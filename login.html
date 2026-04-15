@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YOKING 元井水泵控制器 v2 — 登录 / 注册</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    /* 登录页独立样式补充 */
+    .auth-wrap {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(160deg, #1a7fd4 0%, #0e5fa0 45%, #0a3d6b 100%);
+      align-items: center;
+      padding-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 背景装饰圆圈 */
+    .auth-bg-circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.07);
+      pointer-events: none;
+    }
+    .auth-bg-circle:nth-child(1) { width: 340px; height: 340px; top: -100px; right: -80px; }
+    .auth-bg-circle:nth-child(2) { width: 200px; height: 200px; top: 60px; right: 20px; border-color: rgba(240,124,26,0.15); }
+    .auth-bg-circle:nth-child(3) { width: 260px; height: 260px; bottom: 40px; left: -80px; }
+    .auth-bg-circle:nth-child(4) { width: 120px; height: 120px; bottom: 120px; left: 40px; border-color: rgba(255,255,255,0.12); }
+
+    /* Hero */
+    .auth-hero {
+      width: 100%;
+      max-width: 420px;
+      padding: 52px 28px 28px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-hero__logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .auth-hero__logo-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .auth-hero__text {
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+      font-family: 'SourceHanSansCN','Source Han Sans CN','冬青黑体原版','Noto Sans SC',sans-serif;
+    }
+
+    .auth-hero__logo-img {
+      height: 56px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    .auth-hero__brand-wrap { text-align: center; }
+
+    .auth-hero__brand {
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+      font-family: 'SourceHanSansCN','Source Han Sans CN','冬青黑体原版','Noto Sans SC',sans-serif;
+    }
+
+    .auth-hero__brand em {
+      color: #f07c1a;
+      font-style: normal;
+    }
+
+    .auth-hero__sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.08em;
+      font-weight: 300;
+      margin-top: 4px;
+    }
+
+    .auth-tagline {
+      font-size: 13px;
+      color: rgba(255,255,255,0.8);
+      margin-top: 10px;
+      letter-spacing: 0.04em;
+      font-weight: 400;
+    }
+
+    /* 水波装饰动画 */
+    .auth-wave-bar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      height: 24px;
+      margin: 14px 0 0;
+    }
+
+    .auth-wave-bar span {
+      width: 3px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.35);
+      animation: wave-bar 1.4s ease-in-out infinite;
+    }
+
+    .auth-wave-bar span:nth-child(1) { height: 8px; animation-delay: 0s; }
+    .auth-wave-bar span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+    .auth-wave-bar span:nth-child(3) { height: 22px; animation-delay: 0.2s; background: rgba(240,124,26,0.7); }
+    .auth-wave-bar span:nth-child(4) { height: 14px; animation-delay: 0.3s; }
+    .auth-wave-bar span:nth-child(5) { height: 20px; animation-delay: 0.4s; }
+    .auth-wave-bar span:nth-child(6) { height: 10px; animation-delay: 0.5s; }
+    .auth-wave-bar span:nth-child(7) { height: 18px; animation-delay: 0.6s; background: rgba(240,124,26,0.5); }
+    .auth-wave-bar span:nth-child(8) { height: 12px; animation-delay: 0.7s; }
+    .auth-wave-bar span:nth-child(9) { height: 8px; animation-delay: 0.8s; }
+
+    @keyframes wave-bar {
+      0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+      50%       { transform: scaleY(1); opacity: 1; }
+    }
+
+    /* Card */
+    .auth-card {
+      width: calc(100% - 32px);
+      max-width: 420px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.22), 0 0 0 1px rgba(26,127,212,0.1);
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Tabs */
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(26,127,212,0.13);
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 14px 0;
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'SourceHanSansCN','Source Han Sans CN','Noto Sans SC',sans-serif;
+      color: #8aa0b8;
+      cursor: pointer;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .auth-tab.is-active { color: #1a7fd4; }
+
+    .auth-tab.is-active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: #1a7fd4;
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* Forms */
+    .auth-form {
+      padding: 22px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .auth-form[hidden] { display: none !important; }
+
+    .auth-field { display: flex; flex-direction: column; gap: 5px; }
+
+    .auth-field__label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a6080;
+      letter-spacing: 0.03em;
+    }
+
+    .auth-field__wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .auth-field__icon {
+      position: absolute;
+      left: 11px;
+      font-size: 15px;
+      color: #8aa0b8;
+      pointer-events: none;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+    }
+
+    .auth-field__icon svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .auth-input {
+      width: 100%;
+      background: #f4f7fb;
+      border: 1.5px solid rgba(26,127,212,0.22);
+      border-radius: 6px;
+      padding: 10px 12px 10px 36px;
+      font-size: 14px;
+      font-family: 'SourceHanSansCN','Noto Sans SC',sans-serif;
+      color: #1a2638;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    .auth-input:focus {
+      border-color: #1a7fd4;
+      box-shadow: 0 0 0 3px rgba(26,127,212,0.15);
+      background: #fff;
+    }
+
+    .auth-input::placeholder { color: #8aa0b8; }
+
+    /* 验证码行 */
+    .auth-captcha-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .auth-captcha-row .auth-field__wrap { flex: 1; }
+
+    .auth-captcha-img {
+      flex-shrink: 0;
+      height: 42px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1.5px solid rgba(26,127,212,0.22);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #e8f3fc 0%, #d0e8f8 100%);
+      padding: 0 10px;
+      font-size: 18px;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+      color: #1a7fd4;
+      letter-spacing: 0.15em;
+      user-select: none;
+      min-width: 88px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-captcha-img::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 4px,
+        rgba(26,127,212,0.06) 4px,
+        rgba(26,127,212,0.06) 5px
+      );
+    }
+
+    .auth-hint {
+      font-size: 11px;
+      color: #8aa0b8;
+      padding: 0 2px;
+    }
+
+    .auth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 7px;
+      background: #1a7fd4;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'SourceHanSansCN','Noto Sans SC',sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 14px rgba(26,127,212,0.32);
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      margin-top: 2px;
+    }
+
+    .auth-btn:hover { background: #1268b0; box-shadow: 0 6px 18px rgba(26,127,212,0.38); }
+    .auth-btn:active { transform: scale(0.98); }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: #8aa0b8;
+    }
+
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(26,127,212,0.13);
+    }
+
+    .auth-wechat-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: 1.5px solid rgba(7,193,96,0.35);
+      border-radius: 7px;
+      background: rgba(7,193,96,0.06);
+      color: #07a84e;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'SourceHanSansCN','Noto Sans SC',sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .auth-wechat-btn:hover { background: rgba(7,193,96,0.12); }
+
+    /* 服务条款勾选 */
+    .auth-agree {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11px;
+      color: #8aa0b8;
+      margin-top: -4px;
+    }
+
+    .auth-agree input[type="checkbox"] {
+      accent-color: #1a7fd4;
+      width: 14px;
+      height: 14px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .auth-agree a {
+      color: #1a7fd4;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* Footer */
+    .auth-footer {
+      padding: 0 20px 18px;
+      text-align: center;
+      font-size: 12px;
+      color: #8aa0b8;
+      border-top: 1px solid rgba(26,127,212,0.08);
+      padding-top: 14px;
+    }
+
+    .auth-footer a {
+      color: #1a7fd4;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* 忘记密码 */
+    .auth-forgot {
+      text-align: right;
+      font-size: 11px;
+    }
+
+    .auth-forgot a {
+      color: #1a7fd4;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* 密码强度条 */
+    .auth-pwd-strength {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .auth-pwd-strength span {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: #e5eaf0;
+      transition: background 0.3s;
+    }
+
+    .auth-pwd-strength[data-level="1"] span:nth-child(1) { background: #dc2626; }
+    .auth-pwd-strength[data-level="2"] span:nth-child(-n+2) { background: #d97706; }
+    .auth-pwd-strength[data-level="3"] span:nth-child(-n+3) { background: #1a7fd4; }
+    .auth-pwd-strength[data-level="4"] span { background: #16a34a; }
+
+    .auth-pwd-strength-label {
+      font-size: 10px;
+      color: #8aa0b8;
+      margin-top: 3px;
+      text-align: right;
+    }
+
+    /* 扫码即绑定（静默注册） */
+    .auth-scanbox{
+      margin: -2px 20px 14px;
+      border: 1px solid rgba(26,127,212,0.14);
+      background: linear-gradient(135deg, rgba(26,127,212,0.05), rgba(240,124,26,0.04));
+      border-radius: 12px;
+      padding: 12px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .auth-scanbox__left{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .auth-scanbox__title{ font-size:12px; font-weight:800; color:#1a2638; letter-spacing:0.03em; }
+    .auth-scanbox__sub{ font-size:11px; color:#4a6080; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .auth-scanbox__sub b{ color:#1a7fd4; }
+    .auth-scanbox__btn{
+      flex-shrink:0;
+      border: 1.5px solid rgba(26,127,212,0.28);
+      background: rgba(255,255,255,0.8);
+      color: #1a7fd4;
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s, border-color 0.15s;
+      font-family: inherit;
+    }
+    .auth-scanbox__btn:hover{ background:#fff; border-color: rgba(26,127,212,0.38); }
+    .auth-scanbox__btn:active{ transform: scale(0.98); }
+
+    .auth-scanbox__input{
+      margin-top: 6px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(26,127,212,0.18);
+      background: rgba(255,255,255,0.85);
+      padding: 0 10px;
+      font-size: 12px;
+      color: #1a2638;
+      outline: none;
+      width: 100%;
+      font-family: inherit;
+    }
+    .auth-scanbox__input:focus{
+      border-color:#1a7fd4;
+      box-shadow: 0 0 0 3px rgba(26,127,212,0.12);
+      background:#fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <!-- 背景装饰圆 -->
+    <div class="auth-bg-circle"></div>
+    <div class="auth-bg-circle"></div>
+    <div class="auth-bg-circle"></div>
+    <div class="auth-bg-circle"></div>
+
+    <!-- Hero -->
+    <div class="auth-hero" style="max-width:420px;width:100%;">
+      <div class="auth-hero__logo">
+        <div class="auth-hero__logo-inner">
+          <div class="auth-hero__brand">YOKING <em>元井</em></div>
+        </div>
+        <div class="auth-hero__sub">INTELLIGENT PUMP CONTROL</div>
+      </div>
+      <div class="auth-tagline">品质成就美好生活</div>
+      <div class="auth-wave-bar">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- Auth Card -->
+    <div class="auth-card">
+      <!-- 扫码即绑定：可先扫码再注册/登录 -->
+      <div class="auth-scanbox">
+        <div class="auth-scanbox__left">
+          <div class="auth-scanbox__title">静默注册：扫码即绑定</div>
+          <div class="auth-scanbox__sub" id="scanHint">未扫描设备（可先扫码，再注册/登录）</div>
+          <input class="auth-scanbox__input" id="bindLocationName" placeholder="安装地点（可选，如：1号工业园泵房）" />
+        </div>
+        <button type="button" class="auth-scanbox__btn" id="btnScanBind" onclick="scanAndCacheDevice()">扫码绑定</button>
+      </div>
+
+      <!-- Tab 切换 -->
+      <div class="auth-tabs">
+        <button class="auth-tab is-active" id="tabLogin" onclick="switchTab('login')">登录</button>
+        <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">注册</button>
+      </div>
+
+      <!-- 登录表单 -->
+      <form class="auth-form" id="formLogin" onsubmit="handleLogin(event)">
+        <div class="auth-field">
+          <div class="auth-field__label">手机号 / 账号</div>
+          <div class="auth-field__wrap">
+            <span class="auth-field__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M17 1H7C5.34315 1 4 2.34315 4 4V20C4 21.6569 5.34315 23 7 23H17C18.6569 23 20 21.6569 20 20V4C20 2.34315 18.6569 1 17 1ZM17 19H7V5H17V19Z"/>
+                <path d="M15 10H9V14H15V10Z"/>
+              </svg>
+            </span>
+            <input class="auth-input" type="text" placeholder="请输入手机号或账号" id="loginUser" autocomplete="username" />
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <div class="auth-field__label">密码</div>
+          <div class="auth-field__wrap">
+            <span class="auth-field__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <!-- keyhole lock (cleaner) -->
+                <path d="M7 10V8a5 5 0 0 1 10 0v2" />
+                <path d="M6 10h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" />
+                <path d="M12 14a2 2 0 0 1 1 3.732V19h-2v-1.268A2 2 0 0 1 12 14Z" />
+              </svg>
+            </span>
+            <input class="auth-input" type="password" placeholder="请输入密码" id="loginPwd" autocomplete="current-password" />
+          </div>
+          <div class="auth-forgot"><a onclick="alert('密码重置（原型占位）')">忘记密码？</a></div>
+        </div>
+
+        <div class="auth-field">
+          <div class="auth-field__label">验证码</div>
+          <div class="auth-captcha-row">
+            <div class="auth-field__wrap">
+              <span class="auth-field__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <!-- verification code (ticket + check) -->
+                <path d="M6 7h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9a2 2 0 0 1 2-2Z" />
+                <path d="M9 13.2l1.6 1.6L15.6 10" />
+              </svg>
+            </span>
+              <input class="auth-input" type="text" placeholder="请输入验证码" id="loginCaptcha" maxlength="4" />
+            </div>
+            <div class="auth-captcha-img" id="captchaImg" onclick="refreshCaptcha()" title="点击刷新">
+              <span id="captchaText">AF3K</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="auth-btn">
+          <span>登录</span>
+          <span>→</span>
+        </button>
+
+        <div class="auth-divider">或使用其他方式登录</div>
+
+        <button type="button" class="auth-wechat-btn" onclick="wechatLogin()">
+          <span style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 100%; height: 100%; fill: #07a84e;">
+              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM9.5 16.5C9.5 16.5 8.5 15.5 8.5 13C8.5 10.5 10 9 12 9C14 9 15.5 10.5 15.5 13C15.5 15.5 14.5 16.5 14.5 16.5M12 11C10.8954 11 10 11.8954 10 13C10 14.1046 10.8954 15 12 15C13.1046 15 14 14.1046 14 13C14 11.8954 13.1046 11 12 11Z"/>
+            </svg>
+          </span>
+          <span>微信快捷登录</span>
+        </button>
+      </form>
+
+      <!-- 注册表单 -->
+      <form class="auth-form" id="formRegister" hidden onsubmit="handleRegister(event)">
+        <div class="auth-field">
+          <div class="auth-field__label">手机号</div>
+          <div class="auth-captcha-row">
+            <div class="auth-field__wrap" style="flex:1">
+              <span class="auth-field__icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <path d="M17 1H7C5.34315 1 4 2.34315 4 4V20C4 21.6569 5.34315 23 7 23H17C18.6569 23 20 21.6569 20 20V4C20 2.34315 18.6569 1 17 1ZM17 19H7V5H17V19Z"/>
+                  <path d="M15 10H9V14H15V10Z"/>
+                </svg>
+              </span>
+              <input class="auth-input" type="tel" placeholder="请输入手机号" id="regPhone" autocomplete="tel" />
+            </div>
+            <button type="button" class="auth-captcha-img" id="btnSmsCode" onclick="sendSms()"
+              style="font-size:11px;font-weight:700;color:#1a7fd4;letter-spacing:0;font-family:inherit;min-width:84px;border:1.5px solid rgba(26,127,212,0.35);background:rgba(26,127,212,0.06);">
+              获取验证码
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <div class="auth-field__label">短信验证码</div>
+          <div class="auth-field__wrap">
+            <span class="auth-field__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M20 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V6C22 4.89543 21.1046 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"/>
+              </svg>
+            </span>
+            <input class="auth-input" type="text" placeholder="请输入短信验证码" id="regSmsCode" maxlength="6" />
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <div class="auth-field__label">设置密码</div>
+          <div class="auth-field__wrap">
+            <span class="auth-field__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <!-- keyhole lock (cleaner) -->
+                <path d="M7 10V8a5 5 0 0 1 10 0v2" />
+                <path d="M6 10h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" />
+                <path d="M12 14a2 2 0 0 1 1 3.732V19h-2v-1.268A2 2 0 0 1 12 14Z" />
+              </svg>
+            </span>
+            <input class="auth-input" type="password" placeholder="至少8位，含字母和数字" id="regPwd" autocomplete="new-password"
+              oninput="checkPwdStrength(this.value)" />
+          </div>
+          <div class="auth-pwd-strength" id="pwdStrengthBar" data-level="0">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="auth-pwd-strength-label" id="pwdStrengthLabel">密码强度</div>
+        </div>
+
+        <div class="auth-field">
+          <div class="auth-field__label">确认密码</div>
+          <div class="auth-field__wrap">
+            <span class="auth-field__icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <!-- keyhole lock (cleaner) -->
+                <path d="M7 10V8a5 5 0 0 1 10 0v2" />
+                <path d="M6 10h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" />
+                <path d="M12 14a2 2 0 0 1 1 3.732V19h-2v-1.268A2 2 0 0 1 12 14Z" />
+              </svg>
+            </span>
+            <input class="auth-input" type="password" placeholder="再次输入密码" id="regPwd2" autocomplete="new-password" />
+          </div>
+        </div>
+
+        <label class="auth-agree">
+          <input type="checkbox" id="agreeCheck" />
+          <span>我已阅读并同意 <a onclick="alert('服务条款（原型占位）')">《服务条款》</a> 和 <a onclick="alert('隐私政策（原型占位）')">《隐私政策》</a></span>
+        </label>
+
+        <button type="submit" class="auth-btn">
+          <span>立即注册</span>
+          <span>→</span>
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <div class="auth-footer">
+        <span id="footerHint">没有账号？</span>
+        <a id="footerSwitch" onclick="switchTab('register')">立即注册</a>
+        &nbsp;·&nbsp;
+      </div>
+    </div>
+
+    <!-- 直接跳转演示入口已移除，微信登录直接进入 -->
+  </div>
+
+  <script>
+    const AUTH_KEY = "cledic_auth_v1";
+    const BINDINGS_KEY = "cledic_bindings_v1";
+    const DEVICE_REG_KEY = "cledic_devices_v1";
+    const USERS_KEY = "cledic_users_v1";
+    const PENDING_BIND_KEY = "cledic_pending_bind_v1";
+    // 后端绑定接口（占位）。接入后把它改成你的真实 URL。
+    const BACKEND_BIND_URL = "";
+
+    function safeJsonParse(text, fallback) {
+      try { return JSON.parse(text); } catch { return fallback; }
+    }
+    function loadJson(key, fallback) {
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      return safeJsonParse(raw, fallback);
+    }
+    function saveJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+    function maskPhone(phone) {
+      const p = String(phone || "").replace(/\s/g, "");
+      if (/^\d{11}$/.test(p)) return `${p.slice(0, 3)}****${p.slice(7)}`;
+      return p ? `${p.slice(0, 3)}****` : "—";
+    }
+
+    function setScanHint() {
+      const pending = loadJson(PENDING_BIND_KEY, null);
+      const el = document.getElementById("scanHint");
+      if (!el) return;
+      if (!pending?.code) {
+        el.innerHTML = "未扫描设备（可先扫码，再注册/登录）";
+        return;
+      }
+      const suffix = String(pending.code).slice(-4);
+      const model = pending.model ? ` · 型号：${pending.model}` : "";
+      const loc = pending.locationName ? ` · 地点：${pending.locationName}` : "";
+      el.innerHTML = `已扫描：<b>${pending.name || "水泵设备"}</b>（${suffix}） · ${pending.code}${model}${loc}`;
+    }
+
+    function normalizeDeviceCode(raw) {
+      const v = String(raw || "").trim();
+      if (!v) return "";
+      // 兼容二维码内容里带前缀/URL
+      const m = v.match(/CLEDIC-\d{10}/i);
+      return (m ? m[0] : v).toUpperCase();
+    }
+
+    function parseQrPayload(raw) {
+      const text = String(raw || "").trim();
+      if (!text) return { code: "", model: "", locationName: "" };
+
+      // JSON: {"code":"CLEDIC-...","model":"...","locationName":"..."}
+      if (text.startsWith("{") && text.endsWith("}")) {
+        const obj = safeJsonParse(text, null);
+        if (obj && typeof obj === "object") {
+          const code = normalizeDeviceCode(obj.code || obj.sn || obj.deviceCode || "");
+          const model = String(obj.model || obj.deviceModel || "").trim();
+          const locationName = String(obj.locationName || obj.location || obj.site || "").trim();
+          return { code, model, locationName };
+        }
+      }
+
+      // URL / query: ...?sn=...&model=...&locationName=...
+      if (/^https?:\/\//i.test(text) || text.includes("?")) {
+        try {
+          const u = new URL(text, location.href);
+          const sp = u.searchParams;
+          const code = normalizeDeviceCode(sp.get("code") || sp.get("sn") || sp.get("deviceCode") || "");
+          const model = String(sp.get("model") || sp.get("deviceModel") || "").trim();
+          const locationName = String(sp.get("locationName") || sp.get("location") || sp.get("site") || "").trim();
+          return { code, model, locationName };
+        } catch {
+          // fallthrough
+        }
+      }
+
+      // key=value pairs: sn=...;model=...;locationName=...
+      if (text.includes("=")) {
+        const parts = text.split(/[;&\s]+/).filter(Boolean);
+        const map = {};
+        parts.forEach((p) => {
+          const i = p.indexOf("=");
+          if (i <= 0) return;
+          const k = p.slice(0, i).trim();
+          const v = p.slice(i + 1).trim();
+          if (k) map[k] = v;
+        });
+        const code = normalizeDeviceCode(map.code || map.sn || map.deviceCode || "");
+        const model = String(map.model || map.deviceModel || "").trim();
+        const locationName = String(map.locationName || map.location || map.site || "").trim();
+        return { code, model, locationName };
+      }
+
+      // plain: contains device code only
+      return { code: normalizeDeviceCode(text), model: "", locationName: "" };
+    }
+
+    // 扫码并缓存：允许先扫码再注册/登录
+    function scanAndCacheDevice() {
+      const raw = prompt("扫码结果（原型：粘贴设备码/二维码内容）", "CLEDIC-6789123456");
+      const parsed = parseQrPayload(raw);
+      const code = parsed.code;
+      if (!/^CLEDIC-\d{10}$/.test(code)) {
+        alert("设备码格式不正确（示例：CLEDIC-6789123456）");
+        return;
+      }
+      const model = String(parsed.model || "").trim();
+      const locationNameInput = document.getElementById("bindLocationName")?.value?.trim() || "";
+      const locationName = locationNameInput || String(parsed.locationName || "").trim();
+      const pending = {
+        code,
+        name: `水泵设备（${code.slice(-4)}）`,
+        model,
+        locationName,
+        scannedAt: Date.now()
+      };
+      saveJson(PENDING_BIND_KEY, pending);
+      setScanHint();
+      // 引导用户直接去注册
+      if (confirm("已扫描设备，是否立即注册/登录并完成绑定？")) {
+        switchTab("register");
+      }
+    }
+
+    function upsertDeviceRegistry({ code, name, status, metrics, lastSync }) {
+      const list = loadJson(DEVICE_REG_KEY, []);
+      const idx = list.findIndex((x) => x.code === code);
+      const row = {
+        code,
+        name: name || code,
+        status: status || list[idx]?.status || "stopped",
+        metrics: metrics ? { ...metrics } : (list[idx]?.metrics ?? null),
+        lastSync: lastSync || list[idx]?.lastSync || "",
+        updatedAt: Date.now(),
+        createdAt: idx >= 0 ? list[idx].createdAt : Date.now(),
+      };
+      if (idx >= 0) list[idx] = { ...list[idx], ...row };
+      else list.unshift(row);
+      saveJson(DEVICE_REG_KEY, list);
+    }
+
+    function addBindingForUser({ userId, phone, code, name }) {
+      const bindings = loadJson(BINDINGS_KEY, []);
+      const exists = bindings.some((b) => b.userId === userId && b.code === code);
+      if (exists) return true;
+      bindings.unshift({
+        id: `b_${Math.random().toString(16).slice(2, 10)}`,
+        userId,
+        phone,
+        maskedPhone: phone ? maskPhone(phone) : "未绑定手机号",
+        code,
+        name: name || code,
+        boundAt: Date.now()
+      });
+      saveJson(BINDINGS_KEY, bindings);
+      return true;
+    }
+
+    function ensurePumpStateDevice({ code, name }) {
+      const seed = loadJson("pump_proto_state", null) || {};
+      const devices = Array.isArray(seed.devices) ? seed.devices : [];
+      let hit = devices.find((d) => d.code === code);
+      if (!hit) {
+        hit = {
+          id: `dev_${Math.random().toString(16).slice(2, 8)}`,
+          name: name || `水泵设备（${code.slice(-4)}）`,
+          code,
+          model: "",
+          fwVersion: "",
+          locationName: "",
+          status: "stopped",
+          metrics: {
+            p: 0, q: 0, i: 0, v: 0,
+            wlPct: 40, wlM: 1.6,
+            rpm: 0, head: 0,
+            vIn: 0, vOut: 0, iOut: 0,
+            temp: 26,
+            runSec: 0,
+            totalSec: 0
+          },
+          ilimit: 8.0,
+          mode: "auto",
+          gear: 3
+        };
+        devices.unshift(hit);
+      } else {
+        hit.name = name || hit.name;
+      }
+      seed.devices = devices;
+      seed.currentDeviceId = hit.id;
+      saveJson("pump_proto_state", seed);
+      return hit;
+    }
+
+    async function postBindToBackend(payload) {
+      if (!BACKEND_BIND_URL) return;
+      try {
+        await fetch(BACKEND_BIND_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      } catch {
+        // 原型：不阻塞主流程
+      }
+    }
+
+    async function finalizePendingBindAfterAuth(auth) {
+      const pending = loadJson(PENDING_BIND_KEY, null);
+      if (!pending?.code) return null;
+      const code = String(pending.code).trim();
+      const name = pending.name || `水泵设备（${code.slice(-4)}）`;
+      const model = String(pending.model || "").trim();
+      const locationName = String(pending.locationName || "").trim();
+
+      addBindingForUser({ userId: auth.userId, phone: auth.phone, code, name });
+      upsertDeviceRegistry({ code, name, status: "stopped", metrics: null, lastSync: "" });
+      const device = ensurePumpStateDevice({ code, name });
+      if (device) {
+        device.model = model || device.model || "";
+        device.locationName = locationName || device.locationName || "";
+        device.fwVersion = device.fwVersion || "";
+        // 写回（ensurePumpStateDevice 已写入一次，这里再覆盖元信息）
+        const seed = loadJson("pump_proto_state", null) || {};
+        if (Array.isArray(seed.devices)) {
+          const idx = seed.devices.findIndex((d) => d.id === device.id);
+          if (idx >= 0) seed.devices[idx] = { ...seed.devices[idx], ...device };
+          saveJson("pump_proto_state", seed);
+        }
+      }
+
+      await postBindToBackend({
+        userId: auth.userId,
+        phone: auth.phone,
+        deviceCode: code,
+        deviceName: name,
+        model,
+        locationName,
+        scannedAt: pending.scannedAt || null,
+        clientAt: Date.now()
+      });
+
+      localStorage.removeItem(PENDING_BIND_KEY);
+      setScanHint();
+      return device;
+    }
+
+    // 微信登录 — 直接跳转主界面
+    function wechatLogin() {
+      const btn = document.querySelector('.auth-wechat-btn');
+      btn.innerHTML = '<span>⏳</span><span>登录中...</span>';
+      btn.disabled = true;
+      localStorage.removeItem('pump_proto_state');
+      setTimeout(() => { window.location.href = 'index.html'; }, 800);
+    }
+
+    // 验证码刷新
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    function genCaptcha() {
+      return Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+    }
+    let currentCaptcha = genCaptcha();
+    document.getElementById('captchaText').textContent = currentCaptcha;
+
+    function refreshCaptcha() {
+      currentCaptcha = genCaptcha();
+      const el = document.getElementById('captchaText');
+      el.style.opacity = '0';
+      setTimeout(() => { el.textContent = currentCaptcha; el.style.opacity = '1'; }, 150);
+    }
+
+    // Tab 切换
+    function switchTab(tab) {
+      const isLogin = tab === 'login';
+      document.getElementById('tabLogin').classList.toggle('is-active', isLogin);
+      document.getElementById('tabRegister').classList.toggle('is-active', !isLogin);
+      document.getElementById('formLogin').hidden = !isLogin;
+      document.getElementById('formRegister').hidden = isLogin;
+      document.getElementById('footerHint').textContent = isLogin ? '没有账号？' : '已有账号？';
+      document.getElementById('footerSwitch').textContent = isLogin ? '立即注册' : '返回登录';
+      document.getElementById('footerSwitch').onclick = () => switchTab(isLogin ? 'register' : 'login');
+    }
+
+    // 密码强度
+    function checkPwdStrength(v) {
+      let level = 0;
+      if (v.length >= 8) level++;
+      if (/[A-Za-z]/.test(v) && /\d/.test(v)) level++;
+      if (/[^A-Za-z0-9]/.test(v)) level++;
+      if (v.length >= 12 && level >= 2) level = 4;
+      const bar = document.getElementById('pwdStrengthBar');
+      const label = document.getElementById('pwdStrengthLabel');
+      bar.dataset.level = v.length ? level : 0;
+      const labels = ['', '弱', '中', '强', '非常强'];
+      label.textContent = v.length ? `密码强度：${labels[level] || '弱'}` : '密码强度';
+    }
+
+    // 发送短信
+    let smsTimer = null;
+    function sendSms() {
+      const phone = document.getElementById('regPhone').value.trim();
+      if (!/^1\d{10}$/.test(phone)) { alert('请输入正确的手机号'); return; }
+      const btn = document.getElementById('btnSmsCode');
+      let sec = 60;
+      btn.disabled = true;
+      btn.style.color = '#8aa0b8';
+      smsTimer = setInterval(() => {
+        btn.textContent = `${sec}秒后重发`;
+        sec--;
+        if (sec < 0) {
+          clearInterval(smsTimer);
+          btn.textContent = '重新获取';
+          btn.disabled = false;
+          btn.style.color = '#1a7fd4';
+        }
+      }, 1000);
+      alert(`验证码已发送至 ${phone}（原型演示，实际未发送）`);
+    }
+
+    // 登录提交
+    function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value.trim();
+      const pwd = document.getElementById('loginPwd').value;
+      const captcha = document.getElementById('loginCaptcha').value.trim().toUpperCase();
+      if (!user) { alert('请输入手机号或账号'); return; }
+      if (!pwd) { alert('请输入密码'); return; }
+      if (captcha !== currentCaptcha) { alert('验证码不正确，请重新输入'); refreshCaptcha(); return; }
+      // 模拟跳转
+      const btn = document.querySelector('#formLogin .auth-btn');
+      btn.textContent = '登录中...';
+      btn.disabled = true;
+      setTimeout(() => {
+        // 这里模拟“账号体系”写入，供 index.html 复用
+        const phone = /^\d{11}$/.test(user) ? user : "";
+        const auth = { phone, userId: phone ? `u_${phone}` : `u_${Math.random().toString(16).slice(2, 10)}` };
+        saveJson(AUTH_KEY, auth);
+        const users = loadJson(USERS_KEY, []);
+        if (!users.some((u) => u.userId === auth.userId)) {
+          users.unshift({ userId: auth.userId, phone: auth.phone, maskedPhone: maskPhone(auth.phone), createdAt: Date.now() });
+          saveJson(USERS_KEY, users);
+        }
+
+        // 如果先扫码了设备：登录成功后直接完成绑定并可见
+        finalizePendingBindAfterAuth(auth).finally(() => {
+          window.location.href = 'index.html';
+        });
+      }, 900);
+    }
+
+    // 注册提交
+    function handleRegister(e) {
+      e.preventDefault();
+      const phone = document.getElementById('regPhone').value.trim();
+      const code = document.getElementById('regSmsCode').value.trim();
+      const pwd = document.getElementById('regPwd').value;
+      const pwd2 = document.getElementById('regPwd2').value;
+      const agree = document.getElementById('agreeCheck').checked;
+      if (!/^1\d{10}$/.test(phone)) { alert('请输入正确的手机号'); return; }
+      if (!code) { alert('请输入短信验证码'); return; }
+      if (pwd.length < 8) { alert('密码至少8位'); return; }
+      if (pwd !== pwd2) { alert('两次密码不一致'); return; }
+      if (!agree) { alert('请阅读并同意服务条款'); return; }
+      const btn = document.querySelector('#formRegister .auth-btn');
+      btn.textContent = '注册中...';
+      btn.disabled = true;
+      setTimeout(() => {
+        // 注册成功：写入 Auth（index.html 可复用），并把“扫码待绑定”的设备绑定到该账号
+        const auth = { phone, userId: `u_${phone}` };
+        saveJson(AUTH_KEY, auth);
+        const users = loadJson(USERS_KEY, []);
+        if (!users.some((u) => u.userId === auth.userId)) {
+          users.unshift({ userId: auth.userId, phone: auth.phone, maskedPhone: maskPhone(auth.phone), createdAt: Date.now() });
+          saveJson(USERS_KEY, users);
+        }
+
+        finalizePendingBindAfterAuth(auth).then((device) => {
+          if (device?.code) {
+            alert(`注册成功，已绑定设备：${device.name}\n编码：${device.code}`);
+            window.location.href = "index.html";
+            return;
+          }
+          alert('注册成功！（原型演示）');
+          switchTab('login');
+          btn.textContent = '立即注册 →';
+          btn.disabled = false;
+        });
+      }, 900);
+    }
+
+    // 初始化扫码提示
+    setScanHint();
+  </script>
+</body>
+</html>
