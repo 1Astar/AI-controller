@@ -1,0 +1,3368 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>元井水泵控制器后台 - 管理员端</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            boxShadow: {
+              panel: "0 10px 30px rgba(2, 6, 23, 0.08)",
+              glow: "0 0 0 1px rgba(56, 189, 248, .25), 0 10px 35px rgba(14, 165, 233, .12)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .breath-dot {
+        box-shadow: 0 0 0 rgba(34, 197, 94, 0.45);
+        animation: breath 1.6s ease-in-out infinite;
+      }
+      @keyframes breath {
+        0% {
+          transform: scale(0.92);
+          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.38);
+        }
+        60% {
+          transform: scale(1);
+          box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+        }
+        100% {
+          transform: scale(0.92);
+          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        }
+      }
+      .scrollbar-slim::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      .scrollbar-slim::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.55);
+        border-radius: 999px;
+      }
+      .scrollbar-slim::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-100 text-slate-800">
+    <div class="min-h-screen flex">
+      <!-- Sidebar -->
+      <aside
+        class="w-[280px] shrink-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 border-r border-slate-800/60"
+      >
+        <div class="px-5 pt-6 pb-4">
+          <div class="flex items-center gap-3">
+            <div
+              class="h-10 w-10 rounded-xl bg-slate-800/60 border border-slate-700/60 grid place-items-center shadow-glow"
+              aria-hidden="true"
+            >
+              <i data-lucide="qr-code" class="h-5 w-5 text-sky-300"></i>
+            </div>
+            <div>
+              <div class="text-[15px] font-semibold tracking-tight">元井水泵控制器后台</div>
+              <div class="text-xs text-slate-300/80">Water Pump Controller · Admin</div>
+            </div>
+          </div>
+        </div>
+
+        <nav class="px-3 pb-6">
+          <div class="px-2 mb-2 text-[11px] uppercase tracking-[0.18em] text-slate-400">导航</div>
+
+          <button
+            class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-800/60 transition"
+            data-view="factory"
+          >
+            <i data-lucide="factory" class="h-[18px] w-[18px] text-slate-300"></i>
+            <span class="font-medium whitespace-nowrap">出厂配置</span>
+          </button>
+          <button
+            class="nav-item w-full mt-1 flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-800/60 transition"
+            data-view="devices"
+          >
+            <i data-lucide="cpu" class="h-[18px] w-[18px] text-slate-300"></i>
+            <span class="font-medium whitespace-nowrap">设备管理</span>
+          </button>
+          <button
+            class="nav-item w-full mt-1 flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-800/60 transition"
+            data-view="bindings"
+          >
+            <i data-lucide="users" class="h-[18px] w-[18px] text-slate-300"></i>
+            <span class="font-medium whitespace-nowrap">用户绑定列表</span>
+          </button>
+          <button
+            id="navPermissions"
+            class="nav-item w-full mt-1 flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-800/60 transition"
+            data-view="permissions"
+          >
+            <i data-lucide="shield" class="h-[18px] w-[18px] text-slate-300"></i>
+            <span class="font-medium whitespace-nowrap">权限设定</span>
+            <span
+              class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/25 text-amber-100"
+              >Super</span
+            >
+          </button>
+          <button
+            class="nav-item w-full mt-1 flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-800/60 transition"
+            data-view="remote"
+          >
+            <i data-lucide="satellite-dish" class="h-[18px] w-[18px] text-slate-300"></i>
+            <span class="font-medium whitespace-nowrap">远程控制镜像</span>
+            <span
+              class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-sky-400/15 border border-sky-400/25 text-sky-200"
+              >核心</span
+            >
+          </button>
+
+          <div class="mt-6 mx-2 p-3 rounded-2xl bg-slate-900/55 border border-slate-800/70">
+            <div class="flex items-center gap-2">
+              <i data-lucide="shield-check" class="h-4 w-4 text-emerald-300"></i>
+              <div class="min-w-0 flex-1">
+                <div id="adminRoleTitle" class="text-sm font-semibold truncate">管理员</div>
+                <div id="adminRoleDesc" class="mt-0.5 text-xs text-slate-300/80 truncate">角色：未登录</div>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center gap-2 text-[11px]">
+              <button
+                id="btnChangePwd"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-600 text-slate-100 font-medium hover:bg-slate-800 transition text-[11px]"
+              >
+                <i data-lucide="key-round" class="h-3.5 w-3.5"></i>
+                修改密码
+              </button>
+            </div>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main -->
+      <main class="flex-1 flex flex-col min-w-0">
+        <header class="bg-white border-b border-slate-200/80">
+          <div class="px-6 py-4 flex items-center gap-3">
+            <div class="min-w-0">
+              <div id="pageTitle" class="text-lg font-semibold tracking-tight whitespace-nowrap">出厂配置</div>
+              <div id="pageSubtitle" class="text-xs text-slate-500">批量生成序列号与二维码</div>
+            </div>
+            <div class="ml-auto flex items-center gap-2">
+              <div class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                <i data-lucide="cloud" class="h-4 w-4 text-sky-600"></i>
+                <span class="text-xs text-slate-600">Cloud Mock · SPA</span>
+                <span class="text-xs text-slate-400">·</span>
+                <span id="adminVersion" class="text-xs text-slate-500 font-mono">v-</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="flex-1 p-6 overflow-auto scrollbar-slim">
+          <!-- 出厂配置 -->
+          <section class="view" data-view="factory">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+              <div class="xl:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-panel">
+                <div class="p-5 border-b border-slate-100 flex items-center gap-2">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="settings-2" class="h-4 w-4 text-slate-700"></i>
+                    <div class="font-semibold">生成参数</div>
+                  </div>
+                  <div class="ml-auto flex items-center gap-2">
+                    <button
+                      id="btnOpenSnAssignDialog"
+                      class="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-slate-900 text-white font-semibold text-[11px] hover:bg-slate-800 transition"
+                      title="仅总管理员可配置 SN 前缀与子管理员"
+                    >
+                      <i data-lucide="qr-code" class="h-3.5 w-3.5"></i>
+                      <span class="hidden sm:inline">设备 SN 分配</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="p-5 space-y-4">
+              <div>
+                <label class="text-xs font-semibold text-slate-600">起始序列号</label>
+                <div class="mt-1 flex items-center gap-2">
+                  <div class="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 grid place-items-center">
+                    <i data-lucide="hash" class="h-4 w-4 text-slate-600"></i>
+                  </div>
+                  <input
+                    id="factoryStartSn"
+                    class="h-10 flex-1 rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+                    placeholder="SN10001"
+                    value="SN10001"
+                  />
+                </div>
+                <div class="mt-2 flex flex-col gap-2">
+                  <div class="flex items-center gap-2">
+                  <div class="h-8 w-8 rounded-xl bg-slate-50 border border-slate-200 grid place-items-center">
+                    <i data-lucide="qr-code" class="h-3.5 w-3.5 text-slate-600"></i>
+                  </div>
+                  <select
+                    id="factorySnPrefixSelect"
+                    class="h-8 flex-1 rounded-xl bg-white border border-slate-200 px-3 text-[11px] outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+                  >
+                    <option value="__CUSTOM__">手动填写起始 SN（不使用已分配前缀）</option>
+                  </select>
+                  </div>
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <button
+                      id="btnFactoryContinueFromExisting"
+                      class="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-9 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-[12px] hover:bg-slate-50 transition"
+                      title="从现有设备注册表中选择一个 SN 作为起点"
+                    >
+                      <i data-lucide="skip-forward" class="h-4 w-4"></i>
+                      从已有设备 SN 继续
+                    </button>
+                    <div class="text-[11px] text-slate-500">
+                      会自动把起始序列号设置为所选设备 SN 的下一位。
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-1 text-[11px] text-slate-500">
+                  建议格式：SN + 数字；也可以直接从上方下拉中选择已分配的 SN 前缀自动带入（例如：SN0101-0001）。
+                </div>
+              </div>
+
+                  <div>
+                    <label class="text-xs font-semibold text-slate-600">生成数量</label>
+                    <div class="mt-1 flex items-center gap-2">
+                      <div class="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 grid place-items-center">
+                        <i data-lucide="layers" class="h-4 w-4 text-slate-600"></i>
+                      </div>
+                      <input
+                        id="factoryCount"
+                        type="number"
+                        min="1"
+                        max="200"
+                        class="h-10 flex-1 rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+                        value="8"
+                      />
+                    </div>
+                    <div class="mt-1 text-[11px] text-slate-500">最多 200</div>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button
+                      id="btnFactoryGenerate"
+                      class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-sky-600 text-white font-semibold text-sm hover:bg-sky-700 transition shadow-glow"
+                    >
+                      <i data-lucide="wand-2" class="h-4 w-4"></i>
+                      生成
+                    </button>
+                    <button
+                      id="btnFactorySelectAll"
+                      class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition"
+                    >
+                      <i data-lucide="check-square" class="h-4 w-4"></i>
+                      全选
+                    </button>
+                    <button
+                      id="btnFactoryExportPrint"
+                      class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition"
+                    >
+                      <i data-lucide="file-spreadsheet" class="h-4 w-4"></i>
+                      导出 Excel
+                    </button>
+                    <button
+                      id="btnFactoryClear"
+                      class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition"
+                    >
+                      <i data-lucide="trash-2" class="h-4 w-4"></i>
+                      清空
+                    </button>
+                    <div id="factoryHint" class="ml-auto text-xs text-slate-500"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-panel">
+                <div class="p-5 border-b border-slate-100 flex items-center gap-2">
+                  <i data-lucide="table" class="h-4 w-4 text-slate-700"></i>
+                  <div class="font-semibold">生成结果</div>
+                  <div class="ml-auto text-xs text-slate-500">二维码预览</div>
+                </div>
+                <div class="p-5 overflow-auto scrollbar-slim">
+                  <table class="w-full text-sm">
+                    <thead class="text-xs text-slate-500">
+                      <tr class="border-b border-slate-100">
+                        <th class="text-left py-2.5 font-semibold">SN 码</th>
+                        <th class="text-left py-2.5 font-semibold">二维码</th>
+                        <th class="text-left py-2.5 font-semibold">打印状态</th>
+                        <th class="text-right py-2.5 font-semibold">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="factoryTableBody" class="align-top"></tbody>
+                  </table>
+                  <div id="factoryEmpty" class="py-10 text-center text-slate-400 text-sm hidden">
+                    还没有生成记录。输入参数后点击“生成”。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 设备管理 -->
+          <section class="view hidden" data-view="devices">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-panel">
+              <div class="p-5 border-b border-slate-100 flex items-center gap-2">
+                <i data-lucide="database" class="h-4 w-4 text-slate-700"></i>
+                <div class="font-semibold">设备管理</div>
+                <div class="ml-auto flex items-center gap-2 flex-wrap justify-end">
+                  <div class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                    <i data-lucide="map" class="h-4 w-4 text-slate-500"></i>
+                    <select
+                      id="deviceProjectFilter"
+                      class="bg-transparent outline-none text-sm w-[180px]"
+                      title="项目所属"
+                    >
+                      <option value="__ALL__">全部项目</option>
+                    </select>
+                  </div>
+                  <div class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                    <i data-lucide="user" class="h-4 w-4 text-slate-500"></i>
+                    <select
+                      id="deviceUserFilter"
+                      class="bg-transparent outline-none text-sm w-[180px]"
+                      title="绑定用户筛选"
+                    >
+                      <option value="__ALL__">全部用户</option>
+                    </select>
+                  </div>
+                  <div class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                    <i data-lucide="activity" class="h-4 w-4 text-slate-500"></i>
+                    <select
+                      id="deviceStatusFilter"
+                      class="bg-transparent outline-none text-sm w-[150px]"
+                      title="设备状态筛选"
+                    >
+                      <option value="__ALL__">全部状态</option>
+                      <option value="fault">告警</option>
+                      <option value="offline">离线</option>
+                      <option value="running">运行中</option>
+                      <option value="stopped">停止</option>
+                    </select>
+                  </div>
+                  <label class="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 select-none">
+                    <input id="deviceOnlyProblem" type="checkbox" class="h-4 w-4 rounded border-slate-300 accent-rose-600" />
+                    <span class="text-sm">仅问题设备</span>
+                  </label>
+                  <div class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                    <i data-lucide="search" class="h-4 w-4 text-slate-500"></i>
+                    <input
+                      id="deviceSearch"
+                      class="bg-transparent outline-none text-sm w-[240px]"
+                      placeholder="搜索 SN / 型号 / 地点"
+                    />
+                  </div>
+                  <button
+                    id="btnDeviceNew"
+                    class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition"
+                  >
+                    <i data-lucide="plus" class="h-4 w-4"></i>
+                    新建设备
+                  </button>
+                  <button
+                    id="btnDeviceDeleteSelected"
+                    class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white border border-rose-200 text-rose-700 font-semibold text-sm hover:bg-rose-50 transition"
+                    title="删除所选设备（也会删除绑定关系）"
+                  >
+                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                    删除所选
+                  </button>
+                </div>
+              </div>
+              <div class="px-5 pt-4">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div class="text-xs text-slate-500">设备总数</div>
+                    <div id="dashDevTotal" class="mt-1 text-lg font-semibold">-</div>
+                  </div>
+                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div class="text-xs text-slate-500">在线率</div>
+                    <div class="mt-1 text-lg font-semibold">
+                      <span id="dashOnlineRate">-</span><span class="text-xs text-slate-500 font-medium">%</span>
+                    </div>
+                  </div>
+                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div class="text-xs text-slate-500">在线设备</div>
+                    <div id="dashOnline" class="mt-1 text-lg font-semibold">-</div>
+                  </div>
+                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div class="text-xs text-slate-500">用户总数</div>
+                    <div id="dashUserTotal" class="mt-1 text-lg font-semibold">-</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p-5 overflow-auto scrollbar-slim">
+                <table class="w-full text-sm">
+                  <thead class="text-xs text-slate-500">
+                    <tr class="border-b border-slate-100">
+                      <th class="text-left py-2.5 font-semibold">
+                        <label class="inline-flex items-center gap-2">
+                          <input id="deviceSelectAll" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
+                          <span>全选</span>
+                        </label>
+                      </th>
+                      <th class="text-left py-2.5 font-semibold">设备 SN</th>
+                      <th class="text-left py-2.5 font-semibold">绑定用户</th>
+                      <th class="text-left py-2.5 font-semibold">型号</th>
+                      <th class="text-left py-2.5 font-semibold">安装地点</th>
+                      <th class="text-left py-2.5 font-semibold">固件版本</th>
+                      <th class="text-left py-2.5 font-semibold">状态</th>
+                      <th class="text-right py-2.5 font-semibold">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="deviceTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 用户绑定列表 -->
+          <section class="view hidden" data-view="bindings">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-panel">
+              <div class="p-5 border-b border-slate-100 flex items-center gap-2">
+                <i data-lucide="link-2" class="h-4 w-4 text-slate-700"></i>
+                <div class="font-semibold">用户绑定列表</div>
+                <div class="ml-auto text-xs text-slate-500">在线状态：绿色呼吸灯</div>
+              </div>
+              <div class="px-5 pt-4 space-y-3">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                  <div class="lg:col-span-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                    <i data-lucide="map" class="h-4 w-4 text-slate-500"></i>
+                    <select id="bindingProjectFilter" class="bg-transparent outline-none text-sm flex-1">
+                      <option value="__ALL__">全部项目</option>
+                    </select>
+                  </div>
+                  <div class="lg:col-span-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                    <i data-lucide="user-cog" class="h-4 w-4 text-slate-500"></i>
+                    <select id="bindingAdminFilter" class="bg-transparent outline-none text-sm flex-1">
+                      <option value="__ALL__">全部子管理员</option>
+                    </select>
+                  </div>
+                  <div class="lg:col-span-6 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                    <i data-lucide="search" class="h-4 w-4 text-slate-500"></i>
+                    <input
+                      id="bindingSearch"
+                      class="bg-transparent outline-none text-sm flex-1"
+                      placeholder="搜索 手机号 / 设备编码 / UID"
+                    />
+                  </div>
+                </div>
+                <div class="text-[11px] text-slate-500">
+                  总管理员支持按项目/子管理员筛选；子管理员自动仅显示自己项目的数据。
+                </div>
+              </div>
+              <div class="p-5 overflow-auto scrollbar-slim">
+                <table class="w-full text-sm">
+                  <thead class="text-xs text-slate-500">
+                    <tr class="border-b border-slate-100">
+                      <th class="text-left py-2.5 font-semibold">微信头像</th>
+                      <th class="text-left py-2.5 font-semibold">手机号</th>
+                      <th class="text-left py-2.5 font-semibold">项目</th>
+                      <th class="text-left py-2.5 font-semibold">管理员</th>
+                      <th class="text-left py-2.5 font-semibold">绑定设备 SN</th>
+                      <th class="text-left py-2.5 font-semibold">绑定时间</th>
+                      <th class="text-left py-2.5 font-semibold">在线状态</th>
+                      <th class="text-right py-2.5 font-semibold">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bindingTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 权限设定（仅总管理员） -->
+          <section class="view hidden" data-view="permissions">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-panel">
+              <div class="p-5 border-b border-slate-100 flex items-center gap-2">
+                <i data-lucide="shield" class="h-4 w-4 text-slate-700"></i>
+                <div class="font-semibold">权限设定 · 子管理员管理</div>
+                <div class="ml-auto flex items-center gap-2 text-xs text-slate-500">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                    <i data-lucide="crown" class="h-3 w-3"></i>
+                    仅总管理员可见
+                  </span>
+                </div>
+              </div>
+              <div class="px-5 pt-4 flex items-center gap-2">
+                <button
+                  id="btnOpenSubAdminDialog"
+                  class="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition"
+                >
+                  <i data-lucide="user-plus" class="h-4 w-4"></i>
+                  新建子管理员
+                </button>
+                <div class="ml-auto text-[11px] text-slate-500">
+                  说明：账号统一为姓名拼音 + 两位编号（例如：zhangsan01 / zhangsan02），初始密码 123456@。
+                </div>
+              </div>
+              <div class="p-5 overflow-auto scrollbar-slim">
+                <table class="w-full text-sm">
+                  <thead class="text-xs text-slate-500">
+                    <tr class="border-b border-slate-100">
+                      <th class="text-left py-2.5 font-semibold">姓名</th>
+                      <th class="text-left py-2.5 font-semibold">登录账号</th>
+                      <th class="text-left py-2.5 font-semibold">所属项目</th>
+                      <th class="text-left py-2.5 font-semibold">状态</th>
+                      <th class="text-right py-2.5 font-semibold">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="subAdminTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 远程控制镜像 -->
+          <section class="view hidden" data-view="remote">
+            <div class="grid grid-cols-1 2xl:grid-cols-12 gap-4">
+              <div class="2xl:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-panel overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex items-center gap-2">
+                  <i data-lucide="list" class="h-4 w-4 text-slate-700"></i>
+                  <div class="font-semibold">镜像设备列表</div>
+                  <div class="ml-auto text-xs text-slate-500">点击切换右侧镜像</div>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                    <i data-lucide="search" class="h-4 w-4 text-slate-500"></i>
+                    <input
+                      id="remoteSearch"
+                      class="bg-transparent outline-none text-sm flex-1"
+                      placeholder="搜索 SN / 地点 / 用户"
+                    />
+                  </div>
+                </div>
+                <div id="remoteDeviceList" class="px-4 pb-4 space-y-2 max-h-[calc(100vh-260px)] overflow-auto scrollbar-slim"></div>
+              </div>
+
+              <div class="2xl:col-span-8 space-y-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-panel overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex items-center gap-2">
+                  <i data-lucide="layout-dashboard" class="h-4 w-4 text-slate-700"></i>
+                  <div class="font-semibold">远程控制</div>
+                  <div class="ml-auto flex items-center gap-2 text-xs text-slate-500">
+                    <i data-lucide="zap" class="h-4 w-4 text-amber-500"></i>
+                    实时数据 + 控制（档位 / 正反转）
+                  </div>
+                </div>
+
+                  <div class="p-5">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                          <div class="h-9 w-9 rounded-xl bg-slate-50 border border-slate-200 grid place-items-center">
+                            <i data-lucide="cpu" class="h-4 w-4 text-slate-700"></i>
+                          </div>
+                          <div class="min-w-0">
+                            <div class="flex items-center gap-2 min-w-0">
+                              <div class="font-semibold truncate" id="remoteTitle">SN -</div>
+                              <span id="remoteStateInline" class="shrink-0 text-[11px] px-2 py-0.5 rounded-full text-white bg-slate-900">-</span>
+                            </div>
+                            <div class="text-xs text-slate-500 truncate" id="remoteSub">地点 - · 绑定用户 -</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="lg:ml-auto flex items-center gap-2">
+                        <button
+                          id="btnRemoteStart"
+                          class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition"
+                        >
+                          <i data-lucide="play" class="h-4 w-4"></i>
+                          启动
+                        </button>
+                        <button
+                          id="btnRemoteStop"
+                          class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-rose-600 text-white font-semibold text-sm hover:bg-rose-700 transition"
+                        >
+                          <i data-lucide="square" class="h-4 w-4"></i>
+                          停止
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
+                      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div class="text-xs text-slate-500">扬程 / 流量</div>
+                        <div class="mt-1 text-lg font-semibold">
+                          <span id="remoteHead">-</span>
+                          <span class="text-xs text-slate-500 font-medium">m</span>
+                          <span class="mx-2 text-slate-300">·</span>
+                          <span id="remoteQ">-</span>
+                          <span class="text-xs text-slate-500 font-medium">m³/h</span>
+                        </div>
+                      </div>
+                      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div class="text-xs text-slate-500">电流 / 电压</div>
+                        <div class="mt-1 text-lg font-semibold">
+                          <span id="remoteI">-</span>
+                          <span class="text-xs text-slate-500 font-medium">A</span>
+                          <span class="mx-2 text-slate-300">·</span>
+                          <span id="remoteV">-</span>
+                          <span class="text-xs text-slate-500 font-medium">V</span>
+                        </div>
+                      </div>
+                      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div class="text-xs text-slate-500">转速</div>
+                        <div class="mt-1 text-lg font-semibold">
+                          <span id="remoteRpm">-</span>
+                          <span class="text-xs text-slate-500 font-medium">rpm</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 lg:grid-cols-5 gap-3">
+                      <div class="lg:col-span-3 space-y-3">
+                        <div>
+                          <div class="text-xs font-semibold text-slate-600 mb-1">运行控制</div>
+                          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="md:col-span-1">
+                              <div class="text-[11px] text-slate-500 mb-1">转向</div>
+                              <div class="flex items-center gap-2">
+                                <button
+                                  id="remoteDirForward"
+                                  class="flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-sky-600 border-sky-600 text-white"
+                                >
+                                  正转
+                                </button>
+                                <button
+                                  id="remoteDirReverse"
+                                  class="flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-white border-slate-200 text-slate-700"
+                                >
+                                  反转
+                                </button>
+                              </div>
+                            </div>
+                            <div class="md:col-span-2">
+                              <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                                <span>档位</span>
+                                <span id="remoteGearLabel" class="font-semibold text-slate-700">3 档</span>
+                              </div>
+                              <input
+                                id="remoteGearRange"
+                                type="range"
+                                min="1"
+                                max="5"
+                                step="1"
+                                value="3"
+                                class="w-full accent-sky-600"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <button
+                            id="btnRemoteApplyControl"
+                            class="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition"
+                          >
+                            <i data-lucide="toggle-right" class="h-4 w-4"></i>
+                            应用控制（模拟下发）
+                          </button>
+                          <div class="mt-2 text-[11px] text-slate-500">
+                            所有控制均为前端模拟，与小程序共享同一设备数据（localStorage）。
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="lg:col-span-2">
+                        <div class="text-xs font-semibold text-slate-600 mb-1">操作记录（模拟）</div>
+                        <div id="remoteLog" class="p-3 rounded-2xl bg-slate-50 border border-slate-200 h-[148px] overflow-auto scrollbar-slim text-sm"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 hidden">
+      <div class="max-w-[420px] rounded-2xl bg-slate-900 text-white px-4 py-3 shadow-panel border border-slate-700/50">
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5 h-9 w-9 rounded-xl bg-white/10 border border-white/10 grid place-items-center">
+            <i data-lucide="info" class="h-4 w-4 text-sky-200"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="text-sm font-semibold" id="toastTitle">提示</div>
+            <div class="text-xs text-slate-200/80 mt-0.5" id="toastText"></div>
+          </div>
+          <button id="toastClose" class="ml-auto text-slate-200/80 hover:text-white transition" aria-label="关闭">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Device new dialog -->
+    <dialog id="dlgDeviceNew" class="rounded-2xl border border-slate-200 p-0 w-[min(720px,calc(100vw-24px))] shadow-panel">
+      <div class="bg-white rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+          <i data-lucide="plus" class="h-4 w-4 text-slate-700"></i>
+          <div class="font-semibold" id="dlgDeviceNewTitle">添加设备</div>
+          <button id="dlgDeviceNewClose" class="ml-auto h-9 w-9 grid place-items-center rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition" aria-label="关闭">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-600">设备 SN</label>
+              <input id="newDevSn" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="SN10005" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">绑定用户（手机号）</label>
+              <select
+                id="newDevBindPhone"
+                class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+              >
+                <option value="">不绑定</option>
+              </select>
+              <div class="mt-1 text-[11px] text-slate-500">编辑时可切换绑定用户；删除设备会同步删除绑定。</div>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">设备名称</label>
+              <input id="newDevName" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="1号工业园排污泵" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">型号</label>
+              <input id="newDevModel" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="CLEDIC-PUMP-4G" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">安装地点</label>
+              <input id="newDevPlace" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="泵房A / 机井2#" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">固件版本</label>
+              <input id="newDevFw" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="v1.2.4" />
+            </div>
+            <div class="flex items-center gap-2 pt-1">
+              <button id="btnNewDevGenQr" class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-sky-600 text-white font-semibold text-sm hover:bg-sky-700 transition shadow-glow">
+                <i data-lucide="qr-code" class="h-4 w-4"></i>
+                生成二维码
+              </button>
+              <button id="btnNewDevSave" class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition">
+                <i data-lucide="save" class="h-4 w-4"></i>
+                保存
+              </button>
+              <div id="newDevHint" class="ml-auto text-xs text-slate-500"></div>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-xs font-semibold text-slate-600">二维码预览</div>
+            <div class="mt-3 grid place-items-center">
+              <img id="newDevQrImg" class="h-[180px] w-[180px] rounded-2xl border border-slate-200 bg-white" alt="二维码" />
+            </div>
+            <div class="mt-3 text-xs text-slate-500">
+              token：<span id="newDevToken" class="font-mono break-all">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Factory continue from existing SN -->
+    <dialog
+      id="dlgFactoryContinue"
+      class="rounded-2xl border border-slate-200 p-0 w-[min(760px,calc(100vw-24px))] shadow-panel"
+    >
+      <div class="bg-white rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+          <i data-lucide="skip-forward" class="h-4 w-4 text-slate-700"></i>
+          <div class="font-semibold">从已有设备 SN 继续</div>
+          <button
+            id="dlgFactoryContinueClose"
+            class="ml-auto h-9 w-9 grid place-items-center rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition"
+            aria-label="关闭"
+          >
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+        <div class="p-5 space-y-3">
+          <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+            <i data-lucide="search" class="h-4 w-4 text-slate-500"></i>
+            <input
+              id="factoryContinueSearch"
+              class="bg-transparent outline-none text-sm flex-1"
+              placeholder="搜索 SN / 型号 / 地点"
+            />
+          </div>
+          <div class="text-[11px] text-slate-500">
+            选择一条已有设备 SN 后，将把“起始序列号”设置为该 SN 的下一位（同前缀、同位宽）。
+          </div>
+          <div class="rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="max-h-[360px] overflow-auto scrollbar-slim">
+              <table class="w-full text-sm">
+                <thead class="text-xs text-slate-500 bg-white sticky top-0">
+                  <tr class="border-b border-slate-100">
+                    <th class="text-left py-2.5 px-3 font-semibold">设备 SN</th>
+                    <th class="text-left py-2.5 px-3 font-semibold">型号</th>
+                    <th class="text-left py-2.5 px-3 font-semibold">安装地点</th>
+                    <th class="text-right py-2.5 px-3 font-semibold">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="factoryContinueTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Sub admin manage dialog (only for总管理员) -->
+    <dialog
+      id="dlgSubAdmin"
+      class="rounded-2xl border border-slate-200 p-0 w-[min(520px,calc(100vw-24px))] shadow-panel"
+    >
+      <div class="bg-white rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+          <i data-lucide="users-cog" class="h-4 w-4 text-slate-700"></i>
+          <div class="font-semibold">添加子管理员</div>
+          <button
+            id="dlgSubAdminClose"
+            class="ml-auto h-9 w-9 grid place-items-center rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition"
+            aria-label="关闭"
+          >
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+        <div class="p-5 space-y-4">
+          <div>
+            <label class="text-xs font-semibold text-slate-600">子管理员姓名</label>
+            <input
+              id="subAdminName"
+              class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+              placeholder="例如：张三"
+            />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">所属项目</label>
+            <select
+              id="subAdminProject"
+              class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+            >
+              <option value="农田项目">农田项目</option>
+              <option value="工业排水项目">工业排水项目</option>
+              <option value="北京二号站">北京二号站</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-600">生成的登录账号（拼音）</label>
+              <input
+                id="subAdminUsername"
+                class="mt-1 h-10 w-full rounded-xl bg-slate-50 border border-slate-200 px-3 text-sm outline-none text-slate-700"
+                readonly
+              />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">初始密码</label>
+              <input
+                id="subAdminPassword"
+                class="mt-1 h-10 w-full rounded-xl bg-slate-50 border border-slate-200 px-3 text-sm outline-none text-slate-700"
+                value="123456@"
+                readonly
+              />
+            </div>
+          </div>
+          <div class="text-xs text-slate-500">
+            说明：账号为姓名的简化拼音（仅保留字母和数字，自动去重）；初始密码为 <span class="font-mono">123456@</span>，子管理员登录后可自行修改。
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <button
+              id="btnSubAdminSave"
+              class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-sky-600 text-white font-semibold text-sm hover:bg-sky-700 transition shadow-glow"
+            >
+              <i data-lucide="save" class="h-4 w-4"></i>
+              保存子管理员账号
+            </button>
+            <div id="subAdminHint" class="ml-auto text-xs text-slate-500"></div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- SN prefix assign dialog (only for 总管理员) -->
+    <dialog
+      id="dlgSnAssign"
+      class="rounded-2xl border border-slate-200 p-0 w-[min(640px,calc(100vw-24px))] shadow-panel"
+    >
+      <div class="bg-white rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+          <i data-lucide="qr-code" class="h-4 w-4 text-slate-700"></i>
+          <div class="font-semibold">设备 SN 前缀分配</div>
+          <button
+            id="dlgSnAssignClose"
+            class="ml-auto h-9 w-9 grid place-items-center rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition"
+            aria-label="关闭"
+          >
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+        <div class="p-5 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-600">SN 前缀</label>
+              <input
+                id="snPrefixPrefix"
+                class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+                placeholder="例如：SN0101-（推荐格式：前缀 + 连字符）"
+              />
+              <div class="mt-1 text-[11px] text-slate-500">
+                总管理员为某个项目 / 子管理员新建 SN 前缀，例如农业项目 A 公司：SN0101-。
+              </div>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">所属项目</label>
+              <select
+                id="snPrefixProject"
+                class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+              >
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-600">分配给子管理员</label>
+              <select
+                id="snPrefixManager"
+                class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+              >
+              </select>
+              <div class="mt-1 text-[11px] text-slate-500">
+                说明：用户扫码绑定该前缀下的 SN，即自动归属到对应的子管理员。
+              </div>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">备注说明（可选）</label>
+              <input
+                id="snPrefixRemark"
+                class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+                placeholder="例如：A 农业公司 / 北京区张三"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-600">所属行业</label>
+              <select
+                id="snPrefixIndustry"
+                class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+              >
+                <option value="">选择行业</option>
+                <option value="agri">农业</option>
+                <option value="ind">工业</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">默认设备型号</label>
+              <select
+                id="snPrefixModel"
+                class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+              >
+              </select>
+              <div class="mt-1 text-[11px] text-slate-500">
+                示例：CLEDIC-6789（农业）、CLEDIC-45678（工业），可根据行业自动筛选。
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <button
+              id="btnSnPrefixSave"
+              class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-sky-600 text-white font-semibold text-sm hover:bg-sky-700 transition shadow-glow"
+            >
+              <i data-lucide="save" class="h-4 w-4"></i>
+              保存 SN 前缀分配
+            </button>
+            <div id="snPrefixHint" class="ml-auto text-xs text-slate-500"></div>
+          </div>
+          <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
+            <div class="px-4 py-2 border-b border-slate-200 flex items-center gap-2">
+              <i data-lucide="list-checks" class="h-4 w-4 text-slate-700"></i>
+              <div class="text-xs font-semibold text-slate-700">已分配的 SN 前缀</div>
+            </div>
+            <div class="max-h-[260px] overflow-auto scrollbar-slim">
+              <table class="w-full text-xs">
+                <thead class="text-[11px] text-slate-500">
+                  <tr class="border-b border-slate-200">
+                    <th class="text-left py-2 px-3 font-semibold">SN 前缀</th>
+                    <th class="text-left py-2 px-3 font-semibold">项目</th>
+                    <th class="text-left py-2 px-3 font-semibold">子管理员</th>
+                    <th class="text-left py-2 px-3 font-semibold">备注</th>
+                    <th class="text-right py-2 px-3 font-semibold">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="snPrefixTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Change password dialog (子管理员使用) -->
+    <dialog
+      id="dlgChangePwd"
+      class="rounded-2xl border border-slate-200 p-0 w-[min(480px,calc(100vw-24px))] shadow-panel"
+    >
+      <div class="bg-white rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+          <i data-lucide="key-round" class="h-4 w-4 text-slate-700"></i>
+          <div class="font-semibold">修改登录密码</div>
+          <button
+            id="dlgChangePwdClose"
+            class="ml-auto h-9 w-9 grid place-items-center rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition"
+            aria-label="关闭"
+          >
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+        <div class="p-5 space-y-3">
+          <div class="text-xs text-slate-500">
+            仅对子管理员生效，总管理员的密码请通过平台配置修改。
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">当前密码</label>
+            <input
+              id="changePwdOld"
+              type="password"
+              class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+            />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">新密码</label>
+            <input
+              id="changePwdNew"
+              type="password"
+              class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+              placeholder="建议包含字母、数字和符号"
+            />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">确认新密码</label>
+            <input
+              id="changePwdNew2"
+              type="password"
+              class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+            />
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <button
+              id="btnChangePwdSave"
+              class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition"
+            >
+              <i data-lucide="check" class="h-4 w-4"></i>
+              确认修改
+            </button>
+            <div id="changePwdHint" class="ml-auto text-xs text-slate-500"></div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Pinyin (for 子管理员账号生成) -->
+    <script src="https://unpkg.com/pinyin-pro"></script>
+    <script>
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+      // --------------------
+      // Local "cloud" store (shared with index.html prototype)
+      // --------------------
+      const CLOUD = {
+        keys: {
+          users: "cledic_users_v1",
+          bindings: "cledic_bindings_v1",
+          devices: "cledic_devices_v1",
+          qrSecret: "cledic_qr_secret_v1",
+        },
+        load(key, fallback) {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw);
+          } catch {
+            return fallback;
+          }
+        },
+        save(key, value) {
+          localStorage.setItem(key, JSON.stringify(value));
+        },
+        listBindings() {
+          return this.load(this.keys.bindings, []);
+        },
+        listUsers() {
+          return this.load(this.keys.users, []);
+        },
+        listDeviceRegistry() {
+          return this.load(this.keys.devices, []);
+        },
+        maskPhone(phone) {
+          const p = String(phone || "").replace(/\s/g, "");
+          if (/^\d{11}$/.test(p)) return `${p.slice(0, 3)}****${p.slice(7)}`;
+          return p ? `${p.slice(0, 3)}****` : "-";
+        },
+        fmtDate(ts) {
+          const d = new Date(Number(ts) || Date.now());
+          const pad2 = (n) => String(n).padStart(2, "0");
+          return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+        },
+      };
+
+      // --------------------
+      // QR bind token (signed)
+      // --------------------
+      const encUtf8 = (s) => new TextEncoder().encode(String(s));
+      function base64UrlEncode(bytes) {
+        const bin = String.fromCharCode(...bytes);
+        const b64 = btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+        return b64;
+      }
+      async function getHmacKey() {
+        let sec = localStorage.getItem(CLOUD.keys.qrSecret);
+        if (!sec) {
+          sec = `sec_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+          localStorage.setItem(CLOUD.keys.qrSecret, sec);
+        }
+        if (!getHmacKey._p) {
+          getHmacKey._p = crypto.subtle.importKey("raw", encUtf8(sec), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+        }
+        return getHmacKey._p;
+      }
+      async function makeBindToken(sn) {
+        const payload = { sn: String(sn || "").trim(), iat: Date.now() };
+        const payloadB64 = base64UrlEncode(encUtf8(JSON.stringify(payload)));
+        const key = await getHmacKey();
+        const sig = await crypto.subtle.sign("HMAC", key, encUtf8(payloadB64));
+        const sigB64 = base64UrlEncode(new Uint8Array(sig));
+        return `${payloadB64}.${sigB64}`;
+      }
+
+      const pageMeta = {
+        factory: { title: "出厂配置", sub: "批量生成序列号与二维码" },
+        devices: { title: "设备管理", sub: "设备台账、状态、固件等信息" },
+        bindings: { title: "用户绑定列表", sub: "绑定关系与在线状态（绿色呼吸灯）" },
+        remote: { title: "远程控制", sub: "实时数据 + 控制（档位 / 正反转）" },
+        permissions: { title: "权限设定", sub: "子管理员账号与项目权限管理" },
+      };
+
+      const ADMIN_STORE = {
+        key: "cledic_admin_role_v1",
+        load() {
+          try {
+            const raw = localStorage.getItem(this.key);
+            if (!raw) return null;
+            return JSON.parse(raw);
+          } catch {
+            return null;
+          }
+        },
+      };
+
+      const ADMIN_ACCOUNTS = {
+        key: "cledic_admin_accounts_v1",
+        load() {
+          try {
+            const raw = localStorage.getItem(this.key);
+            if (!raw) return [];
+            const list = JSON.parse(raw);
+            return Array.isArray(list) ? list : [];
+          } catch {
+            return [];
+          }
+        },
+        save(list) {
+          try {
+            localStorage.setItem(this.key, JSON.stringify(list || []));
+          } catch {
+            // ignore
+          }
+        },
+        ensureDefaultSuper() {
+          const list = this.load();
+          if (list.some((a) => a.role === "super")) return;
+          list.push({
+            username: "admin",
+            name: "平台管理员",
+            role: "super",
+            password: "123456@",
+            project: "ALL",
+            enabled: true,
+          });
+          this.save(list);
+        },
+        slugifyNameToUsername(name) {
+          const raw = String(name || "").trim();
+          if (!raw) return `user${Date.now().toString(36)}`;
+
+          // 优先：中文转拼音（无声调、去空格）
+          try {
+            const hasCjk = /[\u4e00-\u9fff]/.test(raw);
+            if (hasCjk && window.pinyinPro?.pinyin) {
+              const py = window.pinyinPro
+                .pinyin(raw, { toneType: "none", type: "array" })
+                .join("");
+              const base = String(py || "")
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, "")
+                .replace(/[^a-z0-9]/g, "");
+              if (base) return base;
+            }
+          } catch {
+            // ignore and fallback
+          }
+
+          // fallback：仅保留字母数字
+          const base = raw
+            .toLowerCase()
+            .replace(/\s+/g, "")
+            .replace(/[^a-z0-9]/g, "");
+          return base || `user${Date.now().toString(36)}`;
+        },
+        createSubAdmin(displayName, project) {
+          const list = this.load();
+          const base = this.slugifyNameToUsername(displayName);
+          let i = 1;
+          let username = "";
+          do {
+            const suffix = String(i).padStart(2, "0");
+            username = `${base}${suffix}`;
+            i += 1;
+          } while (list.some((a) => a.username === username));
+          const acc = {
+            username,
+            name: displayName || username,
+            role: "project",
+            password: "123456@",
+            project: project || "",
+            enabled: true,
+          };
+          list.push(acc);
+          this.save(list);
+          return acc;
+        },
+        updatePassword(username, oldPwd, newPwd) {
+          const list = this.load();
+          const idx = list.findIndex((a) => a.username === username);
+          if (idx < 0) return { ok: false, reason: "not_found" };
+          const acc = list[idx];
+          if (acc.password !== oldPwd) return { ok: false, reason: "bad_old" };
+          list[idx] = { ...acc, password: newPwd };
+          this.save(list);
+          return { ok: true };
+        },
+      };
+
+      const SN_PREFIX_STORE = {
+        key: "cledic_sn_prefixes_v1",
+        load() {
+          try {
+            const raw = localStorage.getItem(this.key);
+            if (!raw) return [];
+            const list = JSON.parse(raw);
+            return Array.isArray(list) ? list : [];
+          } catch {
+            return [];
+          }
+        },
+        save(list) {
+          try {
+            localStorage.setItem(this.key, JSON.stringify(list || []));
+          } catch {
+            // ignore
+          }
+        },
+        upsert(item) {
+          const list = this.load();
+          let next = { ...item };
+          if (!next.id) {
+            next.id = `sn_${Date.now().toString(36)}_${Math.random().toString(16).slice(2, 6)}`;
+          }
+          const idx = list.findIndex((x) => x.id === next.id);
+          if (idx >= 0) list[idx] = { ...list[idx], ...next };
+          else list.unshift(next);
+          this.save(list);
+          return next;
+        },
+        remove(id) {
+          const list = this.load();
+          const next = list.filter((x) => x.id !== id);
+          this.save(next);
+        },
+        listForManager(username) {
+          const u = String(username || "").trim();
+          if (!u) return [];
+          return this.load().filter((x) => x.managerUsername === u);
+        },
+      };
+
+      const APP_VERSION = "v0.3.0";
+
+      function getAdminScope() {
+        const admin = ADMIN_STORE.load();
+        if (!admin) return { role: "none", project: "" };
+        if (admin.role === "super") return { role: "super", project: "" };
+        return { role: "project", project: admin.project || "" };
+      }
+
+      function listKnownProjects() {
+        const set = new Set();
+        // from device registry
+        (CLOUD.listDeviceRegistry() || []).forEach((d) => {
+          const p = String(d.project || "").trim();
+          if (p) set.add(p);
+        });
+        // from users
+        (CLOUD.listUsers() || []).forEach((u) => {
+          const p = String(u.project || "").trim();
+          if (p) set.add(p);
+        });
+        // from bindings
+        (CLOUD.listBindings() || []).forEach((b) => {
+          const p = String(b.project || "").trim();
+          if (p) set.add(p);
+        });
+        // defaults
+        ["农田项目", "工业排水项目", "北京二号站"].forEach((p) => set.add(p));
+        return [...set];
+      }
+
+      function getProjectAdminMap() {
+        const map = new Map();
+        ADMIN_ACCOUNTS.load()
+          .filter((a) => a.role === "project" && a.enabled !== false)
+          .forEach((a) => {
+            const p = String(a.project || "").trim();
+            if (!p) return;
+            if (!map.has(p)) map.set(p, []);
+            map.get(p).push(a);
+          });
+        return map;
+      }
+
+      function renderBindingFilters() {
+        const scope = getAdminScope();
+        const projSel = $("#bindingProjectFilter");
+        const admSel = $("#bindingAdminFilter");
+        if (!projSel || !admSel) return;
+
+        if (scope.role === "project") {
+          projSel.innerHTML = "";
+          const p = scope.project || "未分配";
+          const opt = document.createElement("option");
+          opt.value = p;
+          opt.textContent = p;
+          opt.selected = true;
+          projSel.appendChild(opt);
+          projSel.disabled = true;
+
+          admSel.innerHTML = "";
+          const opt2 = document.createElement("option");
+          opt2.value = "__ME__";
+          opt2.textContent = "当前子管理员";
+          opt2.selected = true;
+          admSel.appendChild(opt2);
+          admSel.disabled = true;
+          return;
+        }
+
+        projSel.disabled = false;
+        admSel.disabled = false;
+
+        // project options
+        const projVal = projSel.value || "__ALL__";
+        projSel.innerHTML = "";
+        const allP = document.createElement("option");
+        allP.value = "__ALL__";
+        allP.textContent = "全部项目";
+        projSel.appendChild(allP);
+        listKnownProjects().forEach((p) => {
+          const opt = document.createElement("option");
+          opt.value = p;
+          opt.textContent = p;
+          projSel.appendChild(opt);
+        });
+        projSel.value = projVal;
+
+        // admin options
+        const adminVal = admSel.value || "__ALL__";
+        admSel.innerHTML = "";
+        const allA = document.createElement("option");
+        allA.value = "__ALL__";
+        allA.textContent = "全部子管理员";
+        admSel.appendChild(allA);
+        ADMIN_ACCOUNTS.load()
+          .filter((a) => a.role === "project")
+          .forEach((a) => {
+            const opt = document.createElement("option");
+            opt.value = a.username;
+            opt.textContent = `${a.username}（${a.name || "-"}）`;
+            admSel.appendChild(opt);
+          });
+        admSel.value = adminVal;
+      }
+
+      function renderDeviceProjectOptions(selected) {
+        const scope = getAdminScope();
+        const sel = $("#deviceProjectFilter");
+        if (!sel) return;
+        sel.innerHTML = "";
+
+        if (scope.role === "project") {
+          const p = scope.project || "未分配";
+          const opt = document.createElement("option");
+          opt.value = p;
+          opt.textContent = p;
+          opt.selected = true;
+          sel.appendChild(opt);
+          sel.disabled = true;
+          return;
+        }
+
+        sel.disabled = false;
+        const all = document.createElement("option");
+        all.value = "__ALL__";
+        all.textContent = "全部项目";
+        sel.appendChild(all);
+        listKnownProjects().forEach((p) => {
+          const opt = document.createElement("option");
+          opt.value = p;
+          opt.textContent = p;
+          sel.appendChild(opt);
+        });
+        sel.value = selected || "__ALL__";
+      }
+
+      function renderDashboard(rows) {
+        const scope = getAdminScope();
+        const users = CLOUD.listUsers() || [];
+        const project = scope.role === "project" ? scope.project : $("#deviceProjectFilter")?.value;
+
+        const inScope = (r) => {
+          if (scope.role === "project") return String(r.project || "") === String(scope.project || "");
+          if (project && project !== "__ALL__") return String(r.project || "") === String(project);
+          return true;
+        };
+
+        const scopedDevices = (rows || []).filter(inScope);
+        const total = scopedDevices.length;
+        const online = scopedDevices.filter((d) => d.status === "running" || d.status === "online" || d.status === "stopped" || d.status === "fault").length;
+        const offline = scopedDevices.filter((d) => d.status === "offline").length;
+        const onlineCount = total - offline;
+        const rate = total ? Math.round((onlineCount / total) * 100) : 0;
+
+        const scopedUsers =
+          scope.role === "project"
+            ? users.filter((u) => String(u.project || "") === String(scope.project || ""))
+            : project && project !== "__ALL__"
+            ? users.filter((u) => String(u.project || "") === String(project))
+            : users;
+
+        const setText = (id, v) => {
+          const el = $(id);
+          if (el) el.textContent = String(v);
+        };
+        setText("#dashDevTotal", total);
+        setText("#dashOnline", onlineCount);
+        setText("#dashOnlineRate", rate);
+        setText("#dashUserTotal", scopedUsers.length);
+      }
+
+      // --------------------
+      // 静态数据（写死在 JS）
+      // --------------------
+      const deviceRows = [
+        { sn: "SN10001", model: "CLEDIC-PUMP-4G", place: "1号工业园 · 泵房A", fw: "v1.2.4", status: "在线" },
+        { sn: "SN10002", model: "CLEDIC-PUMP-4G", place: "农田灌溉 · 2#机井", fw: "v1.2.1", status: "离线" },
+        { sn: "SN10003", model: "CLEDIC-PUMP-WIFI", place: "市政排水 · 站点3", fw: "v1.1.9", status: "在线" },
+        { sn: "SN10004", model: "CLEDIC-PUMP-4G", place: "仓储园区 · 生活泵", fw: "v1.2.4", status: "告警" },
+      ];
+
+      const bindingRows = [
+        {
+          avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=faces",
+          phone: "138****8888",
+          sn: "SN10001",
+          time: "2024-05-20",
+          online: true,
+        },
+        {
+          avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces",
+          phone: "139****6666",
+          sn: "SN10003",
+          time: "2024-05-20",
+          online: true,
+        },
+        {
+          avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces",
+          phone: "137****1234",
+          sn: "SN10002",
+          time: "2024-05-20",
+          online: false,
+        },
+      ];
+
+      let remoteDevices = [];
+
+      function findBindingBySn(sn) {
+        const code = String(sn || "").trim();
+        if (!code) return null;
+        const bindings = CLOUD.listBindings() || [];
+        return (
+          bindings.find((b) => String(b.code || "").trim() === code) ||
+          bindings.find((b) => String(b.sn || "").trim() === code) ||
+          null
+        );
+      }
+
+      function getBoundUserForCode(code) {
+        const hit = findBindingBySn(code);
+        if (!hit) return null;
+        const p = String(hit.phone || "").replace(/\s/g, "");
+        return p || null;
+      }
+
+      function getBoundPhoneForSn(sn) {
+        const hit = findBindingBySn(sn);
+        const p = String(hit?.phone || "").replace(/\s/g, "");
+        return p || "";
+      }
+
+      function upsertBindingForSn(sn, phone) {
+        const code = String(sn || "").trim();
+        const p = String(phone || "").replace(/\s/g, "");
+        const bindings = CLOUD.listBindings() || [];
+        const idx = bindings.findIndex((b) => String(b.code || b.sn || "").trim() === code);
+        if (!p) {
+          // remove binding
+          if (idx >= 0) {
+            const next = bindings.filter((_, i) => i !== idx);
+            CLOUD.save(CLOUD.keys.bindings, next);
+          }
+          return;
+        }
+        const maskedPhone = CLOUD.maskPhone(p);
+        const now = Date.now();
+        const cur = idx >= 0 ? bindings[idx] : {};
+        const nextRow = {
+          ...cur,
+          phone: p,
+          maskedPhone,
+          code,
+          sn: code,
+          boundAt: cur.boundAt || now,
+          online: typeof cur.online === "boolean" ? cur.online : true,
+        };
+        if (idx >= 0) bindings[idx] = nextRow;
+        else bindings.unshift(nextRow);
+        CLOUD.save(CLOUD.keys.bindings, bindings);
+      }
+
+      function statusToRemoteState(status) {
+        if (status === "running") return "运行中";
+        if (status === "stopped") return "停止";
+        if (status === "offline") return "离线";
+        if (status === "fault") return "告警";
+        return "停止";
+      }
+
+      function fromCloudRegistryRow(row) {
+        const user = getBoundUserForCode(row.code) || "-";
+        return {
+          id: `r_${row.code}`,
+          sn: row.code,
+          project: row.project || "",
+          place: row.place || "-",
+          user,
+          state: statusToRemoteState(row.status),
+          lastSeen: row.lastSync || "-",
+          metrics: {
+            p: Number(row.metrics?.p ?? 0),
+            q: Number(row.metrics?.q ?? 0),
+            i: Number(row.metrics?.i ?? 0),
+            v: Number(row.metrics?.v ?? 0),
+            wl: Number(row.metrics?.wlPct ?? row.metrics?.wl ?? 0),
+            temp: Number(row.metrics?.temp ?? 0),
+            rpm: Number(row.metrics?.rpm ?? 0),
+            head: Number(row.metrics?.head ?? 0),
+            gear: Number(row.metrics?.gear ?? 3),
+            dir: row.metrics?.dir || "forward",
+          },
+        };
+      }
+
+      function refreshRemoteDevicesFromCloud() {
+        const scope = getAdminScope();
+        const selectedProject = $("#deviceProjectFilter")?.value || "__ALL__";
+        const adminInfo = ADMIN_STORE.load();
+        const assignedPrefixes =
+          adminInfo && adminInfo.role === "project" && adminInfo.username
+            ? (SN_PREFIX_STORE.listForManager(adminInfo.username) || [])
+                .map((x) => String(x.prefix || "").trim())
+                .filter(Boolean)
+            : [];
+        const reg = CLOUD.listDeviceRegistry();
+        remoteDevices = (reg || [])
+          .map(fromCloudRegistryRow)
+          .filter((d) => {
+            const project = String(d.project || "").trim();
+            if (scope.role === "project") {
+              if (project && project === String(scope.project || "")) return true;
+              // 兼容：项目字段为空时，按“已分配 SN 前缀”判定归属
+              if (!project && assignedPrefixes.length) {
+                return assignedPrefixes.some((p) => p && String(d.sn || "").startsWith(p));
+              }
+              return false;
+            }
+            if (selectedProject && selectedProject !== "__ALL__") return project === String(selectedProject);
+            return true;
+          });
+        if (remoteDevices.length === 0) return;
+        if (!remoteDevices.some((d) => d.id === RemoteState.currentId)) {
+          RemoteState.currentId = remoteDevices[0].id;
+        }
+      }
+
+      function upsertDeviceRegistry(row) {
+        const reg = CLOUD.listDeviceRegistry();
+        const idx = reg.findIndex((x) => x.code === row.code);
+        const now = Date.now();
+        const next = {
+          code: String(row.code || "").trim(),
+          name: row.name || row.code,
+          model: row.model || "-",
+          place: row.place || "-",
+          fw: row.fw || "-",
+          status: row.status || "stopped",
+          metrics: row.metrics || {
+            p: 0, q: 0, i: 0, v: 0,
+            wlPct: 40, wlM: 1.6,
+            rpm: 0, head: 0,
+            vIn: 0, vOut: 0, iOut: 0,
+            temp: 26,
+            runSec: 0,
+            totalSec: 0,
+            gear: 3,
+            dir: "forward"
+          },
+          lastSync: row.lastSync || "-",
+          updatedAt: now,
+          createdAt: idx >= 0 ? reg[idx].createdAt : now,
+        };
+        if (idx >= 0) reg[idx] = { ...reg[idx], ...next };
+        else reg.unshift(next);
+        CLOUD.save(CLOUD.keys.devices, reg);
+        return next;
+      }
+
+      const remoteCmdPresets = [
+        { label: "@启动", value: "@启动" },
+        { label: "@停止", value: "@停止" },
+        { label: "@拉取状态", value: "@拉取状态" },
+        { label: "@复位告警", value: "@复位告警" },
+        { label: "@切换档位 3", value: "@切换档位 3" },
+        { label: "@切换档位 5", value: "@切换档位 5" },
+      ];
+
+      // 出厂配置生成结果（运行时数据，仍然是前端数组）
+      const factoryRows = [];
+
+      // --------------------
+      // 视图切换（classList）
+      // --------------------
+      function setView(view) {
+        $$(".view").forEach((el) => el.classList.toggle("hidden", el.dataset.view !== view));
+        $$(".nav-item").forEach((btn) => {
+          const active = btn.dataset.view === view;
+          btn.classList.toggle("bg-slate-800/60", active);
+          btn.classList.toggle("border", active);
+          btn.classList.toggle("border-slate-700/60", active);
+        });
+        $("#pageTitle").textContent = pageMeta[view]?.title ?? "页面";
+        $("#pageSubtitle").textContent = pageMeta[view]?.sub ?? "";
+
+        // refresh dynamic views (localStorage shared with user side)
+        if (view === "bindings") renderBindings($("#bindingSearch")?.value || "");
+        if (view === "remote") {
+          renderRemoteDeviceList($("#remoteSearch")?.value || "");
+          renderRemote();
+        }
+      }
+
+      // --------------------
+      // 出厂配置：生成/渲染
+      // --------------------
+      function parseSn(startSn) {
+        const m = String(startSn || "").trim().match(/^(.+?)(\d+)$/);
+        if (!m) return null;
+        return { prefix: m[1], num: Number(m[2]), width: m[2].length };
+      }
+
+      function qrImgUrlForBindToken(token) {
+        const payloadUrl = `index.html?bindToken=${encodeURIComponent(token)}`;
+        return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(payloadUrl)}`;
+      }
+
+      function renderFactory() {
+        const body = $("#factoryTableBody");
+        body.innerHTML = "";
+        $("#factoryEmpty").classList.toggle("hidden", factoryRows.length !== 0);
+        $("#factoryHint").textContent = factoryRows.length ? `共 ${factoryRows.length} 条` : "";
+
+        factoryRows.forEach((r, idx) => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100 last:border-b-0";
+          tr.innerHTML = `
+            <td class="py-3">
+              <label class="inline-flex items-center gap-2">
+                <input type="checkbox" class="h-4 w-4 rounded border-slate-300" data-fx-select="${idx}" ${r.selected ? "checked" : ""} />
+                <span class="font-semibold text-slate-900">${r.sn}</span>
+              </label>
+              <div class="text-xs text-slate-500">批次：${r.batch}</div>
+            </td>
+            <td class="py-3">
+              <div class="flex items-center gap-3">
+                <img class="h-14 w-14 rounded-xl border border-slate-200 bg-white" alt="二维码" src="${r.qrImg || ""}" />
+                <div class="text-xs text-slate-500">
+                  <div class="font-mono">${r.sn}</div>
+                  <div>size=150x150</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3">
+              <span class="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                r.printed ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-50 text-slate-700 border border-slate-200"
+              }">
+                <span class="h-2 w-2 rounded-full ${r.printed ? "bg-emerald-500" : "bg-slate-400"}"></span>
+                ${r.printed ? "已打印" : "未打印"}
+              </span>
+            </td>
+            <td class="py-3 text-right">
+              <div class="inline-flex items-center gap-2">
+                <button data-act="toggle" data-idx="${idx}" class="h-9 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition">
+                  ${r.printed ? "标记未打印" : "标记已打印"}
+                </button>
+                <button data-act="copy" data-idx="${idx}" class="h-9 px-3 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition">
+                  复制 SN
+                </button>
+              </div>
+            </td>
+          `;
+          body.appendChild(tr);
+        });
+
+        $$("[data-fx-select]", body).forEach((cb) => {
+          cb.addEventListener("change", () => {
+            const idx = Number(cb.getAttribute("data-fx-select"));
+            if (!factoryRows[idx]) return;
+            factoryRows[idx].selected = cb.checked;
+          });
+        });
+
+        $$("button[data-act]", body).forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const idx = Number(btn.dataset.idx);
+            const act = btn.dataset.act;
+            const row = factoryRows[idx];
+            if (!row) return;
+
+            if (act === "toggle") {
+              row.printed = !row.printed;
+              renderFactory();
+              showToast("打印状态已更新", `${row.sn} → ${row.printed ? "已打印" : "未打印"}`);
+              return;
+            }
+            if (act === "copy") {
+              try {
+                await navigator.clipboard.writeText(row.sn);
+                showToast("已复制", `SN：${row.sn}`);
+              } catch {
+                showToast("复制失败", "浏览器不允许写入剪贴板（可手动复制）。");
+              }
+            }
+          });
+        });
+      }
+
+      function initFactorySnPrefixSelect() {
+        const sel = $("#factorySnPrefixSelect");
+        if (!sel) return;
+        const adminInfo = ADMIN_STORE.load();
+        const all = SN_PREFIX_STORE.load();
+        let list = all;
+        if (adminInfo && adminInfo.role === "project" && adminInfo.username) {
+          list = all.filter((x) => x.managerUsername === adminInfo.username);
+        }
+        const current = sel.value || "__CUSTOM__";
+        sel.innerHTML = "";
+        const optCustom = document.createElement("option");
+        optCustom.value = "__CUSTOM__";
+        optCustom.textContent = "手动填写起始 SN（不使用已分配前缀）";
+        sel.appendChild(optCustom);
+        list.forEach((r) => {
+          const opt = document.createElement("option");
+          opt.value = r.id;
+          // 下拉选项尽量短，避免占位过长；完整信息放到 title 里
+          const short = [];
+          if (r.prefix) short.push(r.prefix);
+          const mgr = r.managerName || r.managerUsername;
+          if (mgr) short.push(mgr);
+          opt.textContent = short.join(" · ") || r.id;
+
+          const full = [];
+          if (r.prefix) full.push(r.prefix);
+          if (r.project) full.push(`项目：${r.project}`);
+          if (r.managerName || r.managerUsername) full.push(`子管理：${r.managerName || r.managerUsername}`);
+          if (r.industry) full.push(`行业：${r.industry === "agri" ? "农业" : r.industry === "ind" ? "工业" : r.industry}`);
+          if (r.modelCode) full.push(`型号：${r.modelCode}`);
+          opt.title = full.join(" · ");
+          sel.appendChild(opt);
+        });
+        sel.value = current;
+
+        sel.onchange = () => {
+          const v = sel.value;
+          if (!v || v === "__CUSTOM__") return;
+          const allList = SN_PREFIX_STORE.load();
+          const rec = allList.find((x) => x.id === v);
+          if (!rec || !rec.prefix) return;
+          const base = String(rec.prefix).trim();
+          const input = $("#factoryStartSn");
+          if (!input) return;
+          const start = `${base}${base.endsWith("-") ? "0001" : "0001"}`;
+          input.value = start;
+          const hint = $("#factoryHint");
+          if (hint) {
+            hint.textContent = `已选择前缀：${base}，将从 ${start} 开始生成。`;
+          }
+        };
+      }
+
+      function getSelectedSnPrefixRecord() {
+        const sel = $("#factorySnPrefixSelect");
+        if (!sel) return null;
+        const v = sel.value;
+        if (!v || v === "__CUSTOM__") return null;
+        const list = SN_PREFIX_STORE.load();
+        return list.find((x) => x.id === v) || null;
+      }
+
+      function renderFactoryContinueList(filter = "") {
+        const body = $("#factoryContinueTableBody");
+        if (!body) return;
+        body.innerHTML = "";
+        const q = String(filter || "").trim().toLowerCase();
+        const scope = getAdminScope();
+        const reg = CLOUD.listDeviceRegistry() || [];
+        const rows = reg
+          .map((r) => ({
+            sn: r.code,
+            model: r.model || "-",
+            place: r.place || "-",
+            project: r.project || "",
+          }))
+          .filter((r) => {
+            if (scope.role === "project") return String(r.project || "") === String(scope.project || "");
+            return true;
+          })
+          .filter((r) => {
+            if (!q) return true;
+            return [r.sn, r.model, r.place].some((x) => String(x).toLowerCase().includes(q));
+          })
+          .slice(0, 200);
+
+        if (!rows.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="4" class="py-6 px-3 text-center text-slate-500 text-sm">暂无设备记录（请先在“新建设备”里保存设备）。</td>`;
+          body.appendChild(tr);
+          return;
+        }
+
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100 last:border-b-0";
+          tr.innerHTML = `
+            <td class="py-3 px-3">
+              <div class="font-semibold text-slate-900">${r.sn || "-"}</div>
+              <div class="text-[11px] text-slate-500">${r.project ? `项目：${r.project}` : ""}</div>
+            </td>
+            <td class="py-3 px-3">${r.model}</td>
+            <td class="py-3 px-3">${r.place}</td>
+            <td class="py-3 px-3 text-right">
+              <button
+                class="h-9 px-3 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition"
+                data-fx-continue="${encodeURIComponent(r.sn || "")}"
+              >
+                以此继续
+              </button>
+            </td>
+          `;
+          body.appendChild(tr);
+        });
+
+        $$("[data-fx-continue]", body).forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const sn = decodeURIComponent(btn.getAttribute("data-fx-continue") || "");
+            if (!sn) return;
+            const parsed = parseSn(sn);
+            if (!parsed) {
+              showToast("无法继续", "该 SN 不符合“前缀 + 数字”格式，无法自动计算下一位。");
+              return;
+            }
+            const nextSn = `${parsed.prefix}${String(parsed.num + 1).padStart(parsed.width, "0")}`;
+            const input = $("#factoryStartSn");
+            if (input) input.value = nextSn;
+            const dlg = $("#dlgFactoryContinue");
+            if (dlg?.open) dlg.close();
+            showToast("已设置起始序列号", `将从 ${nextSn} 开始生成。`);
+          });
+        });
+      }
+
+      function generateFactory() {
+        const start = $("#factoryStartSn").value.trim();
+        const count = clamp(Number($("#factoryCount").value || 0), 1, 200);
+        const parsed = parseSn(start);
+        if (!parsed) {
+          showToast("参数格式不正确", "起始序列号请使用类似 SN10001 的格式。");
+          return;
+        }
+        const selPrefix = getSelectedSnPrefixRecord();
+        const batch = `BATCH-${new Date().toISOString().slice(0, 10)}`;
+        (async () => {
+          for (let i = 0; i < count; i++) {
+            const sn = `${parsed.prefix}${String(parsed.num + i).padStart(parsed.width, "0")}`;
+            const token = await makeBindToken(sn);
+            const qrImg = qrImgUrlForBindToken(token);
+            factoryRows.unshift({ sn, batch, printed: false, selected: false, token, qrImg });
+            // 同步写入设备注册表，便于“从已有设备 SN 继续”直接可选
+            upsertDeviceRegistry({
+              code: sn,
+              name: sn,
+              model: selPrefix?.modelCode || "-",
+              place: "-",
+              fw: "-",
+              status: "stopped",
+              project: selPrefix?.project || "",
+            });
+          }
+          renderFactory();
+          initFactorySnPrefixSelect();
+          showToast("生成完成", `已生成 ${count} 条记录。`);
+        })();
+      }
+
+      function exportSelectedFactoryPrint() {
+        const rows = factoryRows.filter((r) => r.selected);
+        if (rows.length === 0) {
+          showToast("未选择", "请先勾选要导出的 SN。");
+          return;
+        }
+        const header = ["SN", "批次", "二维码链接", "打印状态"];
+        const csvRows = [header.join(",")].concat(
+          rows.map((r) =>
+            [
+              r.sn,
+              r.batch,
+              r.qrImg || "",
+              r.printed ? "已打印" : "未打印",
+            ]
+              .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+              .join(",")
+          )
+        );
+        const csvContent = csvRows.join("\r\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `cledic_qr_${Date.now()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("导出完成", `已导出 ${rows.length} 条记录到 Excel（CSV）。`);
+      }
+
+      // --------------------
+      // 设备管理：渲染/搜索
+      // --------------------
+      function renderDeviceUserOptions(rows) {
+        const sel = $("#deviceUserFilter");
+        if (!sel) return;
+        const current = sel.value || "__ALL__";
+        sel.innerHTML = "";
+        const all = document.createElement("option");
+        all.value = "__ALL__";
+        all.textContent = "全部用户";
+        sel.appendChild(all);
+
+        const map = new Map(); // key -> { label, count }
+        (rows || []).forEach((r) => {
+          const key = String(r.boundUserKey || "").trim();
+          const label = String(r.boundUserLabel || "").trim();
+          if (!key) return;
+          const cur = map.get(key) || { label: label || key, count: 0 };
+          cur.count += 1;
+          if (label) cur.label = label;
+          map.set(key, cur);
+        });
+
+        [...map.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .forEach(([key, v]) => {
+          const opt = document.createElement("option");
+          opt.value = key;
+          opt.textContent = `${v.label}（${v.count}台）`;
+          sel.appendChild(opt);
+        });
+        sel.value = current;
+      }
+
+      function renderDeviceDashboardFromRows(rows) {
+        const total = (rows || []).length;
+        // 口径：仅“运行中”算在线设备；停止/离线/告警都不计入“在线设备”
+        const online = (rows || []).filter((d) => String(d.statusRaw || "") === "running").length;
+        const rate = total ? Math.round((online / total) * 100) : 0;
+        const setText = (id, v) => {
+          const el = $(id);
+          if (el) el.textContent = String(v);
+        };
+        setText("#dashDevTotal", total);
+        setText("#dashOnline", online);
+        setText("#dashOnlineRate", rate);
+        // 用户总数：按绑定手机号去重（更贴近“有设备的用户”）
+        const uSet = new Set((rows || []).map((r) => r.boundUserKey).filter(Boolean));
+        setText("#dashUserTotal", uSet.size);
+      }
+
+      function buildDeviceRowsFromCloud() {
+        const scope = getAdminScope();
+        const selectedProject = $("#deviceProjectFilter")?.value || "__ALL__";
+        const reg = CLOUD.listDeviceRegistry() || [];
+        const bindings = CLOUD.listBindings() || [];
+        const users = CLOUD.listUsers() || [];
+        const adminInfo = ADMIN_STORE.load();
+        const assignedPrefixes =
+          adminInfo && adminInfo.role === "project" && adminInfo.username
+            ? (SN_PREFIX_STORE.listForManager(adminInfo.username) || [])
+                .map((x) => String(x.prefix || "").trim())
+                .filter(Boolean)
+            : [];
+
+        // 绑定里可能有 SN，但设备注册表没建 —— 用占位设备补齐
+        const snSet = new Set();
+        reg.forEach((r) => snSet.add(String(r.code || "").trim()));
+        bindings.forEach((b) => snSet.add(String(b.code || b.sn || "").trim()));
+
+        const bySn = new Map();
+        reg.forEach((r) => {
+          const sn = String(r.code || "").trim();
+          if (!sn) return;
+          bySn.set(sn, r);
+        });
+
+        const getProjectForSn = (sn) => {
+          const row = bySn.get(sn);
+          if (row?.project) return String(row.project).trim();
+          const bind = bindings.find((b) => String(b.code || b.sn || "").trim() === sn);
+          if (bind?.project) return String(bind.project).trim();
+          const u = users.find((x) => x.userId === bind?.userId);
+          if (u?.project) return String(u.project).trim();
+          return "";
+        };
+
+        const inScope = (project) => {
+          if (scope.role === "project") return String(project || "") === String(scope.project || "");
+          if (selectedProject && selectedProject !== "__ALL__") return String(project || "") === String(selectedProject);
+          return true;
+        };
+
+        const rows = [];
+        [...snSet]
+          .filter(Boolean)
+          .forEach((sn) => {
+            const row = bySn.get(sn);
+            const project = getProjectForSn(sn);
+            if (!inScope(project)) {
+              // 如果项目为空，允许通过“已分配 SN 前缀”来归属到子管理员（避免有绑定但无 project 导致看不到）
+              if (scope.role === "project" && !String(project || "").trim() && assignedPrefixes.length) {
+                const ok = assignedPrefixes.some((p) => p && String(sn).startsWith(p));
+                if (!ok) return;
+              } else {
+                return;
+              }
+            }
+            const statusRaw = row?.status || "stopped";
+            const statusLabel =
+              statusRaw === "running" ? "运行中"
+              : statusRaw === "offline" ? "离线"
+              : statusRaw === "fault" ? "告警"
+              : "停止";
+            rows.push({
+              sn,
+              model: row?.model || "-",
+              place: row?.place || "-",
+              fw: row?.fw || "-",
+              project,
+              statusRaw,
+              status: statusLabel,
+              boundUserLabel: getBoundUserForCode(sn) || "-",
+              boundUserKey: getBoundPhoneForSn(sn) || "",
+            });
+          });
+        return rows;
+      }
+
+      function renderDevices(filter = "") {
+        const q = String(filter || "").trim().toLowerCase();
+        const userSel = $("#deviceUserFilter")?.value || "__ALL__";
+        const statusSel = $("#deviceStatusFilter")?.value || "__ALL__";
+        const onlyProblem = Boolean($("#deviceOnlyProblem")?.checked);
+
+        const allRows = buildDeviceRowsFromCloud();
+        renderDeviceUserOptions(allRows);
+        renderDeviceDashboardFromRows(allRows);
+
+        const rows = allRows
+          .filter((r) => {
+            if (userSel !== "__ALL__") return String(r.boundUserKey || "") === String(userSel);
+            return true;
+          })
+          .filter((r) => {
+            if (statusSel !== "__ALL__") return String(r.statusRaw || "") === String(statusSel);
+            return true;
+          })
+          .filter((r) => {
+            if (!onlyProblem) return true;
+            return r.statusRaw === "fault" || r.statusRaw === "offline";
+          })
+          .filter((r) => {
+            if (!q) return true;
+            return [r.sn, r.boundUser, r.model, r.place, r.fw, r.status].some((x) => String(x).toLowerCase().includes(q));
+          });
+
+        // 设备页统计口径改为 renderDeviceDashboardFromRows(allRows)，避免旧统计覆盖在线率
+
+        const body = $("#deviceTableBody");
+        body.innerHTML = "";
+        rows.forEach((r) => {
+          const pill =
+            r.statusRaw === "running"
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : r.statusRaw === "offline"
+              ? "bg-slate-50 text-slate-700 border-slate-200"
+              : r.statusRaw === "fault"
+              ? "bg-rose-50 text-rose-700 border-rose-200"
+              : "bg-slate-50 text-slate-700 border-slate-200";
+          const dot =
+            r.statusRaw === "running"
+              ? "bg-emerald-500"
+              : r.statusRaw === "offline"
+              ? "bg-slate-400"
+              : r.statusRaw === "fault"
+              ? "bg-rose-500"
+              : "bg-slate-400";
+
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100 last:border-b-0";
+          tr.innerHTML = `
+            <td class="py-3">
+              <input type="checkbox" class="h-4 w-4 rounded border-slate-300" data-dev-select="${r.sn}" />
+            </td>
+            <td class="py-3">
+              <button class="font-semibold text-slate-900 hover:underline" data-open-remote="${r.sn}">${r.sn}</button>
+            </td>
+            <td class="py-3 font-mono text-slate-700">${r.boundUserLabel || "-"}</td>
+            <td class="py-3">${r.model}</td>
+            <td class="py-3">${r.place}</td>
+            <td class="py-3 font-mono text-slate-700">${r.fw}</td>
+            <td class="py-3">
+              <span class="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-1 rounded-full border ${pill}">
+                <span class="h-2 w-2 rounded-full ${dot}"></span>
+                ${r.status || "-"}
+              </span>
+            </td>
+            <td class="py-3 text-right">
+              <div class="inline-flex items-center gap-2">
+                <button class="h-9 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition" data-dev-edit="${r.sn}">
+                  编辑
+                </button>
+                <button class="h-9 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition" data-open-remote="${r.sn}">
+                  打开镜像
+                </button>
+                <button class="h-9 px-3 rounded-xl bg-white border border-rose-200 text-rose-700 text-sm font-semibold hover:bg-rose-50 transition" data-dev-del="${r.sn}">
+                  删除
+                </button>
+              </div>
+            </td>
+          `;
+          body.appendChild(tr);
+        });
+
+        // selection
+        $$("[data-dev-select]", body).forEach((cb) => {
+          cb.addEventListener("change", () => {
+            const sn = cb.getAttribute("data-dev-select");
+            if (!sn) return;
+            if (cb.checked) DeviceUi.selected.add(sn);
+            else DeviceUi.selected.delete(sn);
+            syncDeviceSelectAll();
+          });
+          cb.checked = DeviceUi.selected.has(cb.getAttribute("data-dev-select"));
+        });
+        syncDeviceSelectAll();
+
+        $$("[data-open-remote]", body).forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const sn = btn.getAttribute("data-open-remote");
+            setView("remote");
+            selectRemoteBySn(sn);
+            showToast("已切换到镜像", `设备：${sn}`);
+          });
+        });
+
+        $$("[data-dev-del]", body).forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const sn = btn.getAttribute("data-dev-del");
+            if (!sn) return;
+            const ok = window.confirm(`确定删除设备：${sn}？\n将同时删除绑定关系。`);
+            if (!ok) return;
+            deleteDeviceBySn(sn);
+            showToast("已删除", `设备：${sn}`);
+            renderDevices($("#deviceSearch")?.value || "");
+          });
+        });
+
+        $$("[data-dev-edit]", body).forEach((btn) => {
+          btn.addEventListener("click", () => openDeviceEdit(btn.getAttribute("data-dev-edit")));
+        });
+      }
+
+      // --------------------
+      // 用户绑定：渲染
+      // --------------------
+      function renderBindings(filter = "") {
+        const body = $("#bindingTableBody");
+        body.innerHTML = "";
+        const cloudBindings = CLOUD.listBindings();
+        const users = CLOUD.listUsers();
+        const scope = getAdminScope();
+        const projSel = $("#bindingProjectFilter")?.value || "__ALL__";
+        const admSel = $("#bindingAdminFilter")?.value || "__ALL__";
+        const projectAdmins = getProjectAdminMap();
+        const q = String(filter || "").trim().toLowerCase();
+        const rows = (cloudBindings.length
+          ? cloudBindings
+          : bindingRows.map((r) => ({
+              avatar: r.avatar,
+              phone: r.phone,
+              maskedPhone: r.phone,
+              userId: "u",
+              code: r.sn,
+              sn: r.sn,
+              name: r.sn,
+              boundAt: new Date(r.time).getTime(),
+              online: r.online,
+            }))).filter((r) => {
+          // 数据隔离：子管理员只能看自己项目的绑定
+          const u = users.find((x) => x.userId === r.userId);
+          const project = String(r.project || u?.project || "").trim();
+          if (scope.role === "project") return project && project === String(scope.project || "");
+          if (projSel !== "__ALL__" && project !== projSel) return false;
+
+          if (admSel !== "__ALL__") {
+            const admins = projectAdmins.get(project) || [];
+            const hit = admins.some((a) => a.username === admSel);
+            if (!hit) return false;
+          }
+
+          if (!q) return true;
+          return [r.userId, r.phone, r.maskedPhone, r.code, r.sn, r.name].some((x) => String(x || "").toLowerCase().includes(q));
+        });
+
+        rows.forEach((r) => {
+          const u = users.find((x) => x.userId === r.userId);
+          const phone = r.maskedPhone || CLOUD.maskPhone(r.phone);
+          const code = r.code || r.sn;
+          const timeText = r.boundAt ? CLOUD.fmtDate(r.boundAt) : r.time || "-";
+          const online = typeof r.online === "boolean" ? r.online : true;
+          const project = String(r.project || u?.project || "-").trim() || "-";
+          const admins = projectAdmins.get(project) || [];
+          const adminText = admins.length
+            ? `${admins[0].username}${admins.length > 1 ? ` +${admins.length - 1}` : ""}`
+            : "-";
+
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100 last:border-b-0";
+          tr.innerHTML = `
+            <td class="py-3">
+              <div class="flex items-center gap-3">
+                <img class="h-10 w-10 rounded-full border border-slate-200 object-cover" src="${
+                  r.avatar ||
+                  u?.avatar ||
+                  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=faces"
+                }" alt="头像" />
+                <div>
+                  <div class="font-semibold text-slate-900">微信用户</div>
+                  <div class="text-xs text-slate-500">UID：${r.userId || "-"} · 项目：${project}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 font-mono text-slate-700">${phone}</td>
+            <td class="py-3 text-sm text-slate-700">${project}</td>
+            <td class="py-3 text-sm text-slate-700">${adminText}</td>
+            <td class="py-3">
+              <div class="font-semibold text-slate-900">${code}</div>
+              <div class="text-xs text-slate-500">设备：${r.name || code}</div>
+            </td>
+            <td class="py-3 font-mono text-slate-700">${timeText}</td>
+            <td class="py-3">
+              <div class="inline-flex items-center gap-2">
+                <span class="h-2.5 w-2.5 rounded-full ${online ? "bg-emerald-500 breath-dot" : "bg-slate-400"}"></span>
+                <span class="text-sm ${online ? "text-emerald-700 font-semibold" : "text-slate-600"}">${online ? "在线" : "离线"}</span>
+              </div>
+            </td>
+            <td class="py-3 text-right">
+              <button class="h-9 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition" data-bind-open="${code}">
+                查看镜像
+              </button>
+            </td>
+          `;
+          body.appendChild(tr);
+        });
+
+        $$("[data-bind-open]", body).forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const sn = btn.getAttribute("data-bind-open");
+            setView("remote");
+            selectRemoteBySn(sn);
+          });
+        });
+      }
+
+      // --------------------
+      // 远程控制镜像：状态/命令/渲染
+      // --------------------
+      const RemoteState = {
+        currentId: null,
+        log: [],
+      };
+
+      function statePillClass(state) {
+        if (state === "运行中") return "bg-emerald-600";
+        if (state === "离线") return "bg-slate-500";
+        if (state === "告警") return "bg-rose-600";
+        return "bg-slate-900";
+      }
+
+      function getRemoteCurrent() {
+        refreshRemoteDevicesFromCloud();
+        return remoteDevices.find((d) => d.id === RemoteState.currentId) || remoteDevices[0];
+      }
+
+      function pushRemoteLog(kind, text) {
+        RemoteState.log.unshift({ at: new Date().toLocaleString(), kind, text });
+        RemoteState.log = RemoteState.log.slice(0, 30);
+        renderRemoteLog();
+      }
+
+      function renderRemoteLog() {
+        const box = $("#remoteLog");
+        box.innerHTML = "";
+        if (RemoteState.log.length === 0) {
+          const div = document.createElement("div");
+          div.className = "text-sm text-slate-500";
+          div.textContent = "暂无记录。点击启动/停止/应用控制会写入。";
+          box.appendChild(div);
+          return;
+        }
+        RemoteState.log.forEach((r) => {
+          const item = document.createElement("div");
+          item.className = "py-1.5 border-b border-slate-200/70 last:border-b-0";
+          item.innerHTML = `
+            <div class="text-xs text-slate-500">${r.at} · ${r.kind}</div>
+            <div class="text-sm text-slate-800">${r.text}</div>
+          `;
+          box.appendChild(item);
+        });
+      }
+
+      function renderRemoteControlPanel(d) {
+        const gear = clamp(Number(d.metrics.gear || 3), 1, 5);
+        const dir = d.metrics.dir === "reverse" ? "reverse" : "forward";
+
+        const gearRange = $("#remoteGearRange");
+        const gearLabel = $("#remoteGearLabel");
+        const dirForward = $("#remoteDirForward");
+        const dirReverse = $("#remoteDirReverse");
+
+        if (gearRange) gearRange.value = String(gear);
+        if (gearLabel) gearLabel.textContent = `${gear} 档`;
+
+        if (dirForward && dirReverse) {
+          if (dir === "forward") {
+            dirForward.className = "flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-sky-600 border-sky-600 text-white";
+            dirReverse.className = "flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-white border-slate-200 text-slate-700";
+          } else {
+            dirForward.className = "flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-white border-slate-200 text-slate-700";
+            dirReverse.className = "flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-sky-600 border-sky-600 text-white";
+          }
+        }
+      }
+
+      function renderRemoteDeviceList(filter = "") {
+        const q = String(filter || "").trim().toLowerCase();
+        const list = $("#remoteDeviceList");
+        list.innerHTML = "";
+        refreshRemoteDevicesFromCloud();
+        remoteDevices
+          .filter((d) => {
+            if (!q) return true;
+            return [d.sn, d.place, d.user, d.state].some((x) => String(x).toLowerCase().includes(q));
+          })
+          .forEach((d) => {
+            const active = d.id === RemoteState.currentId;
+            const btn = document.createElement("button");
+            btn.className = `w-full text-left p-3 rounded-2xl border transition ${
+              active ? "bg-sky-50 border-sky-200 shadow-glow" : "bg-white border-slate-200 hover:bg-slate-50"
+            }`;
+            btn.innerHTML = `
+              <div class="flex items-start gap-3">
+                <div class="mt-0.5 h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 grid place-items-center">
+                  <i data-lucide="radio" class="h-4 w-4 ${d.state === "运行中" ? "text-emerald-600" : d.state === "离线" ? "text-slate-500" : "text-sky-600"}"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <div class="font-semibold text-slate-900 truncate">${d.sn}</div>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full text-white ${statePillClass(d.state)}">${d.state}</span>
+                  </div>
+                  <div class="mt-0.5 text-xs text-slate-500 truncate">${d.place} · ${d.user} · 更新：${d.lastSeen}</div>
+                </div>
+              </div>
+            `;
+            btn.addEventListener("click", () => {
+              RemoteState.currentId = d.id;
+              renderRemote();
+              renderRemoteDeviceList($("#remoteSearch").value);
+            });
+            list.appendChild(btn);
+          });
+        lucide.createIcons();
+      }
+
+      function renderSubAdminList() {
+        const body = $("#subAdminTableBody");
+        if (!body) return;
+        body.innerHTML = "";
+        const list = ADMIN_ACCOUNTS.load().filter((a) => a.role === "project");
+        list.forEach((a) => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100 last:border-b-0";
+          const statusPill =
+            a.enabled !== false
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-slate-50 text-slate-600 border-slate-200";
+          const statusDot =
+            a.enabled !== false ? "bg-emerald-500" : "bg-slate-400";
+          tr.innerHTML = `
+            <td class="py-3">
+              <div class="font-semibold text-slate-900">${a.name || "-"}</div>
+            </td>
+            <td class="py-3 font-mono text-slate-700">${a.username}</td>
+            <td class="py-3 text-sm text-slate-700">${a.project || "-"}</td>
+            <td class="py-3">
+              <span class="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-1 rounded-full border ${statusPill}">
+                <span class="h-2 w-2 rounded-full ${statusDot}"></span>
+                ${a.enabled !== false ? "启用" : "停用"}
+              </span>
+            </td>
+            <td class="py-3 text-right">
+              <div class="inline-flex items-center gap-2">
+                <button
+                  class="h-8 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
+                  data-subadmin-act="reset"
+                  data-username="${a.username}"
+                >
+                  重置密码
+                </button>
+                <button
+                  class="h-8 px-3 rounded-xl bg-white border border-rose-200 text-rose-700 text-xs font-semibold hover:bg-rose-50 transition"
+                  data-subadmin-act="delete"
+                  data-username="${a.username}"
+                >
+                  删除
+                </button>
+                <button
+                  class="h-8 px-3 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition"
+                  data-subadmin-act="toggle"
+                  data-username="${a.username}"
+                >
+                  ${a.enabled !== false ? "停用" : "启用"}
+                </button>
+              </div>
+            </td>
+          `;
+          body.appendChild(tr);
+        });
+
+        $$("[data-subadmin-act]", body).forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const act = btn.getAttribute("data-subadmin-act");
+            const username = btn.getAttribute("data-username");
+            if (!act || !username) return;
+            if (act === "reset") {
+              const list = ADMIN_ACCOUNTS.load();
+              const idx = list.findIndex((x) => x.username === username);
+              if (idx < 0) return;
+              list[idx] = { ...list[idx], password: "123456@" };
+              ADMIN_ACCOUNTS.save(list);
+              showToast("密码已重置", `账号：${username}，新密码：123456@`);
+            } else if (act === "delete") {
+              const ok = window.confirm(`确定删除子管理员账号：${username}？\n删除后无法恢复。`);
+              if (!ok) return;
+              const list = ADMIN_ACCOUNTS.load();
+              const next = list.filter((x) => x.username !== username);
+              ADMIN_ACCOUNTS.save(next);
+              showToast("已删除", `账号：${username}`);
+            } else if (act === "toggle") {
+              const list = ADMIN_ACCOUNTS.load();
+              const idx = list.findIndex((x) => x.username === username);
+              if (idx < 0) return;
+              const enabled = list[idx].enabled !== false;
+              list[idx] = { ...list[idx], enabled: !enabled };
+              ADMIN_ACCOUNTS.save(list);
+              showToast(!enabled ? "账号已启用" : "账号已停用", `账号：${username}`);
+            }
+            renderSubAdminList();
+          });
+        });
+      }
+
+      function renderSnPrefixDialog() {
+        const dlg = $("#dlgSnAssign");
+        if (!dlg) return;
+        const projSel = $("#snPrefixProject");
+        const mgrSel = $("#snPrefixManager");
+        const industrySel = $("#snPrefixIndustry");
+        const modelSel = $("#snPrefixModel");
+        const tbody = $("#snPrefixTableBody");
+        if (!projSel || !mgrSel || !industrySel || !modelSel || !tbody) return;
+
+        const currentProj = projSel.value || "";
+        projSel.innerHTML = "";
+        const projPlaceholder = document.createElement("option");
+        projPlaceholder.value = "";
+        projPlaceholder.textContent = "选择项目（可选）";
+        projSel.appendChild(projPlaceholder);
+        listKnownProjects().forEach((p) => {
+          const opt = document.createElement("option");
+          opt.value = p;
+          opt.textContent = p;
+          projSel.appendChild(opt);
+        });
+        if (currentProj) projSel.value = currentProj;
+
+        mgrSel.innerHTML = "";
+        const mgrPlaceholder = document.createElement("option");
+        mgrPlaceholder.value = "";
+        mgrPlaceholder.textContent = "选择子管理员";
+        mgrSel.appendChild(mgrPlaceholder);
+        ADMIN_ACCOUNTS.load()
+          .filter((a) => a.role === "project")
+          .forEach((a) => {
+            const opt = document.createElement("option");
+            opt.value = a.username;
+            opt.textContent = `${a.username}（${a.name || "-"}）`;
+            mgrSel.appendChild(opt);
+          });
+
+        const DEVICE_MODEL_OPTIONS = [
+          { code: "CLEDIC-6789", label: "CLEDIC-6789（农业）", industry: "agri" },
+          { code: "CLEDIC-AG-01", label: "CLEDIC-AG-01（农业）", industry: "agri" },
+          { code: "CLEDIC-45678", label: "CLEDIC-45678（工业）", industry: "ind" },
+          { code: "CLEDIC-IND-01", label: "CLEDIC-IND-01（工业）", industry: "ind" },
+        ];
+
+        function renderModelOptions() {
+          const curIndustry = industrySel.value || "";
+          const curModel = modelSel.value || "";
+          modelSel.innerHTML = "";
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = "选择默认型号（可选）";
+          modelSel.appendChild(placeholder);
+          DEVICE_MODEL_OPTIONS.filter((m) => !curIndustry || m.industry === curIndustry).forEach((m) => {
+            const opt = document.createElement("option");
+            opt.value = m.code;
+            opt.textContent = m.label;
+            modelSel.appendChild(opt);
+          });
+          if (curModel) modelSel.value = curModel;
+        }
+
+        renderModelOptions();
+        industrySel.onchange = renderModelOptions;
+        modelSel.onchange = () => {
+          const code = modelSel.value || "";
+          if (!code) return;
+          const found = DEVICE_MODEL_OPTIONS.find((m) => m.code === code);
+          if (found && found.industry && industrySel.value !== found.industry) {
+            industrySel.value = found.industry;
+            renderModelOptions();
+            modelSel.value = code;
+          }
+        };
+
+        const list = SN_PREFIX_STORE.load();
+        tbody.innerHTML = "";
+        if (!list.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td colspan="5" class="py-4 px-3 text-center text-[12px] text-slate-500">
+              暂无 SN 前缀分配记录，请在上方先添加一条。
+            </td>
+          `;
+          tbody.appendChild(tr);
+        } else {
+          list.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.className = "border-t border-slate-200";
+            tr.innerHTML = `
+              <td class="py-2 px-3 font-mono text-[12px] text-slate-900">${r.prefix || "-"}</td>
+              <td class="py-2 px-3 text-[12px] text-slate-700">${r.project || "-"}</td>
+              <td class="py-2 px-3 text-[12px] text-slate-700">${r.managerUsername || "-"}${
+              r.managerName ? `（${r.managerName}）` : ""
+            }</td>
+              <td class="py-2 px-3 text-[12px] text-slate-500">
+                <div>${r.remark || "-"}</div>
+                <div class="mt-0.5 text-[11px] text-slate-400">
+                  行业：${
+                    r.industry === "agri" ? "农业"
+                    : r.industry === "ind" ? "工业"
+                    : "-"
+                  } · 型号：${r.modelCode || "-"}
+                </div>
+              </td>
+              <td class="py-2 px-3 text-right">
+                <button
+                  class="h-8 px-3 rounded-xl bg-white border border-rose-200 text-rose-700 text-[11px] font-semibold hover:bg-rose-50 transition"
+                  data-sn-prefix-del="${r.id}"
+                >
+                  删除
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+
+        $$("[data-sn-prefix-del]", tbody).forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-sn-prefix-del");
+            if (!id) return;
+            const ok = window.confirm("确定删除该 SN 前缀分配？\n删除后子管理员将不再自动使用该前缀。");
+            if (!ok) return;
+            SN_PREFIX_STORE.remove(id);
+            renderSnPrefixDialog();
+            showToast("已删除", "SN 前缀分配记录已删除。");
+          });
+        });
+
+        lucide.createIcons();
+      }
+
+      function applySnPrefixForAdmin(adminInfo) {
+        try {
+          if (!adminInfo || adminInfo.role !== "project") return;
+          const username = adminInfo.username || "";
+          if (!username) return;
+          const list = SN_PREFIX_STORE.listForManager(username);
+          if (!list.length) return;
+          const first = list[0];
+          const base = String(first.prefix || "").trim();
+          if (!base) return;
+          window.__SN_PREFIX_FOR_ADMIN__ = base;
+          const input = $("#factoryStartSn");
+          if (input) {
+            const start = `${base}${base.endsWith("-") ? "0001" : "0001"}`;
+            input.value = start;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      function renderRemote() {
+        const d = getRemoteCurrent();
+        $("#remoteTitle").textContent = d.sn;
+        const inline = $("#remoteStateInline");
+        if (inline) {
+          inline.textContent = d.state;
+          inline.className = `shrink-0 text-[11px] px-2 py-0.5 rounded-full text-white ${statePillClass(d.state)}`;
+        }
+        $("#remoteSub").textContent = `地点 ${d.place} · 绑定用户 ${d.user}`;
+        const lastSeen = $("#remoteLastSeen");
+        if (lastSeen) lastSeen.textContent = `最近：${d.lastSeen}`;
+        const pill = $("#remoteStatePill");
+        if (pill) {
+          pill.textContent = d.state;
+          pill.className = `text-xs font-semibold px-2 py-1 rounded-full text-white ${statePillClass(d.state)}`;
+        }
+
+        $("#remoteHead").textContent = Number(d.metrics.head ?? 0).toFixed(1);
+        $("#remoteQ").textContent = d.metrics.q.toFixed(1);
+        $("#remoteI").textContent = d.metrics.i.toFixed(1);
+        $("#remoteV").textContent = String(d.metrics.v);
+        $("#remoteRpm").textContent = String(Math.round(Number(d.metrics.rpm ?? 0)));
+        renderRemoteControlPanel(d);
+
+        $("#btnRemoteStart").disabled = d.state === "离线" || d.state === "运行中";
+        $("#btnRemoteStop").disabled = d.state === "离线" || d.state !== "运行中";
+      }
+
+      function selectRemoteBySn(sn) {
+        // 先刷新并应用数据隔离，避免子管理员看到不属于自己的设备
+        refreshRemoteDevicesFromCloud();
+        let d = remoteDevices.find((x) => x.sn === sn);
+        if (!d) {
+          const scope = getAdminScope();
+          if (scope.role === "project") {
+            showToast("无权限查看", "该设备不属于当前子管理员项目范围。");
+            return;
+          }
+          const user = getBoundUserForCode(sn) || "-";
+          // 如果设备注册表里没有，先补一条，确保地点/型号等字段有来源
+          upsertDeviceRegistry({ code: sn, name: sn, status: "stopped" });
+          d = {
+            id: `r_${Math.random().toString(16).slice(2, 8)}`,
+            sn,
+            place: "-",
+            user,
+            state: "停止",
+            lastSeen: "-",
+            metrics: { p: 0.0, q: 0.0, i: 0.0, v: 0, wl: 0, temp: 0, rpm: 0, head: 0, gear: 3, dir: "forward" },
+          };
+          remoteDevices.unshift(d);
+        }
+        RemoteState.currentId = d.id;
+        renderRemote();
+        renderRemoteDeviceList($("#remoteSearch").value);
+      }
+
+      function applyRemoteControlFromUi() {
+        const d = getRemoteCurrent();
+        const gearRange = $("#remoteGearRange");
+        const dirForward = $("#remoteDirForward");
+        const dirReverse = $("#remoteDirReverse");
+
+        if (!d || !gearRange || !dirForward || !dirReverse) return;
+
+        const gear = clamp(Number(gearRange.value || 3), 1, 5);
+        const dir = dirForward.classList.contains("bg-sky-600") ? "forward" : "reverse";
+
+        d.metrics.gear = gear;
+        d.metrics.dir = dir;
+
+        const status =
+          d.state === "运行中"
+            ? "running"
+            : d.state === "告警"
+            ? "fault"
+            : d.state === "离线"
+            ? "offline"
+            : "stopped";
+
+        upsertDeviceRegistry({
+          code: d.sn,
+          status,
+          metrics: {
+            ...d.metrics,
+            gear,
+            dir,
+          },
+        });
+
+        pushRemoteLog(
+          "CMD",
+          `设置控制：${d.sn} → 档位 ${gear}，${dir === "forward" ? "正转" : "反转"}`
+        );
+        renderRemoteDeviceList($("#remoteSearch").value);
+        renderRemote();
+        showToast("已下发", "控制参数已更新（模拟）。");
+      }
+
+      function runRemoteAction(action) {
+        const d = getRemoteCurrent();
+        function writeBackCloud(nextStatus, nextMetrics) {
+          const reg = CLOUD.listDeviceRegistry();
+          const idx = reg.findIndex((x) => x.code === d.sn);
+          const row = idx >= 0 ? reg[idx] : { code: d.sn, name: d.sn, createdAt: Date.now() };
+          row.status = nextStatus;
+          row.metrics = { ...(row.metrics || {}), ...(nextMetrics || {}) };
+          row.lastSync = new Date().toISOString().slice(5, 19).replace("T", " ");
+          row.updatedAt = Date.now();
+          if (idx >= 0) reg[idx] = row;
+          else reg.unshift(row);
+          CLOUD.save(CLOUD.keys.devices, reg);
+        }
+        if (action === "start") {
+          if (d.state === "离线") return showToast("操作失败", "设备离线。");
+          d.state = "运行中";
+          d.metrics = { ...d.metrics, p: 0.38, q: 12.4, i: 6.5, v: 222 };
+          writeBackCloud("running", { p: d.metrics.p, q: d.metrics.q, i: d.metrics.i, v: d.metrics.v, wlPct: d.metrics.wl, temp: d.metrics.temp });
+          pushRemoteLog("CMD", `启动：${d.sn}`);
+          renderRemoteDeviceList($("#remoteSearch").value);
+          renderRemote();
+          return;
+        }
+        if (action === "stop") {
+          if (d.state === "离线") return showToast("操作失败", "设备离线。");
+          d.state = "停止";
+          d.metrics = { ...d.metrics, p: 0.0, q: 0.0, i: 0.0, v: 0 };
+          writeBackCloud("stopped", { p: d.metrics.p, q: d.metrics.q, i: d.metrics.i, v: d.metrics.v });
+          pushRemoteLog("CMD", `停止：${d.sn}`);
+          renderRemoteDeviceList($("#remoteSearch").value);
+          renderRemote();
+          return;
+        }
+      }
+
+      // --------------------
+      // Toast
+      // --------------------
+      let toastTimer = null;
+      function showToast(title, text) {
+        $("#toastTitle").textContent = title || "提示";
+        $("#toastText").textContent = text || "";
+        $("#toast").classList.remove("hidden");
+        if (toastTimer) window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => $("#toast").classList.add("hidden"), 2800);
+      }
+
+      // --------------------
+      // Boot
+      // --------------------
+      const DeviceUi = {
+        selected: new Set(),
+        editingSn: null,
+      };
+
+      function syncDeviceSelectAll() {
+        const allCb = $("#deviceSelectAll");
+        const body = $("#deviceTableBody");
+        if (!allCb || !body) return;
+        const items = $$("[data-dev-select]", body);
+        const total = items.length;
+        const checked = items.filter((x) => x.checked).length;
+        allCb.indeterminate = checked > 0 && checked < total;
+        allCb.checked = total > 0 && checked === total;
+      }
+
+      function deleteDeviceBySn(sn) {
+        const code = String(sn || "").trim();
+        if (!code) return;
+        // delete registry
+        const reg = CLOUD.listDeviceRegistry() || [];
+        const nextReg = reg.filter((x) => String(x.code || "").trim() !== code);
+        CLOUD.save(CLOUD.keys.devices, nextReg);
+        // delete binding
+        upsertBindingForSn(code, "");
+        // selection cleanup
+        DeviceUi.selected.delete(code);
+      }
+
+      function listKnownPhones() {
+        const set = new Set();
+        (CLOUD.listUsers() || []).forEach((u) => {
+          const p = String(u.phone || "").replace(/\s/g, "");
+          if (p) set.add(p);
+        });
+        (CLOUD.listBindings() || []).forEach((b) => {
+          const p = String(b.phone || "").replace(/\s/g, "");
+          if (p) set.add(p);
+        });
+        return [...set].sort();
+      }
+
+      function renderBindPhoneOptions(selectedPhone) {
+        const sel = $("#newDevBindPhone");
+        if (!sel) return;
+        const cur = String(selectedPhone || "");
+        sel.innerHTML = "";
+        const opt0 = document.createElement("option");
+        opt0.value = "";
+        opt0.textContent = "不绑定";
+        sel.appendChild(opt0);
+        listKnownPhones().forEach((p) => {
+          const opt = document.createElement("option");
+          opt.value = p;
+          opt.textContent = `${CLOUD.maskPhone(p)}（${p}）`;
+          sel.appendChild(opt);
+        });
+        sel.value = cur;
+      }
+
+      function openDeviceEdit(sn) {
+        const code = String(sn || "").trim();
+        if (!code) return;
+        const dlg = $("#dlgDeviceNew");
+        if (!dlg) return;
+        DeviceUi.editingSn = code;
+        $("#dlgDeviceNewTitle").textContent = "编辑设备";
+        const reg = CLOUD.listDeviceRegistry() || [];
+        const row = reg.find((x) => String(x.code || "").trim() === code) || { code };
+        $("#newDevSn").value = code;
+        $("#newDevSn").readOnly = true;
+        $("#newDevName").value = row.name || code;
+        $("#newDevModel").value = row.model || "-";
+        $("#newDevPlace").value = row.place || "-";
+        $("#newDevFw").value = row.fw || "-";
+        renderBindPhoneOptions(getBoundPhoneForSn(code));
+        $("#newDevHint").textContent = "";
+        $("#newDevToken").textContent = "-";
+        $("#newDevQrImg").removeAttribute("src");
+        if (!dlg.open) dlg.showModal();
+        lucide.createIcons();
+      }
+
+      function boot() {
+        // 确保有默认总管理员账号
+        ADMIN_ACCOUNTS.ensureDefaultSuper();
+
+        const ver = $("#adminVersion");
+        if (ver) ver.textContent = APP_VERSION;
+
+        const adminInfo = ADMIN_STORE.load();
+        if (!adminInfo) {
+          try {
+            window.location.replace("admin-login.html");
+            return;
+          } catch {
+            // ignore navigation error
+          }
+        } else {
+          const roleLabel =
+            adminInfo.role === "super"
+              ? "总管理员（平台管理员）"
+              : "子管理员（项目管理员）";
+          const title = adminInfo.name ? `${adminInfo.name}（${roleLabel}）` : roleLabel;
+          const desc =
+            adminInfo.role === "super"
+              ? "角色：总管理员 · 可管理子管理员和所有项目"
+              : `角色：子管理员 · 项目：${adminInfo.project || "未分配"}`;
+          const tEl = $("#adminRoleTitle");
+          const dEl = $("#adminRoleDesc");
+          if (tEl) tEl.textContent = title;
+          if (dEl) dEl.textContent = desc;
+
+          // 侧边卡片按钮权限：仅总管理员可管理子管理员；仅子管理员可改密码
+          const btnPwd = $("#btnChangePwd");
+          if (btnPwd) {
+            btnPwd.classList.toggle("hidden", adminInfo.role !== "project");
+          }
+
+          const navPermissions = $("#navPermissions");
+          if (navPermissions) {
+            navPermissions.classList.toggle("hidden", adminInfo.role !== "super");
+          }
+
+          const btnSnAssign = $("#btnOpenSnAssignDialog");
+          if (btnSnAssign) {
+            btnSnAssign.classList.toggle("hidden", adminInfo.role !== "super");
+          }
+
+          applySnPrefixForAdmin(adminInfo);
+
+          // project filter UI
+          renderDeviceProjectOptions("__ALL__");
+          const prSel = $("#deviceProjectFilter");
+          if (prSel) {
+            prSel.addEventListener("change", () => {
+              renderDevices($("#deviceSearch")?.value || "");
+            });
+          }
+        }
+
+        // nav
+        $$(".nav-item").forEach((btn) =>
+          btn.addEventListener("click", () => {
+            setView(btn.dataset.view);
+          })
+        );
+        setView("factory");
+
+        // factory
+        $("#btnFactoryGenerate").addEventListener("click", generateFactory);
+        $("#btnFactorySelectAll").addEventListener("click", () => {
+          const allSelected = factoryRows.length && factoryRows.every((r) => r.selected);
+          factoryRows.forEach((r) => (r.selected = !allSelected));
+          renderFactory();
+        });
+        $("#btnFactoryExportPrint").addEventListener("click", exportSelectedFactoryPrint);
+        $("#btnFactoryClear").addEventListener("click", () => {
+          factoryRows.splice(0, factoryRows.length);
+          renderFactory();
+          showToast("已清空", "出厂配置生成记录已清空。");
+        });
+        renderFactory();
+        initFactorySnPrefixSelect();
+
+        // devices
+        renderDevices("");
+        $("#deviceSearch").addEventListener("input", (e) => renderDevices(e.target.value));
+        $("#deviceProjectFilter")?.addEventListener("change", () => renderDevices($("#deviceSearch")?.value || ""));
+        $("#deviceUserFilter")?.addEventListener("change", () => renderDevices($("#deviceSearch")?.value || ""));
+        $("#deviceStatusFilter")?.addEventListener("change", () => renderDevices($("#deviceSearch")?.value || ""));
+        $("#deviceOnlyProblem")?.addEventListener("change", () => renderDevices($("#deviceSearch")?.value || ""));
+        $("#deviceSelectAll")?.addEventListener("change", (e) => {
+          const body = $("#deviceTableBody");
+          if (!body) return;
+          const checked = Boolean(e.target.checked);
+          $$("[data-dev-select]", body).forEach((cb) => {
+            cb.checked = checked;
+            const sn = cb.getAttribute("data-dev-select");
+            if (!sn) return;
+            if (checked) DeviceUi.selected.add(sn);
+            else DeviceUi.selected.delete(sn);
+          });
+          syncDeviceSelectAll();
+        });
+        $("#btnDeviceDeleteSelected")?.addEventListener("click", () => {
+          const list = [...DeviceUi.selected];
+          if (!list.length) return showToast("未选择", "请先勾选要删除的设备。");
+          const ok = window.confirm(`确定删除所选 ${list.length} 台设备？\n将同时删除绑定关系。`);
+          if (!ok) return;
+          list.forEach((sn) => deleteDeviceBySn(sn));
+          showToast("已删除", `已删除 ${list.length} 台设备。`);
+          renderDevices($("#deviceSearch")?.value || "");
+        });
+        function showDlgDeviceNew() {
+          const dlg = $("#dlgDeviceNew");
+          if (!dlg) return;
+          DeviceUi.editingSn = null;
+          $("#dlgDeviceNewTitle").textContent = "添加设备";
+          $("#newDevSn").readOnly = false;
+          $("#newDevHint").textContent = "";
+          $("#newDevToken").textContent = "-";
+          $("#newDevQrImg").removeAttribute("src");
+          const adminInfo = ADMIN_STORE.load();
+          if (adminInfo && adminInfo.role === "project" && adminInfo.username) {
+            const list = SN_PREFIX_STORE.listForManager(adminInfo.username) || [];
+            if (list.length) {
+              const first = list[0];
+              const base = String(first.prefix || "").trim();
+              if (base) {
+                $("#newDevSn").value = base;
+              }
+              if (first.modelCode) {
+                $("#newDevModel").value = first.modelCode;
+              }
+            }
+          }
+          renderBindPhoneOptions("");
+          if (!dlg.open) dlg.showModal();
+          lucide.createIcons();
+        }
+        function closeDlgDeviceNew() {
+          const dlg = $("#dlgDeviceNew");
+          if (dlg?.open) dlg.close();
+        }
+        $("#btnDeviceNew").addEventListener("click", showDlgDeviceNew);
+        $("#dlgDeviceNewClose").addEventListener("click", closeDlgDeviceNew);
+
+        let newDevTokenValue = "";
+        $("#btnNewDevGenQr").addEventListener("click", async () => {
+          const sn = $("#newDevSn").value.trim();
+          if (!sn) return showToast("缺少 SN", "请先输入设备 SN。");
+          const token = await makeBindToken(sn);
+          newDevTokenValue = token;
+          $("#newDevToken").textContent = token;
+          $("#newDevQrImg").src = qrImgUrlForBindToken(token);
+          $("#newDevHint").textContent = "已生成";
+        });
+
+        $("#btnNewDevSave").addEventListener("click", async () => {
+          const sn = $("#newDevSn").value.trim();
+          if (!sn) return showToast("缺少 SN", "请先输入设备 SN。");
+          const name = $("#newDevName").value.trim() || sn;
+          const model = $("#newDevModel").value.trim() || "-";
+          const place = $("#newDevPlace").value.trim() || "-";
+          const fw = $("#newDevFw").value.trim() || "-";
+          const bindPhone = String($("#newDevBindPhone")?.value || "").trim();
+          if (!newDevTokenValue) {
+            const token = await makeBindToken(sn);
+            newDevTokenValue = token;
+            $("#newDevToken").textContent = token;
+            $("#newDevQrImg").src = qrImgUrlForBindToken(token);
+          }
+          upsertDeviceRegistry({ code: sn, name, model, place, fw, status: "stopped" });
+          // 写入/更新绑定关系
+          upsertBindingForSn(sn, bindPhone);
+          renderDevices($("#deviceSearch").value);
+          refreshRemoteDevicesFromCloud();
+          renderRemoteDeviceList($("#remoteSearch").value);
+          showToast("已保存", `设备：${sn}`);
+          closeDlgDeviceNew();
+        });
+
+        // bindings
+        renderBindingFilters();
+        renderBindings("");
+        const bs = $("#bindingSearch");
+        if (bs) bs.addEventListener("input", (e) => renderBindings(e.target.value));
+        $("#bindingProjectFilter")?.addEventListener("change", () => renderBindings($("#bindingSearch")?.value || ""));
+        $("#bindingAdminFilter")?.addEventListener("change", () => renderBindings($("#bindingSearch")?.value || ""));
+
+        // permissions (super only)
+        renderSubAdminList();
+
+        // remote
+        refreshRemoteDevicesFromCloud();
+        if (!RemoteState.currentId && remoteDevices.length) RemoteState.currentId = remoteDevices[0].id;
+        renderRemoteDeviceList("");
+        renderRemoteLog();
+        renderRemote();
+
+        // 同步用户端状态：监听 localStorage 变更（同一浏览器多标签/多窗口）
+        let storageRaf = 0;
+        window.addEventListener("storage", (e) => {
+          if (!e || !e.key) return;
+          if (![CLOUD.keys.devices, CLOUD.keys.bindings, CLOUD.keys.users].includes(e.key)) return;
+          // 轻量节流：一帧内多次变更只刷新一次，避免 UI 抖动
+          if (storageRaf) return;
+          storageRaf = window.requestAnimationFrame(() => {
+            storageRaf = 0;
+            renderBindings($("#bindingSearch")?.value || "");
+            renderRemoteDeviceList($("#remoteSearch")?.value || "");
+            renderRemote();
+          });
+        });
+
+        $("#remoteSearch").addEventListener("input", (e) => renderRemoteDeviceList(e.target.value));
+        $("#btnRemoteStart").addEventListener("click", () => runRemoteAction("start"));
+        $("#btnRemoteStop").addEventListener("click", () => runRemoteAction("stop"));
+
+        const gearRange = $("#remoteGearRange");
+        if (gearRange) {
+          gearRange.addEventListener("input", (e) => {
+            const v = clamp(Number(e.target.value || 3), 1, 5);
+            const gearLabel = $("#remoteGearLabel");
+            if (gearLabel) gearLabel.textContent = `${v} 档`;
+          });
+        }
+
+        const dirForward = $("#remoteDirForward");
+        const dirReverse = $("#remoteDirReverse");
+        if (dirForward && dirReverse) {
+          dirForward.addEventListener("click", () => {
+            dirForward.className = "flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-sky-600 border-sky-600 text-white";
+            dirReverse.className = "flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-white border-slate-200 text-slate-700";
+          });
+          dirReverse.addEventListener("click", () => {
+            dirForward.className = "flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-white border-slate-200 text-slate-700";
+            dirReverse.className = "flex-1 h-9 px-3 rounded-xl border text-xs font-semibold bg-sky-600 border-sky-600 text-white";
+          });
+        }
+
+        $("#btnRemoteApplyControl").addEventListener("click", applyRemoteControlFromUi);
+
+        // sub admin manage (only for super, in 权限设定 tab)
+        const dlgSub = $("#dlgSubAdmin");
+        const btnOpenSubAdminDialog = $("#btnOpenSubAdminDialog");
+        if (dlgSub && btnOpenSubAdminDialog) {
+          btnOpenSubAdminDialog.addEventListener("click", () => {
+            const adminInfo = ADMIN_STORE.load();
+            if (!adminInfo || adminInfo.role !== "super") {
+              showToast("权限不足", "仅总管理员可管理子管理员账号。");
+              return;
+            }
+            $("#subAdminName").value = "";
+            $("#subAdminUsername").value = "";
+            $("#subAdminPassword").value = "123456@";
+            $("#subAdminHint").textContent = "";
+            if (!dlgSub.open) dlgSub.showModal();
+            lucide.createIcons();
+          });
+        }
+        if (dlgSub) {
+          $("#dlgSubAdminClose")?.addEventListener("click", () => dlgSub.close());
+
+          $("#subAdminName")?.addEventListener("input", (e) => {
+            const v = String(e.target.value || "");
+            const base = ADMIN_ACCOUNTS.slugifyNameToUsername(v);
+            const preview = base ? `${base}01` : "";
+            $("#subAdminUsername").value = preview;
+          });
+
+          $("#btnSubAdminSave")?.addEventListener("click", () => {
+            const adminInfo = ADMIN_STORE.load();
+            if (!adminInfo || adminInfo.role !== "super") {
+              showToast("权限不足", "仅总管理员可管理子管理员账号。");
+              return;
+            }
+            const name = $("#subAdminName").value.trim();
+            const project = String($("#subAdminProject")?.value || "").trim();
+            const hint = $("#subAdminHint");
+            if (!name) {
+              if (hint) hint.textContent = "请先输入子管理员姓名。";
+              return;
+            }
+            const acc = ADMIN_ACCOUNTS.createSubAdmin(name, project);
+            if (hint) {
+              hint.textContent = `已创建：账号 ${acc.username}，初始密码 123456@`;
+            }
+            showToast("子管理员已创建", `账号：${acc.username}，初始密码：123456@`);
+            renderSubAdminList();
+          });
+        }
+
+        // SN prefix assign (only for super admin)
+        const dlgSnAssign = $("#dlgSnAssign");
+        const btnOpenSnAssignDialog = $("#btnOpenSnAssignDialog");
+        if (dlgSnAssign && btnOpenSnAssignDialog) {
+          btnOpenSnAssignDialog.addEventListener("click", () => {
+            const adminInfo = ADMIN_STORE.load();
+            if (!adminInfo || adminInfo.role !== "super") {
+              showToast("权限不足", "仅总管理员可分配 SN 前缀。");
+              return;
+            }
+            $("#snPrefixPrefix").value = "";
+            $("#snPrefixRemark").value = "";
+            $("#snPrefixHint").textContent = "";
+            $("#snPrefixIndustry").value = "";
+            $("#snPrefixModel").innerHTML = "";
+            renderSnPrefixDialog();
+            if (!dlgSnAssign.open) dlgSnAssign.showModal();
+          });
+        }
+        if (dlgSnAssign) {
+          $("#dlgSnAssignClose")?.addEventListener("click", () => dlgSnAssign.close());
+          $("#btnSnPrefixSave")?.addEventListener("click", () => {
+            const adminInfo = ADMIN_STORE.load();
+            const hint = $("#snPrefixHint");
+            if (!adminInfo || adminInfo.role !== "super") {
+              if (hint) hint.textContent = "仅总管理员可分配 SN 前缀。";
+              showToast("权限不足", "仅总管理员可分配 SN 前缀。");
+              return;
+            }
+            const prefixRaw = $("#snPrefixPrefix").value.trim();
+            const project = String($("#snPrefixProject")?.value || "").trim();
+            const managerUsername = String($("#snPrefixManager")?.value || "").trim();
+            const industry = String($("#snPrefixIndustry")?.value || "").trim();
+            const modelCode = String($("#snPrefixModel")?.value || "").trim();
+            const remark = $("#snPrefixRemark").value.trim();
+            if (!prefixRaw) {
+              if (hint) hint.textContent = "请先输入 SN 前缀。";
+              return;
+            }
+            if (!managerUsername) {
+              if (hint) hint.textContent = "请选择要分配的子管理员。";
+              return;
+            }
+            const admins = ADMIN_ACCOUNTS.load();
+            const mgr = admins.find((a) => a.username === managerUsername);
+            const record = {
+              prefix: prefixRaw,
+              project,
+              managerUsername,
+              managerName: mgr?.name || "",
+              industry,
+              modelCode,
+              remark,
+            };
+            SN_PREFIX_STORE.upsert(record);
+            if (hint) hint.textContent = "已保存 SN 前缀分配。";
+            showToast("已保存", `SN 前缀 ${prefixRaw} 已分配给 ${managerUsername}。`);
+            renderSnPrefixDialog();
+          });
+        }
+
+        // change password (only for project admins)
+        const btnChangePwd = $("#btnChangePwd");
+        const dlgPwd = $("#dlgChangePwd");
+        if (btnChangePwd && dlgPwd) {
+          btnChangePwd.addEventListener("click", () => {
+            const adminInfo = ADMIN_STORE.load();
+            if (!adminInfo || adminInfo.role !== "project") {
+              showToast("权限限制", "仅子管理员可在此修改密码。");
+              return;
+            }
+            $("#changePwdOld").value = "";
+            $("#changePwdNew").value = "";
+            $("#changePwdNew2").value = "";
+            $("#changePwdHint").textContent = "";
+            if (!dlgPwd.open) dlgPwd.showModal();
+          });
+          $("#dlgChangePwdClose")?.addEventListener("click", () => dlgPwd.close());
+
+          $("#btnChangePwdSave")?.addEventListener("click", () => {
+            const adminInfo = ADMIN_STORE.load();
+            const hint = $("#changePwdHint");
+            if (!adminInfo || adminInfo.role !== "project") {
+              if (hint) hint.textContent = "当前登录身份非子管理员。";
+              return;
+            }
+            const oldPwd = $("#changePwdOld").value;
+            const newPwd = $("#changePwdNew").value;
+            const newPwd2 = $("#changePwdNew2").value;
+            if (!oldPwd || !newPwd || !newPwd2) {
+              if (hint) hint.textContent = "请完整填写当前密码和新密码。";
+              return;
+            }
+            if (newPwd !== newPwd2) {
+              if (hint) hint.textContent = "两次输入的新密码不一致。";
+              return;
+            }
+            if (newPwd.length < 6) {
+              if (hint) hint.textContent = "新密码长度至少 6 位。";
+              return;
+            }
+            const res = ADMIN_ACCOUNTS.updatePassword(adminInfo.username, oldPwd, newPwd);
+            if (!res.ok) {
+              if (res.reason === "bad_old") {
+                if (hint) hint.textContent = "当前密码不正确。";
+              } else {
+                if (hint) hint.textContent = "修改失败，请稍后再试。";
+              }
+              return;
+            }
+            if (hint) hint.textContent = "密码已修改，下次登录生效。";
+            showToast("修改成功", "登录密码已更新。");
+            dlgPwd.close();
+          });
+        }
+
+        // toast
+        $("#toastClose").addEventListener("click", () => $("#toast").classList.add("hidden"));
+
+        // factory continue from existing
+        const dlgFx = $("#dlgFactoryContinue");
+        const btnFx = $("#btnFactoryContinueFromExisting");
+        if (dlgFx && btnFx) {
+          btnFx.addEventListener("click", () => {
+            renderFactoryContinueList($("#factoryContinueSearch")?.value || "");
+            if (!dlgFx.open) dlgFx.showModal();
+            lucide.createIcons();
+          });
+          $("#dlgFactoryContinueClose")?.addEventListener("click", () => dlgFx.close());
+          $("#factoryContinueSearch")?.addEventListener("input", (e) => renderFactoryContinueList(e.target.value));
+        }
+
+        lucide.createIcons();
+      }
+
+      boot();
+    </script>
+  </body>
+</html>
+
