@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>元井水泵控制器后台 - 管理员登录</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            boxShadow: {
+              panel: "0 18px 45px rgba(15,23,42,0.35)",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-50">
+    <div class="min-h-screen flex flex-col lg:flex-row">
+      <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center">
+        <div class="absolute inset-0 bg-gradient-to-br from-sky-500 via-cyan-400 to-emerald-400 opacity-10"></div>
+        <div class="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-sky-500/40 blur-3xl"></div>
+        <div class="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-emerald-400/40 blur-3xl"></div>
+        <div class="relative px-12">
+          <div class="flex items-center gap-3">
+            <div class="h-12 w-12 rounded-2xl bg-slate-900/70 border border-sky-400/40 grid place-items-center shadow-panel">
+              <i data-lucide="qr-code" class="h-6 w-6 text-sky-300"></i>
+            </div>
+            <div>
+              <div class="text-lg font-semibold tracking-tight">元井水泵控制器后台</div>
+              <div class="text-xs text-slate-200/80 mt-0.5">Water Pump Controller · Admin</div>
+            </div>
+          </div>
+          <div class="mt-10 space-y-4">
+            <div class="inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full bg-slate-900/60 border border-sky-400/30 text-sky-100">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              多项目 · 多角色 · 集中管理
+            </div>
+            <div class="text-3xl font-semibold leading-snug tracking-tight">
+              平台 / 项目级<br />
+              管理员一站式控制台
+            </div>
+            <p class="text-sm text-slate-200/80 leading-relaxed">
+              总管理员可配置子管理员账号与权限，统一管理所有项目；
+              子管理员仅能查看和运维自己负责的项目，实现权限隔离与精细化管理。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <main class="flex-1 flex items-center justify-center px-4 py-8">
+        <div class="w-full max-w-md">
+          <div class="mb-8 flex items-center justify-between lg:hidden">
+            <div class="flex items-center gap-3">
+              <div class="h-10 w-10 rounded-2xl bg-slate-900/70 border border-sky-400/40 grid place-items-center shadow-panel">
+                <i data-lucide="qr-code" class="h-5 w-5 text-sky-300"></i>
+              </div>
+              <div>
+                <div class="text-base font-semibold tracking-tight">元井水泵控制器后台</div>
+                <div class="text-[11px] text-slate-300/80 mt-0.5">Admin Console</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-950/60 border border-slate-800 rounded-3xl shadow-panel px-6 py-7 backdrop-blur">
+            <div class="flex items-center gap-2">
+              <div class="h-9 w-9 rounded-xl bg-sky-500/10 border border-sky-500/40 grid place-items-center">
+                <i data-lucide="shield-check" class="h-4 w-4 text-sky-300"></i>
+              </div>
+              <div>
+                <div class="text-lg font-semibold tracking-tight">管理员登录</div>
+                <div class="text-xs text-slate-400 mt-0.5">请输入账号密码并选择登录身份</div>
+              </div>
+            </div>
+
+            <form id="adminLoginForm" class="mt-6 space-y-5">
+              <div>
+                <label class="text-xs font-semibold text-slate-200">登录账号</label>
+                <div class="mt-1 flex items-center gap-2 rounded-2xl bg-slate-900/70 border border-slate-700 px-3 py-2.5">
+                  <i data-lucide="user-2" class="h-4 w-4 text-slate-400"></i>
+                  <input
+                    id="adminName"
+                    class="bg-transparent outline-none text-sm flex-1 text-slate-50 placeholder:text-slate-500"
+                    placeholder="请输入管理员姓名或账号"
+                    autocomplete="off"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-slate-200">登录密码</label>
+                <div class="mt-1 flex items-center gap-2 rounded-2xl bg-slate-900/70 border border-slate-700 px-3 py-2.5">
+                  <i data-lucide="lock" class="h-4 w-4 text-slate-400"></i>
+                  <input
+                    id="adminPassword"
+                    type="password"
+                    class="bg-transparent outline-none text-sm flex-1 text-slate-50 placeholder:text-slate-500"
+                    placeholder="请输入密码"
+                    autocomplete="off"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-slate-200">选择管理员身份</label>
+                <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup">
+                  <button
+                    type="button"
+                    id="roleSuper"
+                    data-role="super"
+                    class="group w-full text-left p-3.5 rounded-2xl border border-sky-500 bg-sky-500/10 shadow-glow"
+                  >
+                    <div class="flex items-center gap-2">
+                      <div class="h-8 w-8 rounded-xl bg-sky-500/20 border border-sky-500/50 grid place-items-center">
+                        <i data-lucide="crown" class="h-4 w-4 text-sky-200"></i>
+                      </div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold text-slate-50 truncate">总管理员</div>
+                        <div class="text-[11px] text-sky-100/90 truncate">平台管理员 · 可管理子管理员</div>
+                      </div>
+                    </div>
+                    <ul class="mt-2 space-y-0.5 text-[11px] text-slate-200/80">
+                      <li>· 查看所有项目与设备</li>
+                      <li>· 新建 / 禁用子管理员账号</li>
+                      <li>· 配置平台级参数与策略</li>
+                    </ul>
+                  </button>
+
+                  <button
+                    type="button"
+                    id="roleProject"
+                    data-role="project"
+                    class="group w-full text-left p-3.5 rounded-2xl border border-slate-700 bg-slate-900/70 hover:border-sky-500/60 hover:bg-slate-900/90 transition"
+                  >
+                    <div class="flex items-center gap-2">
+                      <div class="h-8 w-8 rounded-xl bg-slate-900 border border-slate-700 grid place-items-center">
+                        <i data-lucide="briefcase" class="h-4 w-4 text-slate-200"></i>
+                      </div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold text-slate-50 truncate">子管理员</div>
+                        <div class="text-[11px] text-slate-300 truncate">项目管理员 · 仅管理本项目</div>
+                      </div>
+                    </div>
+                    <ul class="mt-2 space-y-0.5 text-[11px] text-slate-200/80">
+                      <li>· 查看负责项目下的设备与用户</li>
+                      <li>· 远程控制、查看告警与运行数据</li>
+                      <li>· 无法管理其它项目或子管理员</li>
+                    </ul>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-slate-200">登录说明</label>
+                <div class="mt-1 text-[11px] text-slate-400 leading-relaxed">
+                  当前为前端原型页面，登录校验与权限控制均为本地模拟，仅用于展示多角色管理逻辑。
+                </div>
+              </div>
+
+              <div class="pt-2 flex items-center gap-3">
+                <button
+                  id="btnAdminLogin"
+                  type="submit"
+                  class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-sky-500 text-white font-semibold text-sm hover:bg-sky-400 transition shadow-glow flex-1"
+                >
+                  <i data-lucide="log-in" class="h-4 w-4"></i>
+                  进入管理员后台
+                </button>
+              </div>
+
+              <div id="adminLoginHint" class="text-[11px] text-rose-300/0 h-4 transition-colors"></div>
+            </form>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between text-[11px] text-slate-500">
+            <span>© 2024 CLEDIC · Admin Console Prototype</span>
+            <span id="adminLoginVersion" class="font-mono">v-</span>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const APP_VERSION = "v0.3.0";
+      const ADMIN_KEY = "cledic_admin_role_v1";
+      const ADMIN_ACCOUNTS_KEY = "cledic_admin_accounts_v1";
+
+      function loadAdminAccounts() {
+        try {
+          const raw = localStorage.getItem(ADMIN_ACCOUNTS_KEY);
+          if (!raw) return [];
+          const list = JSON.parse(raw);
+          return Array.isArray(list) ? list : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveAdminAccounts(list) {
+        try {
+          localStorage.setItem(ADMIN_ACCOUNTS_KEY, JSON.stringify(list || []));
+        } catch {
+          // ignore
+        }
+      }
+
+      function ensureDefaultSuperAdmin() {
+        const list = loadAdminAccounts();
+        if (list.some((a) => a.role === "super")) return;
+        list.push({
+          username: "admin",
+          name: "平台管理员",
+          role: "super",
+          password: "123456@",
+          project: "ALL",
+          enabled: true,
+        });
+        saveAdminAccounts(list);
+      }
+
+      function saveAdminInfo(info) {
+        try {
+          localStorage.setItem(ADMIN_KEY, JSON.stringify(info));
+        } catch {
+          // ignore
+        }
+      }
+
+      function markRole(role) {
+        const superBtn = $("#roleSuper");
+        const projBtn = $("#roleProject");
+        if (!superBtn || !projBtn) return;
+
+        if (role === "project") {
+          projBtn.className =
+            "group w-full text-left p-3.5 rounded-2xl border border-sky-500 bg-sky-500/10 shadow-glow";
+          superBtn.className =
+            "group w-full text-left p-3.5 rounded-2xl border border-slate-700 bg-slate-900/70 hover:border-sky-500/60 hover:bg-slate-900/90 transition";
+        } else {
+          superBtn.className =
+            "group w-full text-left p-3.5 rounded-2xl border border-sky-500 bg-sky-500/10 shadow-glow";
+          projBtn.className =
+            "group w-full text-left p-3.5 rounded-2xl border border-slate-700 bg-slate-900/70 hover:border-sky-500/60 hover:bg-slate-900/90 transition";
+        }
+      }
+
+      function boot() {
+        lucide.createIcons();
+        const v = $("#adminLoginVersion");
+        if (v) v.textContent = APP_VERSION;
+
+        // 确保至少有一个总管理员账号
+        ensureDefaultSuperAdmin();
+
+        let currentRole = "super";
+        markRole(currentRole);
+
+        $("#roleSuper")?.addEventListener("click", () => {
+          currentRole = "super";
+          markRole(currentRole);
+        });
+        $("#roleProject")?.addEventListener("click", () => {
+          currentRole = "project";
+          markRole(currentRole);
+        });
+
+        $("#adminLoginForm")?.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const name = $("#adminName")?.value.trim();
+          const pwd = $("#adminPassword")?.value || "";
+          const hint = $("#adminLoginHint");
+
+          if (!name) {
+            if (hint) {
+              hint.textContent = "请输入管理员姓名或账号。";
+              hint.classList.remove("text-rose-300/0");
+              hint.classList.add("text-rose-300");
+            }
+            return;
+          }
+
+          if (!pwd) {
+            if (hint) {
+              hint.textContent = "请输入密码。";
+              hint.classList.remove("text-rose-300/0");
+              hint.classList.add("text-rose-300");
+            }
+            return;
+          }
+
+          const accounts = loadAdminAccounts();
+          const acc = accounts.find(
+            (a) => a.username === name || a.name === name
+          );
+
+          if (!acc) {
+            if (hint) {
+              hint.textContent = "账号不存在，请确认姓名或账号。";
+              hint.classList.remove("text-rose-300/0");
+              hint.classList.add("text-rose-300");
+            }
+            return;
+          }
+
+          if (acc.enabled === false) {
+            if (hint) {
+              hint.textContent = "账号已停用，请联系总管理员。";
+              hint.classList.remove("text-rose-300/0");
+              hint.classList.add("text-rose-300");
+            }
+            return;
+          }
+
+          if (acc.password !== pwd) {
+            if (hint) {
+              hint.textContent = "密码不正确。";
+              hint.classList.remove("text-rose-300/0");
+              hint.classList.add("text-rose-300");
+            }
+            return;
+          }
+
+          saveAdminInfo({
+            name: acc.name,
+            username: acc.username,
+            role: acc.role,
+            project: acc.project || "",
+            loginAt: Date.now(),
+          });
+
+          if (hint) {
+            hint.textContent = "";
+            hint.classList.add("text-rose-300/0");
+          }
+
+          window.location.href = "admin-spa.html";
+        });
+      }
+
+      boot();
+    </script>
+  </body>
+</html>
+
