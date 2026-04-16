@@ -2003,6 +2003,30 @@ dialog[open] { animation: dialog-in 0.2s ease; }
                   <button class="gear__btn" data-gear="5">5档<span class="gear__sub">—</span></button>
                 </div>
                 <div class="subtle" style="margin-top: 6px;">当前档位：<span id="gearTextDash">—</span></div>
+                <div style="margin-top:10px;padding:10px;border:1px solid rgba(148,163,184,.35);border-radius:12px;background:rgba(15,23,42,.02);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                    <div style="font-weight:900;">转速微调 <span class="subtle" style="font-weight:700;">(1500–4500 rpm)</span></div>
+                    <div class="subtle" id="rpmFineHintDash">—</div>
+                  </div>
+                  <div class="row" style="margin-top:10px;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <div style="display:flex;gap:8px;align-items:center;flex:1;min-width:240px;">
+                      <button type="button" class="btn btn--ghost" id="btnRpmMinusDash" style="width:44px;min-height:44px;padding:0;font-size:18px;font-weight:900;">−</button>
+                      <div style="flex:1;min-width:0;border:1px solid rgba(148,163,184,.35);border-radius:12px;background:#fff;min-height:44px;display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:18px;">
+                        <span id="rpmFineValDash" class="txt-mono">—</span>
+                      </div>
+                      <button type="button" class="btn btn--ghost" id="btnRpmPlusDash" style="width:44px;min-height:44px;padding:0;font-size:18px;font-weight:900;">＋</button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                      <div style="font-weight:900;">正转</div>
+                      <label class="switch" style="width:auto;">
+                        <input type="checkbox" id="swDirDash" />
+                        <span class="switch__ui"></span>
+                        <span class="switch__label">反转</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="subtle" style="margin-top:8px;">提示：点 “− / ＋” 会立即下发（原型模拟），每次步进 50 rpm。</div>
+                </div>
               </div>
 
               <div class="row" style="margin-top: 10px;">
@@ -2026,30 +2050,22 @@ dialog[open] { animation: dialog-in 0.2s ease; }
               <div class="ticker__item" id="alarmTickerItem">暂无告警</div>
             </div>
           </div>
-        </section>
 
-        <!-- Config Center (formerly Control Center) -->
-        <section class="view" id="view-control" data-view="control" hidden>
-          <div class="view__head">
-            <h2 class="h2">配置中心</h2>
-            <div class="subtle">参数设定 · 定时任务 · 保护逻辑</div>
-          </div>
-
-          <div class="card">
+          <div class="card" id="cardCmdDash">
             <div class="card__head">
-              <div>
-                <div class="card__title">定时任务</div>
-                <div class="subtle">可选 · 按时自动执行指令</div>
-              </div>
-              <button class="ghost-btn" id="btnAddTimer">+ 新建</button>
+              <div class="card__title">指令回执 / 日志</div>
+              <button class="ghost-btn" id="btnCmdMore">查看更多</button>
             </div>
             <div class="card__body">
-              <div class="list" id="timerList"></div>
-              <div class="empty subtle" id="timerEmpty">暂无定时任务</div>
+              <div class="log" id="cmdLogDash"></div>
             </div>
           </div>
+        </section>
 
-          <div class="card">
+        <!-- Config Center（已弃用：入口移除；定时任务移到“我的”页） -->
+        <section class="view" id="view-control" data-view="control" hidden></section>
+
+          <div class="card" id="cardProtect" hidden>
             <div class="card__head">
               <div>
                 <div class="card__title">保护参数</div>
@@ -2089,16 +2105,6 @@ dialog[open] { animation: dialog-in 0.2s ease; }
                 </div>
               </div>
               <div class="command-state" id="protectState"></div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card__head">
-              <div class="card__title">指令回执 / 日志</div>
-              <button class="ghost-btn" id="btnClearLog">清空</button>
-            </div>
-            <div class="card__body">
-              <div class="log" id="cmdLog"></div>
             </div>
           </div>
         </section>
@@ -2210,7 +2216,7 @@ dialog[open] { animation: dialog-in 0.2s ease; }
           </div>
 
           <!-- 中间：设备列表 / 工单 / 帮助 -->
-          <div class="card">
+          <div class="card" id="cardMeDeviceList" hidden>
             <div class="card__head">
               <div>
                 <div class="card__title">设备列表</div>
@@ -2220,6 +2226,20 @@ dialog[open] { animation: dialog-in 0.2s ease; }
             </div>
             <div class="card__body">
               <div class="list" id="deviceList"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="card__title">定时任务</div>
+                <div class="subtle">按时自动执行指令（原型：本地保存）</div>
+              </div>
+              <button class="ghost-btn" id="btnAddTimer">+ 新建</button>
+            </div>
+            <div class="card__body">
+              <div class="list" id="timerList"></div>
+              <div class="empty subtle" id="timerEmpty">暂无定时任务</div>
             </div>
           </div>
 
@@ -2243,16 +2263,13 @@ dialog[open] { animation: dialog-in 0.2s ease; }
             <div class="card__head">
               <div>
                 <div class="card__title">我的工单</div>
-                <div class="subtle">查看报修进度 · 进入客服/报修入口</div>
+                <div class="subtle">直接查看各工单状态，点击条目查看详情</div>
               </div>
-              <button class="ghost-btn" id="btnTicketRefresh">刷新</button>
+              <button class="ghost-btn" id="btnServiceQuick">遇到问题</button>
             </div>
             <div class="card__body">
-              <div class="row" style="margin-bottom:10px;">
-                <button type="button" class="btn btn--primary" id="btnService">客服 / 报修</button>
-              </div>
-              <div class="list" id="ticketList"></div>
-              <div class="subtle" id="ticketEmpty" style="margin-top:10px;">暂无工单。可点击上方「客服 / 报修」新建工单。</div>
+              <div class="list" id="meTicketList"></div>
+              <div class="subtle" id="meTicketEmpty" style="margin-top:10px;">暂无工单。</div>
             </div>
           </div>
 
@@ -2260,21 +2277,27 @@ dialog[open] { animation: dialog-in 0.2s ease; }
             <div class="card__head">
               <div>
                 <div class="card__title">帮助中心</div>
-                <div class="subtle">常见问题与简单排查建议</div>
+                <div class="subtle">常见问题、故障措施、快速指引（直接展示）</div>
               </div>
             </div>
             <div class="card__body">
               <div class="list">
                 <div class="list-item">
                   <div class="list-item__main">
-                    <div class="list-item__title">设备显示离线</div>
-                    <div class="list-item__sub">检查电源/网络指示灯，稍后刷新，如长时间离线请联系售后。</div>
+                    <div class="list-item__title">设备离线</div>
+                    <div class="list-item__sub">检查电源/网络指示灯，稍后刷新；长时间离线建议报修。</div>
                   </div>
                 </div>
                 <div class="list-item">
                   <div class="list-item__main">
                     <div class="list-item__title">频繁过流/停机</div>
-                    <div class="list-item__sub">查看告警代码，检查阀门/管路是否堵塞，必要时降低档位并报修。</div>
+                    <div class="list-item__sub">先看告警代码，检查阀门/管路堵塞，再尝试降低档位。</div>
+                  </div>
+                </div>
+                <div class="list-item" id="btnHelpMoreInMe" style="cursor:pointer;">
+                  <div class="list-item__main">
+                    <div class="list-item__title">查看更多问题</div>
+                    <div class="list-item__sub">在“问题与解决措施”弹窗中可按故障码/标题搜索。点击此条可打开。</div>
                   </div>
                 </div>
               </div>
@@ -2306,7 +2329,7 @@ dialog[open] { animation: dialog-in 0.2s ease; }
             </div>
           </div>
 
-          <div class="card">
+          <div class="card" id="cardMeAboutAgreement" hidden>
             <div class="card__head">
               <div>
                 <div class="card__title">关于与协议</div>
@@ -2334,10 +2357,6 @@ dialog[open] { animation: dialog-in 0.2s ease; }
         <button class="tab is-active" data-nav="dashboard">
           <span class="tab__icon">🏠</span>
           <span class="tab__label">工作台</span>
-        </button>
-        <button class="tab" data-nav="control">
-          <span class="tab__icon">⚙️</span>
-          <span class="tab__label">配置</span>
         </button>
         <button class="tab" data-nav="data">
           <span class="tab__icon">📊</span>
@@ -2388,20 +2407,6 @@ dialog[open] { animation: dialog-in 0.2s ease; }
         </div>
         <div class="subtle" style="margin-bottom:6px;">在列表中点击可切换设备，右侧操作可编辑或分享。</div>
         <div class="list" id="devicePickerList"></div>
-
-        <div style="border-top:1px solid var(--border); margin:14px 0 12px;"></div>
-
-        <div class="field">
-          <div class="field__k">电机/设备类型 & 型号</div>
-          <div class="subtle">先选类型，再选型号（原型演示：切换后会影响档位转速/电流等显示）。</div>
-        </div>
-        <div class="type-tabs" id="motorTypeTabs" aria-label="电机类型"></div>
-        <div class="type-grid" id="motorProfileGrid" aria-label="电机型号列表"></div>
-        <div class="subtle" id="motorProfileHint" style="margin-top:10px;">—</div>
-        <div class="row" style="margin-top:12px;">
-          <button class="btn btn--primary" id="btnSaveMotor">保存并返回</button>
-        </div>
-        <div class="command-state" id="motorSaveState"></div>
       </div>
     </dialog>
 
@@ -2509,6 +2514,37 @@ dialog[open] { animation: dialog-in 0.2s ease; }
           <div class="field">
             <div class="field__k">设备名称</div>
             <input class="input" id="onbName" value="1号工业园排污泵" />
+          </div>
+          <div class="card" id="onbParamCard" style="margin-top:10px;" hidden>
+            <div class="card__head">
+              <div>
+                <div class="card__title">参数对应配置（通用设备）</div>
+                <div class="subtle">定制设备由厂家预置，此处不可修改</div>
+              </div>
+            </div>
+            <div class="card__body">
+              <div class="subtle" style="margin-bottom:8px;">按图示填写（原型：仅保存，不校验寄存器格式）。</div>
+              <div class="grid2">
+                <label class="field"><span class="field__k">运行频率 Hz（R）</span><input class="input" id="pcRunHz" placeholder="寄存器地址，如 40001" /></label>
+                <label class="field"><span class="field__k">设定频率 Hz（R/W）</span><input class="input" id="pcSetHz" placeholder="寄存器地址，如 40002" /></label>
+                <label class="field"><span class="field__k">母线电压 V（R）</span><input class="input" id="pcBusV" placeholder="寄存器地址" /></label>
+                <label class="field"><span class="field__k">输出电压 V（R）</span><input class="input" id="pcOutV" placeholder="寄存器地址" /></label>
+                <label class="field"><span class="field__k">输出电流 A（R）</span><input class="input" id="pcOutI" placeholder="寄存器地址" /></label>
+                <label class="field"><span class="field__k">输出功率 W（R）</span><input class="input" id="pcOutP" placeholder="寄存器地址" /></label>
+                <label class="field"><span class="field__k">输出转矩 %（R）</span><input class="input" id="pcTorque" placeholder="寄存器地址" /></label>
+                <label class="field"><span class="field__k">运行状态（正/反/停）（R）</span><input class="input" id="pcRunState" placeholder="寄存器地址" /></label>
+              </div>
+              <div class="field" style="margin-top:10px;">
+                <div class="field__k">控制下发（W）</div>
+                <div class="subtle">正转/反转/点动/停机/自由停机/故障复位/点动停止等</div>
+                <input class="input" id="pcCmd" placeholder="控制命令寄存器地址，如 40010" />
+              </div>
+              <div class="field" style="margin-top:10px;">
+                <div class="field__k">故障码配置（可选）</div>
+                <div class="subtle">无故障/过流/过压/欠压/变频器过载/电机过载/输入缺相…</div>
+                <input class="input" id="pcFault" placeholder="故障码寄存器地址，如 40020" />
+              </div>
+            </div>
           </div>
           <button class="btn btn--primary" id="btnOnbDone">完成</button>
         </div>
@@ -2627,7 +2663,7 @@ dialog[open] { animation: dialog-in 0.2s ease; }
         <div class="svc-meta">
           <div class="field">
             <div class="field__k">设备</div>
-            <input class="input" id="svcDevice" placeholder="自动带入当前设备" />
+            <select class="input" id="svcDevice"></select>
           </div>
           <div class="field">
             <div class="field__k">联系电话</div>
@@ -2694,10 +2730,7 @@ dialog[open] { animation: dialog-in 0.2s ease; }
 
         <div class="svc-media" id="svcMedia"></div>
 
-        <div class="svc-actions">
-          <a class="btn btn--ghost" id="svcCallBtn" href="tel:00000000000">拨打电话</a>
-          <button class="btn btn--ghost" id="svcCopyBtn">复制电话</button>
-        </div>
+        <!-- 工单内不确定动作已移除：拨打/复制电话（可在正式版由运营策略决定） -->
 
         <div class="row">
           <button class="btn" data-close="dlgService">取消</button>
@@ -2705,6 +2738,108 @@ dialog[open] { animation: dialog-in 0.2s ease; }
         </div>
 
         <div class="command-state" id="svcState"></div>
+      </div>
+    </dialog>
+
+    <!-- Help center knowledge base -->
+    <dialog class="dialog" id="dlgTicketCenter">
+      <div class="dialog__head">
+        <div class="dialog__title">工单中心</div>
+        <button class="icon-btn" data-close="dlgTicketCenter">✕</button>
+      </div>
+      <div class="dialog__body">
+        <div style="padding:12px;border:1px solid rgba(26,127,212,.25);border-radius:14px;background:linear-gradient(135deg,rgba(26,127,212,.10),rgba(26,127,212,.03));margin-bottom:12px;">
+          <div style="font-weight:900;color:var(--txt);">报修服务入口</div>
+          <div class="subtle" style="margin-top:6px;">可新建工单，并查看受理/处理进度。</div>
+          <div class="row" style="margin-top:10px;">
+            <button type="button" class="btn btn--primary" id="btnServiceInTicketCenter">新建工单</button>
+            <button type="button" class="btn" id="btnTicketRefresh">刷新列表</button>
+          </div>
+        </div>
+        <div class="list" id="ticketList"></div>
+        <div class="subtle" id="ticketEmpty" style="margin-top:10px;">暂无工单。可点击上方「新建工单」。</div>
+      </div>
+    </dialog>
+
+    <dialog class="dialog" id="dlgHelpCenter">
+      <div class="dialog__head">
+        <div class="dialog__title">帮助中心</div>
+        <button class="icon-btn" data-close="dlgHelpCenter">✕</button>
+      </div>
+      <div class="dialog__body">
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+          <div style="padding:12px;border:1px solid rgba(15,23,42,.1);border-radius:14px;background:#fff;">
+            <div style="font-weight:900;color:var(--txt);">设备离线</div>
+            <div class="subtle" style="margin-top:6px;">检查电源/网络指示灯，稍后刷新；长时间离线建议报修。</div>
+          </div>
+          <div style="padding:12px;border:1px solid rgba(15,23,42,.1);border-radius:14px;background:#fff;">
+            <div style="font-weight:900;color:var(--txt);">频繁过流/停机</div>
+            <div class="subtle" style="margin-top:6px;">先看告警代码，检查阀门/管路堵塞，再尝试降低档位。</div>
+          </div>
+          <div style="padding:12px;border:1px solid rgba(15,23,42,.1);border-radius:14px;background:#fff;">
+            <div style="font-weight:900;color:var(--txt);">需要更详细措施？</div>
+            <div class="subtle" style="margin-top:6px;">进入问题与措施库，按故障码/标题搜索。</div>
+            <div class="row" style="margin-top:10px;">
+              <button type="button" class="btn btn--primary" id="btnHelpKbOpenInHelpCenter">打开问题与措施库</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="dialog" id="dlgHelpKb">
+      <div class="dialog__head">
+        <div class="dialog__title">问题与解决措施</div>
+        <button class="icon-btn" data-close="dlgHelpKb">✕</button>
+      </div>
+      <div class="dialog__body">
+        <div class="field">
+          <div class="field__k">搜索</div>
+          <input class="input" id="helpKbSearch" placeholder="输入 故障码 / 标题 / 关键词" />
+        </div>
+        <div class="subtle" style="margin:8px 0 10px;">数据来自固化知识库（合并参数表与故障对照表）；无静态文件时回退本地存储。</div>
+        <div class="list" id="helpKbList"></div>
+        <div class="subtle" id="helpKbEmpty" style="margin-top:10px;">暂无问题库条目。</div>
+      </div>
+    </dialog>
+
+    <dialog class="dialog" id="dlgTicketDetail">
+      <div class="dialog__head">
+        <div class="dialog__title">工单详情</div>
+        <button class="icon-btn" data-close="dlgTicketDetail">✕</button>
+      </div>
+      <div class="dialog__body">
+        <div id="ticketDetailPretty"></div>
+      </div>
+    </dialog>
+
+    <dialog class="dialog" id="dlgIssuePretty">
+      <div class="dialog__head">
+        <div class="dialog__title" id="issuePrettyTitle">原因与解决措施</div>
+        <button class="icon-btn" data-close="dlgIssuePretty">✕</button>
+      </div>
+      <div class="dialog__body">
+        <div id="issuePrettyMeta" class="subtle" style="margin-top:-2px;"></div>
+        <div style="margin-top:10px;padding:12px;border:1px solid rgba(15,23,42,.10);border-radius:14px;background:linear-gradient(135deg,rgba(26,127,212,.06),rgba(15,23,42,.02));">
+          <div class="subtle">可能原因</div>
+          <ul id="issuePrettyCauses" style="margin:8px 0 0 18px;line-height:1.6;color:var(--txt-2);font-size:13px;"></ul>
+          <div class="subtle" style="margin-top:10px;">解决措施</div>
+          <ol id="issuePrettyActions" style="margin:8px 0 0 18px;line-height:1.6;color:var(--txt-2);font-size:13px;"></ol>
+          <div id="issuePrettyImgWrap" style="margin-top:12px;display:none;"></div>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="dialog" id="dlgCmdLogFull">
+      <div class="dialog__head">
+        <div class="dialog__title">全部指令日志</div>
+        <button class="icon-btn" data-close="dlgCmdLogFull">✕</button>
+      </div>
+      <div class="dialog__body">
+        <div class="row" style="margin-bottom:8px;">
+          <button class="ghost-btn" id="btnClearLog">清空</button>
+        </div>
+        <div class="log" id="cmdLogFull"></div>
       </div>
     </dialog>
 
@@ -2733,6 +2868,7 @@ dialog[open] { animation: dialog-in 0.2s ease; }
       </div>
     </div>
 
+    <script src="../故障合并知识库_static.js"></script>
     <script>
 /* 原型演示：纯前端单页，不连后端 */
 
@@ -2759,13 +2895,66 @@ const MOTOR_KINDS = [
   { id: "compressor", label: "压缩机" },
 ];
 
+function getMotorProfileBaseById(id) {
+  const key = id && MOTOR_PROFILES[id] ? id : MOTOR_PROFILE_DEFAULT;
+  return MOTOR_PROFILES[key];
+}
+
+function sanitizeMotorOverride(raw = {}) {
+  const toNum = (v, min, max, fixed = 0) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return null;
+    const clamped = Math.max(min, Math.min(max, n));
+    return fixed > 0 ? Number(clamped.toFixed(fixed)) : Math.round(clamped);
+  };
+  return {
+    voltage: toNum(raw.voltage, 1, 1000, 0),
+    powerKw: toNum(raw.powerKw, 0.1, 1000, 1),
+    ratedCurrentA: toNum(raw.ratedCurrentA, 0.1, 1000, 1),
+    maxRpm: toNum(raw.maxRpm, 1, 100000, 0),
+  };
+}
+
+function getMotorProfileOverrideById(id, useDraft = false) {
+  const committed = (State.motorProfileOverrides && State.motorProfileOverrides[id]) || {};
+  if (!useDraft) return committed;
+  const draft = (State._motorProfileCfgDraft && State._motorProfileCfgDraft[id]) || {};
+  return { ...committed, ...draft };
+}
+
+function getMotorProfileById(id, useDraft = false) {
+  const base = getMotorProfileBaseById(id);
+  const ov = sanitizeMotorOverride(getMotorProfileOverrideById(base.id, useDraft));
+  return {
+    ...base,
+    voltage: ov.voltage ?? base.voltage,
+    powerKw: ov.powerKw ?? base.powerKw,
+    ratedCurrentA: ov.ratedCurrentA ?? base.ratedCurrentA,
+    maxRpm: ov.maxRpm ?? base.maxRpm,
+  };
+}
+
 // ── 设备类型（添加设备：用于识别与教程展示）──────────────────
 const DEVICE_TYPES = {
+  generic_ctrl: {
+    id: "generic_ctrl",
+    kind: "other",
+    label: "通用设备（可配置参数）",
+    codePrefix: "GEN-",
+    configurable: true,
+    tutorial: [
+      "这是通用设备：需要先配置“数据读取/控制下发”的参数对应关系。",
+      "完成参数配置后再进行命名与绑定。",
+      "不确定怎么填时，可先用默认示例，后续再到后台/配置中心修改。"
+    ]
+  },
   backflow: {
     id: "backflow",
     kind: "other",
     label: "回水器",
     codePrefix: "HBS-",
+    configurable: false,
     tutorial: [
       "硬件配置：按住面板【设置】+【确定】≥5秒，听到提示音后进入配网模式。",
       "家庭 Wi‑Fi：选择 2.4G 网络，确保密码正确，设备与路由器距离不要太远。",
@@ -2778,6 +2967,7 @@ const DEVICE_TYPES = {
     kind: "pump",
     label: "高速升泵",
     codePrefix: "HSP-",
+    configurable: false,
     tutorial: [
       "确认进出水阀门处于正确状态，避免憋压。",
       "上电后等待自检完成，进入配网模式。",
@@ -2789,6 +2979,7 @@ const DEVICE_TYPES = {
     kind: "pump",
     label: "增压泵",
     codePrefix: "BP-",
+    configurable: false,
     tutorial: [
       "上电自检完成后，确保水源与管路无明显漏水。",
       "选择 2.4G Wi‑Fi，完成绑定。",
@@ -2800,6 +2991,7 @@ const DEVICE_TYPES = {
     kind: "pump",
     label: "CA系列增压泵",
     codePrefix: "CA-",
+    configurable: false,
     tutorial: [
       "确认铭牌型号与电压匹配（220/380）。",
       "按设备说明进入配网模式，完成联网绑定。",
@@ -2811,6 +3003,7 @@ const DEVICE_TYPES = {
     kind: "pump",
     label: "SGW系列",
     codePrefix: "SGW-",
+    configurable: false,
     tutorial: [
       "确认电源接线与接地可靠，现场安全后再操作。",
       "设备进入配网后，完成绑定并命名（区域/编号）。",
@@ -2822,6 +3015,7 @@ const DEVICE_TYPES = {
     kind: "other",
     label: "风机控制器",
     codePrefix: "FAN-",
+    configurable: false,
     tutorial: [
       "确认风机电源与接线正确，避免误操作。",
       "进入配网模式后完成绑定。",
@@ -2833,6 +3027,7 @@ const DEVICE_TYPES = {
     kind: "other",
     label: "压缩机控制器",
     codePrefix: "CMP-",
+    configurable: false,
     tutorial: [
       "确认三相电压与接线正确（如为380V）。",
       "进入配网模式后完成绑定并命名。",
@@ -2844,6 +3039,7 @@ const DEVICE_TYPES = {
     kind: "other",
     label: "阀门控制器",
     codePrefix: "VAL-",
+    configurable: false,
     tutorial: [
       "确认阀门行程与限位设置正确。",
       "进入配网模式后完成绑定。",
@@ -2965,7 +3161,7 @@ function buildGearMap(profile) {
 
 function getMotorProfile() {
   const id = State && State.motorProfileId && MOTOR_PROFILES[State.motorProfileId] ? State.motorProfileId : MOTOR_PROFILE_DEFAULT;
-  return MOTOR_PROFILES[id];
+  return getMotorProfileById(id, false);
 }
 
 function getGearMap() {
@@ -2996,7 +3192,7 @@ function renderMotorProfilePicker() {
   });
 
   const profiles = Object.values(MOTOR_PROFILES).filter((p) => (p.kind || "pump") === State.motorKindId);
-  const current = getMotorProfile();
+  const current = getMotorProfileById(State.motorProfileId || MOTOR_PROFILE_DEFAULT, false);
   const draftId = State._motorProfileDraft;
 
   grid.innerHTML = "";
@@ -3008,14 +3204,15 @@ function renderMotorProfilePicker() {
     grid.appendChild(empty);
   } else {
     profiles.forEach((p) => {
+      const pResolved = getMotorProfileById(p.id, true);
       const card = document.createElement("div");
       const active = (draftId || current?.id) === p.id;
       card.className = "type-card" + (active ? " is-active" : "");
       card.innerHTML = `
         <div>
-          <div class="type-card__title">${p.label}</div>
-          <div class="type-card__sub">${p.model || "—"}</div>
-          <div class="type-card__sub" style="margin-top:6px;">${p.voltage}V · ${p.powerKw}kW · 约${p.ratedCurrentA}A · ≤${p.maxRpm}RPM</div>
+          <div class="type-card__title">${pResolved.label}</div>
+          <div class="type-card__sub">${pResolved.model || "—"}</div>
+          <div class="type-card__sub" style="margin-top:6px;">${pResolved.voltage}V · ${pResolved.powerKw}kW · 约${pResolved.ratedCurrentA}A · ≤${pResolved.maxRpm}RPM</div>
         </div>
       `;
       card.addEventListener("click", () => {
@@ -3028,12 +3225,36 @@ function renderMotorProfilePicker() {
     });
   }
 
-  const picked = MOTOR_PROFILES[draftId] || current;
+  const pickedId = draftId || current?.id || MOTOR_PROFILE_DEFAULT;
+  const picked = getMotorProfileById(pickedId, false);
   if (!picked) {
     hint.textContent = "—";
   } else {
     hint.textContent = `当前：${current?.label || "—"}（${current?.model || "—"}） · 待保存：${draftId ? `${picked.label}（${picked.model}）` : "无"}`;
   }
+}
+
+function renderMotorProfileConfigPanel() {
+  const profile = getMotorProfile();
+  if (!profile) return;
+  const base = getMotorProfileBaseById(profile.id);
+  const title = $("#motorCfgProfileTitle");
+  if (title) title.textContent = `${profile.label}（${profile.model}）`;
+  const setVal = (id, v) => {
+    const el = $(id);
+    if (el && document.activeElement !== el) el.value = String(v ?? "");
+  };
+  setVal("#cfgMotorVoltage", profile.voltage);
+  setVal("#cfgMotorPowerKw", profile.powerKw);
+  setVal("#cfgMotorRatedCurrent", profile.ratedCurrentA);
+  setVal("#cfgMotorMaxRpm", profile.maxRpm);
+  const changed =
+    Number(profile.voltage) !== Number(base.voltage) ||
+    Number(profile.powerKw) !== Number(base.powerKw) ||
+    Number(profile.ratedCurrentA) !== Number(base.ratedCurrentA) ||
+    Number(profile.maxRpm) !== Number(base.maxRpm);
+  const state = $("#motorCfgState");
+  if (state) state.textContent = changed ? "当前已使用自定义参数" : "当前使用型号默认参数";
 }
 
 function renderGearButtons() {
@@ -3152,6 +3373,8 @@ const State = (() => {
     currentDeviceId: seed?.currentDeviceId ?? devices[0].id,
     lastSync: seed?.lastSync ?? fmtTime(),
     motorProfileId: MOTOR_PROFILE_DEFAULT,
+    motorProfileOverrides: seed?.motorProfileOverrides ?? {},
+    _motorProfileCfgDraft: seed?._motorProfileCfgDraft ?? {},
     energyConfig: seed?.energyConfig ?? {
       pf: ENERGY_PF,
       carbonFactor: CARBON_FACTOR,
@@ -3162,7 +3385,22 @@ const State = (() => {
     alarms,
     timers,
     cmdLog: seed?.cmdLog ?? [],
-    tickets: seed?.tickets ?? [] // { id, createdAt, deviceId, deviceCode, deviceName, phone, desc, files[] }
+    tickets: seed?.tickets ?? [
+      // 默认演示工单：用于与后台同步对齐（id 固定）
+      {
+        id: "T202604150001",
+        createdAt: Date.now() - 3600 * 1000 * 6,
+        updatedAt: Date.now() - 3600 * 1000 * 2,
+        status: "submitted",
+        deviceId: devices[0].id,
+        deviceCode: devices[0].code,
+        deviceName: devices[0].name,
+        phone: "13800000000",
+        desc: "【默认演示工单】现象：转不动/没劲；偶发欠压。\n发生时间：今天上午\n发生频率：偶发\n补充：现场已检查阀门，怀疑电网电压波动。",
+        files: [],
+        source: "seed"
+      }
+    ] // { id, createdAt, deviceId, deviceCode, deviceName, phone, desc, files[] }
   };
 
   state.persist = () => store.save(state);
@@ -3234,7 +3472,8 @@ function removeDeviceOrBinding(d) {
   }
   const owner = isDeviceOwner(d);
   if (owner) {
-    if (!confirm("确定删除该设备及其数据？删除后不可恢复（原型演示）。")) return;
+    if (!confirm("确定删除该设备？\n你是主用户，删除将清空该设备所有数据（不可恢复）。")) return;
+    if (!confirm(`二次确认：真的要删除并清空数据吗？\n设备：${d.name}\n编码：${d.code}\n\n提示：子用户无法恢复数据。`)) return;
     State.devices = State.devices.filter((x) => x.id !== d.id);
     State.alarms = (State.alarms || []).filter((x) => x.deviceId !== d.id);
     State.timers = (State.timers || []).filter((x) => x.deviceId !== d.id);
@@ -3246,7 +3485,8 @@ function removeDeviceOrBinding(d) {
     logCmd("成员管理", "OK", `拥有者已删除设备 ${d.code}`);
     return;
   }
-  if (!confirm("确定删除你与该设备的绑定关系？设备及数据会保留，其他人不受影响。")) return;
+  if (!confirm("确定解绑该设备？\n你是子用户：仅会取消绑定，且你没有控制权限。")) return;
+  if (!confirm(`二次确认：解除绑定？\n设备：${d.name}\n编码：${d.code}`)) return;
   State.devices = State.devices.filter((x) => x.id !== d.id);
   if (State.currentDeviceId === d.id) State.currentDeviceId = State.devices[0].id;
   State.lastSync = fmtTime();
@@ -3259,6 +3499,8 @@ function ensureDeviceSharing(d) {
   if (!d) return;
   if (!Array.isArray(d.shares)) d.shares = [];
   if (!d.ownerUserId) d.ownerUserId = State.sessionUserId;
+  // 需求：子用户无控制权限（统一降级为只读）
+  d.shares = d.shares.map((s) => ({ ...s, role: "readonly" }));
 }
 
 function isDeviceOwner(d) {
@@ -3329,7 +3571,6 @@ function setView(view) {
   $$(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.nav === view));
   // 切换视图后立即刷新一次，避免首次进入看不到最新渲染
   if (view === "dashboard") renderDashboard();
-  if (view === "control") renderControl();
   if (view === "me") renderMe();
 }
 
@@ -3500,6 +3741,21 @@ function renderDashboard() {
     const g = gm[gear] || gm[3];
     btn.innerHTML = `${gear}档<span class="gear__sub">${g.rpm}rpm</span>`;
   });
+
+  // 工作台：转速微调 & 旋向
+  const rpmVal = $("#rpmFineValDash");
+  const rpmHint = $("#rpmFineHintDash");
+  const dirSw = $("#swDirDash");
+  if (rpmVal) {
+    const baseRpm = (gm[shownGear] || gm[3]).rpm;
+    const shownRpm = Number(d.pendingRpm ?? d.rpmSetpoint ?? baseRpm);
+    rpmVal.textContent = String(Math.round(shownRpm));
+    if (rpmHint) rpmHint.textContent = d.pendingRpm ? "待下发" : "当前设定";
+  }
+  if (dirSw) {
+    const dir = String(d.dir || "forward");
+    dirSw.checked = dir === "reverse";
+  }
 
   // ticker: show latest alarm for current device if any; else global latest
   const alarm = [...State.alarms]
@@ -3840,7 +4096,34 @@ function renderData() {
 function renderMe() {
   renderDeviceList();
   renderDeviceSharePanel();
+  renderTimers();
+  renderMeTickets();
   renderTickets();
+}
+
+function renderMeTickets() {
+  const list = $("#meTicketList");
+  const empty = $("#meTicketEmpty");
+  if (!list) return;
+  const rows = (State.tickets || []).slice(0, 8);
+  list.innerHTML = "";
+  if (empty) empty.hidden = rows.length > 0;
+  rows.forEach((t) => {
+    const meta = ticketStatusMeta(t.status);
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.style.cursor = "pointer";
+    const createdAt = t.createdAt ? new Date(t.createdAt).toLocaleString() : "—";
+    item.innerHTML = `
+      <div class="list-item__main">
+        <div class="list-item__title">${t.id || "—"}</div>
+        <div class="list-item__sub">${createdAt} · ${t.deviceName || "—"}（${t.deviceCode || "—"}）</div>
+      </div>
+      <div class="chip" style="${meta.style}">${meta.label}</div>
+    `;
+    item.addEventListener("click", () => openTicketDetailDialog(t.id));
+    list.appendChild(item);
+  });
 }
 
 function renderDeviceSharePanel() {
@@ -3937,43 +4220,21 @@ function renderTickets() {
         <div class="list-item__title">${t.id || "—"}</div>
         <div class="list-item__sub">${createdAt} · ${t.deviceName || "—"}（${t.deviceCode || "—"}）</div>
         <div class="list-item__sub" style="margin-top:4px;">${brief || "—"}</div>
-        <div class="subtle" style="margin-top:6px;">状态可在下拉框中修改（原型模拟：代表客服/维修处理结果回填）。</div>
+        <div class="subtle" style="margin-top:6px;">状态由后台自动流转；处理中可补充说明，完成后可评分反馈。</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
         <div class="chip" style="${meta.style}">${meta.label}</div>
-        <select class="input" style="width:120px;padding:8px 10px;" data-ticket-id="${t.id}">
-          <option value="submitted" ${String(t.status) === "submitted" ? "selected" : ""}>已提交</option>
-          <option value="accepted" ${String(t.status) === "accepted" ? "selected" : ""}>已受理</option>
-          <option value="processing" ${String(t.status) === "processing" ? "selected" : ""}>处理中</option>
-          <option value="done" ${String(t.status) === "done" ? "selected" : ""}>已完成</option>
-          <option value="closed" ${String(t.status) === "closed" ? "selected" : ""}>已关闭</option>
-        </select>
+        <div class="subtle">后台自动更新</div>
       </div>
     `;
 
     item.addEventListener("click", () => {
-      alert(
-        `工单号：${t.id || "—"}\n状态：${ticketStatusMeta(t.status).label}\n设备：${t.deviceName || "—"}（${t.deviceCode || "—"}）\n电话：${t.phone || "—"}\n时间：${createdAt}\n\n描述：\n${t.desc || ""}\n\n附件：${(t.files || []).length} 个（原型仅记录元数据）`
-      );
+      openTicketDetailDialog(t.id);
     });
 
     list.appendChild(item);
   });
 
-  // wire status select change
-  list.querySelectorAll("select[data-ticket-id]").forEach((sel) => {
-    sel.addEventListener("change", (e) => {
-      const id = e.target && e.target.dataset && e.target.dataset.ticketId;
-      const v = e.target && e.target.value;
-      const ticket = (State.tickets || []).find((x) => x.id === id);
-      if (!ticket) return;
-      ticket.status = v;
-      ticket.updatedAt = Date.now();
-      State.persist();
-      renderTickets();
-      logCmd("工单状态", "OK", `工单 ${id} -> ${ticketStatusMeta(v).label}（原型）`);
-    });
-  });
 }
 
 /** 与业务侧一致的简易检测（原型）：按转速估算预期电流 I = I0 + (Ir-I0)*(n/nmax)² */
@@ -4188,13 +4449,13 @@ function openChartAnomalyDetail(a) {
   const suggest = (a.suggest || []).map((x, i) => `<li>${i + 1}. ${x}</li>`).join("");
   box.innerHTML = `
     <div style="border:1px solid rgba(15,23,42,.12);border-radius:12px;padding:12px 14px;background:rgba(255,255,255,.04);">
-      <div class="subtle">发生时间：${a.time || "—"}</div>
-      <div class="subtle" style="margin-top:4px;">持续时间：${durMin} 分 ${durSec} 秒（按采样点估算）</div>
+      <div class="subtle">发生时间 ${a.time || "—"}</div>
+      <div class="subtle" style="margin-top:4px;">持续时间 ${durMin} 分 ${durSec} 秒 按采样点估算</div>
       <div style="margin-top:12px;font-weight:800;color:var(--txt);">异常时数据</div>
       <div class="subtle" style="margin-top:6px;line-height:1.55;">
-        转速：<strong style="color:var(--txt);">${a.rpm}</strong> rpm<br/>
-        电流：<strong style="color:var(--txt);">${Number(a.current).toFixed(2)}</strong> A（额定约 ${Number(a.ratedCurrent).toFixed(1)} A）<br/>
-        预期电流（模型）：约 ${Number(a.expectedCurrent).toFixed(2)} A
+        转速 <strong style="color:var(--txt);">${a.rpm}</strong> rpm<br/>
+        电流 <strong style="color:var(--txt);">${Number(a.current).toFixed(2)}</strong> A 额定约 ${Number(a.ratedCurrent).toFixed(1)} A<br/>
+        预期电流 模型约 ${Number(a.expectedCurrent).toFixed(2)} A
       </div>
       <div style="margin-top:12px;font-weight:800;color:var(--txt);">可能原因</div>
       <ul style="margin:6px 0 0 18px;line-height:1.55;color:var(--txt-2);font-size:13px;">${causes || "<li>—</li>"}</ul>
@@ -4202,6 +4463,7 @@ function openChartAnomalyDetail(a) {
       <ul style="margin:6px 0 0 18px;line-height:1.55;color:var(--txt-2);font-size:13px;">${suggest || "<li>—</li>"}</ul>
       <div class="subtle" style="margin-top:10px;">${a.description || ""}</div>
     </div>
+    ${renderIssueKbBlock({ code: a.code || "", title: a.title || "" })}
   `;
   State._chartAnomalyContext = a;
   showDialog("dlgChartAnomaly");
@@ -4757,26 +5019,29 @@ function renderTimers() {
 }
 
 function renderCmdLog() {
-  const box = $("#cmdLog");
-  if (!box) return;
-  box.innerHTML = "";
   const rows = State.cmdLog || [];
-  if (rows.length === 0) {
-    const div = document.createElement("div");
-    div.className = "subtle";
-    div.textContent = "暂无日志（点击启动/停止、下发参数、定时开关等会生成）。";
-    box.appendChild(div);
-    return;
-  }
-  rows.forEach((r) => {
-    const item = document.createElement("div");
-    item.className = "log-item";
-    item.innerHTML = `
-      <div class="log-item__t">${r.title} · ${r.status}</div>
-      <div class="log-item__s">${new Date(r.at).toLocaleString()} · ${r.detail}</div>
-    `;
-    box.appendChild(item);
-  });
+  const renderTo = (box, list) => {
+    if (!box) return;
+    box.innerHTML = "";
+    if (!list.length) {
+      const div = document.createElement("div");
+      div.className = "subtle";
+      div.textContent = "暂无日志（点击启动/停止、下发参数、定时开关等会生成）。";
+      box.appendChild(div);
+      return;
+    }
+    list.forEach((r) => {
+      const item = document.createElement("div");
+      item.className = "log-item";
+      item.innerHTML = `
+        <div class="log-item__t">${r.title} · ${r.status}</div>
+        <div class="log-item__s">${new Date(r.at).toLocaleString()} · ${r.detail}</div>
+      `;
+      box.appendChild(item);
+    });
+  };
+  renderTo($("#cmdLogDash"), rows.slice(0, 3));
+  renderTo($("#cmdLogFull"), rows);
 }
 
 function renderAlarms() {
@@ -4815,22 +5080,295 @@ function openAlarmDetail(alarmId) {
   State.persist();
   renderHeader();
 
+  const t = (State.tickets || []).find((x) => x.deviceId === a.deviceId) || null;
+  const tMeta = t ? ticketStatusMeta(t.status) : null;
+  const tLine = t
+    ? `<div class="subtle" style="margin-top:6px;">工单：<span style="${tMeta?.style || ""}padding:2px 8px;border-radius:999px;border:1px solid rgba(15,23,42,.12);">${tMeta?.label || "—"}</span>（点击查看详情）</div>`
+    : `<div class="subtle" style="margin-top:6px;">工单：—</div>`;
+
   $("#alarmDetailBox").innerHTML = `
     <div style="font-weight:1000; margin-bottom:6px;">${a.code} ${a.title}</div>
     <div class="subtle">设备：${d?.name ?? "未知"}（${d?.code ?? "-"}）</div>
     <div class="subtle">时间：${new Date(a.createdAt).toLocaleString()}</div>
     <div style="margin-top:8px;">${a.detail}</div>
     <div class="subtle" style="margin-top:8px;">建议：先远程复位；若多次复现请联系维修。</div>
+    <div style="margin-top:12px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div style="font-weight:900;color:var(--txt);">原因与解决措施</div>
+        <button type="button" class="btn" id="btnIssuePrettyFromAlarm" style="height:34px;padding:0 12px;font-size:12px;">查看</button>
+      </div>
+      <div class="subtle" style="margin-top:6px;">来自固化知识库：按参数ID/标准故障码优先匹配。</div>
+      ${tLine}
+    </div>
   `;
+  $("#btnIssuePrettyFromAlarm")?.addEventListener("click", () => openIssuePrettyByMatch({ code: a.code, title: a.title }));
+  if (t) {
+    $("#alarmDetailBox")?.querySelectorAll("span").forEach(() => {});
+    const box = $("#alarmDetailBox");
+    const clickable = box?.querySelector("div.subtle span")?.parentElement || null;
+    clickable && (clickable.style.cursor = "pointer");
+    clickable && clickable.addEventListener("click", () => alertTicketDetail(t.id));
+  }
   showDialog("dlgAlarmDetail");
+}
+
+function alertTicketDetail(ticketId) {
+  openTicketDetailDialog(ticketId);
+}
+
+function openTicketDetailDialog(ticketId) {
+  const t = (State.tickets || []).find((x) => x.id === ticketId);
+  if (!t) return;
+  const createdAt = t.createdAt ? new Date(t.createdAt).toLocaleString() : "-";
+  const meta = ticketStatusMeta(t.status);
+  const feedback = t.feedback && typeof t.feedback === "object" ? t.feedback : { score: 0, comment: "" };
+  const canRate = String(t.status || "") === "done";
+  const box = $("#ticketDetailPretty");
+  if (!box) return;
+  box.innerHTML = `
+    <div style="padding:12px;border:1px solid rgba(26,127,212,.20);border-radius:14px;background:linear-gradient(135deg,rgba(26,127,212,.08),rgba(26,127,212,.03));">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div style="font-weight:900;color:var(--txt);">${t.id || "—"}</div>
+        <div class="chip" style="${meta.style}">${meta.label}</div>
+      </div>
+      <div class="subtle" style="margin-top:6px;">${createdAt} · ${t.deviceName || "—"}（${t.deviceCode || "—"}）</div>
+      <div class="subtle" style="margin-top:4px;">联系电话：${t.phone || "—"}</div>
+      <div style="margin-top:10px;padding:10px;border:1px solid rgba(15,23,42,.10);border-radius:12px;background:#fff;">
+        <div class="subtle">问题描述</div>
+        <div style="margin-top:6px;white-space:pre-wrap;line-height:1.6;color:var(--txt-2);">${escapeHtml(t.desc || "—")}</div>
+      </div>
+      <div class="subtle" style="margin-top:8px;">附件：${(t.files || []).length} 个（原型仅记录元数据）</div>
+      <div style="margin-top:10px;padding:10px;border:1px solid rgba(15,23,42,.10);border-radius:12px;background:#fff;">
+        <div class="subtle">处理进展</div>
+        <div style="margin-top:6px;line-height:1.6;color:var(--txt-2);">${
+          (Array.isArray(t.history) && t.history.length)
+            ? t.history
+                .slice()
+                .sort((a, b) => Number(b.at || 0) - Number(a.at || 0))
+                .slice(0, 6)
+                .map((h) => `${new Date(Number(h.at || Date.now())).toLocaleString()} · ${escapeHtml(h.msg || "-")}`)
+                .join("<br/>")
+            : "处理中可持续补充内容；当前暂无处理记录。"
+        }</div>
+      </div>
+      <div class="subtle" style="margin-top:8px;">说明：子管理员处理动作会自动把状态变为“处理中”；处理完成后可评分并填写意见。</div>
+      ${
+        canRate
+          ? `<div style="margin-top:10px;padding:10px;border:1px solid rgba(22,163,74,.25);border-radius:12px;background:#fff;">
+              <div class="subtle">服务评分与意见</div>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+                <select id="ticketFeedbackScore" class="input" style="width:120px;padding:8px 10px;">
+                  <option value="5" ${Number(feedback.score || 0) === 5 ? "selected" : ""}>5分 很满意</option>
+                  <option value="4" ${Number(feedback.score || 0) === 4 ? "selected" : ""}>4分 满意</option>
+                  <option value="3" ${Number(feedback.score || 0) === 3 ? "selected" : ""}>3分 一般</option>
+                  <option value="2" ${Number(feedback.score || 0) === 2 ? "selected" : ""}>2分 待改进</option>
+                  <option value="1" ${Number(feedback.score || 0) === 1 ? "selected" : ""}>1分 不满意</option>
+                </select>
+                <button id="btnTicketFeedbackSave" class="btn btn--primary" style="padding:8px 12px;">提交反馈</button>
+              </div>
+              <textarea id="ticketFeedbackComment" class="input" style="margin-top:8px;min-height:78px;padding:10px;" placeholder="补充意见（可选）">${escapeHtml(feedback.comment || "")}</textarea>
+            </div>`
+          : ""
+      }
+    </div>
+  `;
+  if (canRate) {
+    $("#btnTicketFeedbackSave")?.addEventListener("click", () => {
+      const score = Number($("#ticketFeedbackScore")?.value || 5);
+      const comment = String($("#ticketFeedbackComment")?.value || "").trim();
+      t.feedback = { score, comment, at: Date.now() };
+      t.updatedAt = Date.now();
+      t.history = Array.isArray(t.history) ? t.history : [];
+      t.history.unshift({ at: Date.now(), by: "user", action: "feedback", msg: `用户评分 ${score} 分${comment ? `：${comment}` : ""}` });
+      State.persist();
+      renderTickets();
+      logCmd("工单反馈", "OK", `工单 ${t.id} 已评分 ${score} 分`);
+      openTicketDetailDialog(t.id);
+    });
+  }
+  showDialog("dlgTicketDetail");
+}
+
+function openIssuePretty(issue) {
+  if (!issue) return;
+  const titleText = String(issue.title || "原因与解决措施").trim();
+  const causes = issue.causes || [];
+  const actions = issue.actions || [];
+  $("#issuePrettyTitle").textContent = titleText;
+  const metaBits = [];
+  if (issue.paramId !== undefined && issue.paramId !== null && String(issue.paramId).trim() !== "") metaBits.push(`参数ID：${issue.paramId}`);
+  if (issue.code) metaBits.push(`故障码：${issue.code}`);
+  if (issue.stdCode && String(issue.stdCode) !== String(issue.code)) metaBits.push(`标准码：${issue.stdCode}`);
+  $("#issuePrettyMeta").textContent = metaBits.join(" · ");
+  const ul = $("#issuePrettyCauses");
+  const ol = $("#issuePrettyActions");
+  ul.innerHTML = "";
+  ol.innerHTML = "";
+  causes.forEach((c) => {
+    const li = document.createElement("li");
+    li.textContent = String(c);
+    ul.appendChild(li);
+  });
+  actions.forEach((a, i) => {
+    const li = document.createElement("li");
+    li.textContent = String(a);
+    ol.appendChild(li);
+  });
+  const imgWrap = $("#issuePrettyImgWrap");
+  if (issue.imageDataUrl) {
+    imgWrap.style.display = "block";
+    imgWrap.innerHTML = `<div class="subtle" style="margin-bottom:8px;">流程图 / 图示</div><img src="${issue.imageDataUrl}" alt="流程图" style="width:100%;border-radius:12px;border:1px solid rgba(15,23,42,.12);background:#fff;" />`;
+  } else {
+    imgWrap.style.display = "none";
+    imgWrap.innerHTML = "";
+  }
+  showDialog("dlgIssuePretty");
+}
+
+function openIssuePrettyByMatch({ code, title }) {
+  const rows = matchIssuesFor({ code, title });
+  if (!rows.length) {
+    $("#issuePrettyTitle").textContent = "原因与解决措施";
+    $("#issuePrettyMeta").textContent = "未匹配到知识库条目";
+    $("#issuePrettyCauses").innerHTML = "<li>—</li>";
+    $("#issuePrettyActions").innerHTML = "<li>—</li>";
+    $("#issuePrettyImgWrap").style.display = "none";
+    showDialog("dlgIssuePretty");
+    return;
+  }
+  openIssuePretty(rows[0]);
+}
+
+function loadIssueKb() {
+  if (Array.isArray(window.CLEDIC_STATIC_ISSUE_KB) && window.CLEDIC_STATIC_ISSUE_KB.length) {
+    return window.CLEDIC_STATIC_ISSUE_KB;
+  }
+  try {
+    const raw = localStorage.getItem("cledic_issue_kb_v1");
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getCurrentModelIdForKb() {
+  // 用户端原型：优先用当前选择的电机型号 id；没有则用通用
+  const id = String(State.motorProfileId || "").trim();
+  return id || "__COMMON__";
+}
+
+function matchIssuesFor({ code, title }) {
+  const cRaw = String(code || "").trim();
+  const c = cRaw.toLowerCase();
+  const t = String(title || "").trim().toLowerCase();
+  const modelId = getCurrentModelIdForKb();
+  const list = loadIssueKb();
+
+  const paramFromCode = (() => {
+    const n = Number(cRaw);
+    if (Number.isFinite(n) && n >= 1 && n <= 99999) return n;
+    return null;
+  })();
+
+  const score = (it) => {
+    let s = 0;
+    const itCode = String(it.code || "").trim().toLowerCase();
+    const itTitle = String(it.title || "").trim().toLowerCase();
+    const pid =
+      it.paramId !== undefined && it.paramId !== null && String(it.paramId).trim() !== "" ? Number(it.paramId) : NaN;
+    if (paramFromCode !== null && Number.isFinite(pid) && pid === paramFromCode) s += 120;
+    if (c && itCode && itCode === c) s += 100;
+    const std = String(it.stdCode || "").trim().toLowerCase();
+    if (c && std && std === c) s += 95;
+    if (t && itTitle && (t.includes(itTitle) || itTitle.includes(t))) s += 30;
+    if (c && itTitle && itTitle.includes(c)) s += 10;
+    if (String(it.modelId || "__COMMON__") === modelId) s += 8;
+    if (String(it.modelId || "__COMMON__") === "__COMMON__") s += 2;
+    return s;
+  };
+
+  const filtered = list
+    .filter((it) => {
+      const mid = String(it.modelId || "__COMMON__");
+      return mid === "__COMMON__" || mid === modelId;
+    })
+    .map((it) => ({ it, s: score(it) }))
+    .filter((x) => x.s > 0)
+    .sort((a, b) => b.s - a.s)
+    .map((x) => x.it);
+
+  const seenKey = new Set();
+  const dedup = [];
+  for (const it of filtered) {
+    const key = `${String(it.paramId ?? "")}__${String(it.code || "")}__${String(it.title || "")}`;
+    if (seenKey.has(key)) continue;
+    seenKey.add(key);
+    dedup.push(it);
+    if (dedup.length >= 3) break;
+  }
+  return dedup;
+}
+
+function renderIssueKbBlock() {
+  // 已改为弹窗展示，不再在详情里内嵌卡片
+  return "";
+}
+
+function renderHelpKbList(q = "") {
+  const listEl = $("#helpKbList");
+  const emptyEl = $("#helpKbEmpty");
+  if (!listEl) return;
+  const kw = String(q || "").trim().toLowerCase();
+  const modelId = getCurrentModelIdForKb();
+  const rows = loadIssueKb()
+    .filter((it) => {
+      const mid = String(it.modelId || "__COMMON__");
+      return mid === "__COMMON__" || mid === modelId;
+    })
+    .filter((it) => {
+      if (!kw) return true;
+      const pid =
+        it.paramId !== undefined && it.paramId !== null && String(it.paramId).trim() !== "" ? String(it.paramId) : "";
+      const hay = `${it.code || ""} ${it.stdCode || ""} ${pid} ${it.title || ""} ${(it.tags || []).join(" ")} ${(it.causes || []).join(" ")} ${(it.actions || []).join(" ")}`.toLowerCase();
+      return hay.includes(kw);
+    })
+    .slice(0, 60);
+
+  listEl.innerHTML = "";
+  if (emptyEl) emptyEl.hidden = rows.length > 0;
+  rows.forEach((it) => {
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.style.cursor = "pointer";
+    item.innerHTML = `
+      <div class="list-item__main">
+        <div class="list-item__title">${escapeHtml(it.code ? `${it.code} · ${it.title}` : it.title)}</div>
+        <div class="list-item__sub">${escapeHtml(((it.actions || [])[0]) || "点击查看原因与处理步骤")}</div>
+      </div>
+      <div class="chip" style="border-color:rgba(15,23,42,.18);background:rgba(15,23,42,.04);color:var(--txt);">${escapeHtml((it.tags && it.tags[0]) || (String(it.modelId || "__COMMON__") === "__COMMON__" ? "通用" : "型号"))}</div>
+    `;
+    item.addEventListener("click", () => {
+      openIssuePretty(it);
+    });
+    listEl.appendChild(item);
+  });
 }
 
 function renderAll() {
   renderHeader();
   renderDevicePicker();
-  renderMotorProfilePicker();
   renderDashboard();
-  renderControl();
   renderData();
   renderMe();
 }
@@ -4846,7 +5384,7 @@ function wireNav() {
   const go = $("#btnGoControlBig");
   if (go) {
     go.addEventListener("click", () => {
-      setView("control");
+      setView("me");
       renderAll();
     });
   }
@@ -4857,8 +5395,29 @@ function wireDialogs() {
   $$("[data-close]").forEach((b) =>
     b.addEventListener("click", () => closeDialog(b.getAttribute("data-close")))
   );
+  // issue detail dialog: robust close handlers
+  const dlgIssuePretty = $("#dlgIssuePretty");
+  const btnIssuePrettyClose = document.querySelector('#dlgIssuePretty [data-close="dlgIssuePretty"]');
+  btnIssuePrettyClose?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeDialog("dlgIssuePretty");
+  });
+  dlgIssuePretty?.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closeDialog("dlgIssuePretty");
+  });
+  dlgIssuePretty?.addEventListener("click", (e) => {
+    const rect = dlgIssuePretty.getBoundingClientRect();
+    const inPanel =
+      e.clientX >= rect.left &&
+      e.clientX <= rect.right &&
+      e.clientY >= rect.top &&
+      e.clientY <= rect.bottom;
+    if (!inPanel) closeDialog("dlgIssuePretty");
+  });
+
   $("#btnDevicePicker").addEventListener("click", () => {
-    renderMotorProfilePicker();
     showDialog("dlgDevices");
   });
   $("#btnAlarmCenter").addEventListener("click", () => {
@@ -4923,6 +5482,10 @@ function wireDialogs() {
       renderAll();
     });
   }
+  $("#btnCmdMore")?.addEventListener("click", () => {
+    renderCmdLog();
+    showDialog("dlgCmdLogFull");
+  });
 
   const btnAddDeviceInPicker = $("#btnAddDeviceInPicker");
   if (btnAddDeviceInPicker) {
@@ -5023,6 +5586,8 @@ function wireDashboardControls() {
       const gp = gm[next] || gm[3];
       d.gear = next;
       delete d.pendingGear;
+      delete d.pendingRpm;
+      d.rpmSetpoint = gp.rpm;
       d.metrics.rpm = gp.rpm;
       d.metrics.i = gp.I;
       d.metrics.v = d.metrics.v || getMotorProfile().voltage || 220;
@@ -5032,6 +5597,34 @@ function wireDashboardControls() {
       d.metrics.head = +(40 * Math.pow(d.metrics.rpm / 4000, 2)).toFixed(1);
       d.metrics.q = +(120 * (d.metrics.rpm / 4000)).toFixed(1);
       d.metrics.p = d.metrics.p || 0.38;
+      State.lastSync = fmtTime();
+    }, { stateEl: box, buttons: [btnStart, btnStop, btnResetFaultDash] });
+  }
+
+  async function applyRpmFromDashboard(nextRpm) {
+    const d = getCurrentDevice();
+    const box = $("#commandState");
+    if (d.status === "offline") return setBad(box, "下发失败：设备离线");
+    const rpm = Math.max(1500, Math.min(4500, Math.round(Number(nextRpm) || 0)));
+    d.pendingRpm = rpm;
+    renderDashboard();
+    await runCommandFlow("转速微调", async () => {
+      d.rpmSetpoint = rpm;
+      delete d.pendingRpm;
+      d.metrics.rpm = rpm;
+      d.metrics.head = +(40 * Math.pow(d.metrics.rpm / 4000, 2)).toFixed(1);
+      d.metrics.q = +(120 * (d.metrics.rpm / 4000)).toFixed(1);
+      State.lastSync = fmtTime();
+    }, { stateEl: box, buttons: [btnStart, btnStop, btnResetFaultDash] });
+  }
+
+  async function applyDirFromDashboard(nextDir) {
+    const d = getCurrentDevice();
+    const box = $("#commandState");
+    if (d.status === "offline") return setBad(box, "下发失败：设备离线");
+    const dir = nextDir === "reverse" ? "reverse" : "forward";
+    await runCommandFlow("旋向切换", async () => {
+      d.dir = dir;
       State.lastSync = fmtTime();
     }, { stateEl: box, buttons: [btnStart, btnStop, btnResetFaultDash] });
   }
@@ -5058,10 +5651,32 @@ function wireDashboardControls() {
       State.lastSync = fmtTime();
     });
   });
+
+  // 工作台：转速微调
+  const btnMinus = $("#btnRpmMinusDash");
+  const btnPlus = $("#btnRpmPlusDash");
+  const dirSw = $("#swDirDash");
+  const step = 50;
+  const getShownRpm = () => {
+    const d = getCurrentDevice();
+    const gm = getGearMap();
+    const shownGear = Number(d.pendingGear || d.gear || 1);
+    const baseRpm = (gm[shownGear] || gm[3]).rpm;
+    return Number(d.pendingRpm ?? d.rpmSetpoint ?? baseRpm);
+  };
+  btnMinus?.addEventListener("click", () => applyRpmFromDashboard(getShownRpm() - step));
+  btnPlus?.addEventListener("click", () => applyRpmFromDashboard(getShownRpm() + step));
+  dirSw?.addEventListener("change", () => {
+    applyDirFromDashboard(dirSw.checked ? "reverse" : "forward");
+  });
 }
 
 async function runCommandFlow(title, applyFn, opts = {}) {
   const d = getCurrentDevice();
+  if (!isDeviceOwner(d)) {
+    alert("无控制权限：你是子用户，仅可查看数据/解绑设备。\n如需控制，请使用主用户账号操作。");
+    return;
+  }
   const state = opts.stateEl || $("#commandState");
   const buttons = (opts.buttons || []).filter(Boolean);
   buttons.forEach((b) => (b.disabled = true));
@@ -5126,6 +5741,47 @@ function wireControlPage() {
   if (ov) ov.textContent = "24.0 V";
   if (ot) ot.textContent = "85 ℃";
   if (swDryRun) swDryRun.checked = Boolean(d.dryRunEnabled ?? true);
+
+  $("#btnSaveMotorCfg")?.addEventListener("click", () => {
+    const p = getMotorProfile();
+    if (!p) return;
+    if (!State.motorProfileOverrides) State.motorProfileOverrides = {};
+    const cfg = sanitizeMotorOverride({
+      voltage: $("#cfgMotorVoltage")?.value,
+      powerKw: $("#cfgMotorPowerKw")?.value,
+      ratedCurrentA: $("#cfgMotorRatedCurrent")?.value,
+      maxRpm: $("#cfgMotorMaxRpm")?.value,
+    });
+    const base = getMotorProfileBaseById(p.id);
+    const merged = {
+      voltage: cfg.voltage ?? base.voltage,
+      powerKw: cfg.powerKw ?? base.powerKw,
+      ratedCurrentA: cfg.ratedCurrentA ?? base.ratedCurrentA,
+      maxRpm: cfg.maxRpm ?? base.maxRpm,
+    };
+    const changed =
+      Number(merged.voltage) !== Number(base.voltage) ||
+      Number(merged.powerKw) !== Number(base.powerKw) ||
+      Number(merged.ratedCurrentA) !== Number(base.ratedCurrentA) ||
+      Number(merged.maxRpm) !== Number(base.maxRpm);
+    if (changed) State.motorProfileOverrides[p.id] = cfg;
+    else delete State.motorProfileOverrides[p.id];
+    State.lastSync = fmtTime();
+    State.persist();
+    setOk($("#motorCfgState"), "已保存");
+    logCmd("型号配置", "OK", `${p.label} -> ${merged.maxRpm}RPM / ${merged.ratedCurrentA}A`);
+    renderAll();
+  });
+  $("#btnResetMotorCfg")?.addEventListener("click", () => {
+    const p = getMotorProfile();
+    if (!p) return;
+    if (!State.motorProfileOverrides) State.motorProfileOverrides = {};
+    delete State.motorProfileOverrides[p.id];
+    State.lastSync = fmtTime();
+    State.persist();
+    setOk($("#motorCfgState"), "已恢复默认");
+    renderAll();
+  });
 
   // 已移除“远程控制”模块时，不再绑定相关事件
   if (!btnStartCtrl || !btnStopCtrl) return;
@@ -5305,7 +5961,10 @@ function genWorkOrderId() {
 }
 
 function validatePhone(phone) {
-  return /^1\\d{10}$/.test(String(phone || "").trim());
+  const normalized = String(phone || "")
+    .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 65248))
+    .replace(/\D/g, "");
+  return /^1\d{10}$/.test(normalized);
 }
 
 function svcDescTemplate() {
@@ -5418,7 +6077,17 @@ function openServiceDialog({ source, anomaly } = {}) {
   else if (source === "chart-anomaly" && anomaly) {
     $("#svcHint").textContent = "来自转速/电流曲线异常研判：建议补充现场照片/视频并提交工单。";
   } else $("#svcHint").textContent = "提交后将生成工单（原型：本地保存）。";
-  $("#svcDevice").value = `${d.name}（${d.code}）`;
+  const svcDeviceSel = $("#svcDevice");
+  if (svcDeviceSel) {
+    svcDeviceSel.innerHTML = "";
+    (State.devices || []).forEach((dev) => {
+      const opt = document.createElement("option");
+      opt.value = String(dev.id || "");
+      opt.textContent = `${dev.name || "-"}（${dev.code || "-"}）`;
+      if (String(dev.id || "") === String(d.id || "")) opt.selected = true;
+      svcDeviceSel.appendChild(opt);
+    });
+  }
   $("#svcPhone").value = $("#svcPhone").value || "";
   $$(".svc-symptom").forEach((el) => { el.checked = false; });
   $("#svcExtra").value = "";
@@ -5428,7 +6097,7 @@ function openServiceDialog({ source, anomaly } = {}) {
     const title = String(anomaly.title || "");
     if (title.includes("堵转")) $$(".svc-symptom").find((x) => x.value === "电流异常") && ($$(".svc-symptom").find((x) => x.value === "电流异常").checked = true);
     if (title.includes("缺水") || title.includes("空转")) $$(".svc-symptom").find((x) => x.value === "缺水/空转") && ($$(".svc-symptom").find((x) => x.value === "缺水/空转").checked = true);
-    $("#svcExtra").value = `来源：曲线异常研判\n异常：${anomaly.title || "异常"}\n描述：${anomaly.description || ""}`;
+    $("#svcExtra").value = `来源 曲线异常研判\n异常 ${anomaly.title || "异常"}\n描述 ${anomaly.description || ""}`;
     State._svcOccurredAt = "刚刚";
   }
   $("#svcWorkOrder").value = "";
@@ -5438,17 +6107,7 @@ function openServiceDialog({ source, anomaly } = {}) {
   State._svcFiles = [];
   State._svcPreviews = [];
 
-  const supportPhone = "00000000000";
-  $("#svcCallBtn").setAttribute("href", `tel:${supportPhone}`);
-
-  $("#svcCopyBtn").onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(supportPhone);
-      setOk($("#svcState"), "已复制客服电话");
-    } catch {
-      setBad($("#svcState"), "复制失败，请手动复制： " + supportPhone);
-    }
-  };
+  // 工单内不确定按钮已移除：拨打/复制电话
 
   $("#svcFiles").onchange = async (e) => {
     const files = (e && e.target && e.target.files) || [];
@@ -5540,19 +6199,24 @@ function openServiceDialog({ source, anomaly } = {}) {
   };
 
   $("#btnSvcSubmit").onclick = async () => {
-    const phone = $("#svcPhone").value.trim();
+    const selectedDeviceId = String($("#svcDevice")?.value || String(d.id || ""));
+    const selDevice = (State.devices || []).find((x) => String(x.id || "") === selectedDeviceId) || d;
+    const phone = String($("#svcPhone").value || "")
+      .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 65248))
+      .replace(/\D/g, "");
+    $("#svcPhone").value = phone;
     const symptoms = $$(".svc-symptom").filter((x) => x.checked).map((x) => x.value);
     const occurredAt = String(State._svcOccurredAt || "").trim();
     const freq = String(State._svcFreq || "").trim();
     const extra = String($("#svcExtra").value || "").trim();
-    if (!validatePhone(phone)) return setBad($("#svcState"), "请输入正确手机号");
-    if (symptoms.length === 0 && !extra) return setBad($("#svcState"), "请至少勾选 1 项现象，或填写补充说明");
+    if (!validatePhone(phone)) return setBad($("#svcState"), "手机号格式不正确 请输入11位手机号");
+    if (symptoms.length === 0 && !extra) return setBad($("#svcState"), "手机号正确 还需勾选1项现象或填写补充说明");
 
     const desc = [
-      `问题现象：${symptoms.length ? symptoms.join("、") : "（未勾选）"}`,
-      `发生时间：${occurredAt || "（未选择）"}`,
-      `发生频率：${freq || "（未选择）"}`,
-      `补充说明：${extra || "（无）"}`
+      `问题现象 ${symptoms.length ? symptoms.join(" ") : "未勾选"}`,
+      `发生时间 ${occurredAt || "未选择"}`,
+      `发生频率 ${freq || "未选择"}`,
+      `补充说明 ${extra || "无"}`
     ].join("\n");
 
     const id = genWorkOrderId();
@@ -5562,18 +6226,19 @@ function openServiceDialog({ source, anomaly } = {}) {
       id,
       createdAt: Date.now(),
       status: "submitted",
-      deviceId: d.id,
-      deviceCode: d.code,
-      deviceName: d.name,
+      deviceId: selDevice.id,
+      deviceCode: selDevice.code,
+      deviceName: selDevice.name,
       phone,
       desc,
-      files: (State._svcPreviews || []).map((p) => ({ name: p.name, type: p.type, size: p.size }))
+      files: (State._svcPreviews || []).map((p) => ({ name: p.name, type: p.type, size: p.size })),
+      history: [{ at: Date.now(), by: "user", action: "submit", msg: "用户提交工单" }]
     };
     State.tickets.unshift(ticket);
     State.tickets = State.tickets.slice(0, 50);
     State.persist();
     setOk($("#svcState"), "工单已提交：" + id);
-    logCmd("客服/报修", "OK", `提交工单 ${id}（${d.name}）`);
+    logCmd("客服/报修", "OK", `提交工单 ${id}（${selDevice.name}）`);
     renderTickets();
   };
 
@@ -5619,7 +6284,41 @@ function wireMePage() {
   $("#btnService")?.addEventListener("click", () => {
     openServiceDialog({ source: "me" });
   });
+  $("#btnServiceQuick")?.addEventListener("click", () => {
+    openServiceDialog({ source: "me" });
+  });
+  $("#btnServiceInTicketCenter")?.addEventListener("click", () => {
+    openServiceDialog({ source: "me" });
+  });
+  $("#btnTicketCenter")?.addEventListener("click", () => {
+    renderTickets();
+    showDialog("dlgTicketCenter");
+  });
+  $("#btnTicketCenter2")?.addEventListener("click", () => {
+    renderTickets();
+    showDialog("dlgTicketCenter");
+  });
   $("#btnTicketRefresh")?.addEventListener("click", () => renderTickets());
+
+  $("#btnHelpCenter")?.addEventListener("click", () => showDialog("dlgHelpCenter"));
+  // btnHelpCenter2 已移除（卡片不再提供该入口）
+  $("#btnHelpKbOpen")?.addEventListener("click", () => {
+    $("#helpKbSearch").value = "";
+    renderHelpKbList("");
+    showDialog("dlgHelpKb");
+  });
+  $("#btnHelpKbOpenInHelpCenter")?.addEventListener("click", () => {
+    closeDialog("dlgHelpCenter");
+    $("#helpKbSearch").value = "";
+    renderHelpKbList("");
+    showDialog("dlgHelpKb");
+  });
+  $("#btnHelpMoreInMe")?.addEventListener("click", () => {
+    $("#helpKbSearch").value = "";
+    renderHelpKbList("");
+    showDialog("dlgHelpKb");
+  });
+  $("#helpKbSearch")?.addEventListener("input", (e) => renderHelpKbList(e.target.value));
 
   // 电机型号选择器已移至「切换设备」弹窗（电机型号），此处不再重复
 
@@ -5644,6 +6343,10 @@ function resetOnboarding() {
   $("#onbBar").style.width = "20%";
   $("#linkTypeText").textContent = "4G 云连接中…";
   renderDeviceTypePicker();
+}
+
+function isGenericConfigDeviceType(dtype) {
+  return Boolean(dtype && dtype.configurable);
 }
 
 function setStep(n) {
@@ -5686,6 +6389,9 @@ function wireOnboarding() {
       setStep(3);
       $("#wiz2").hidden = true;
       $("#wiz3").hidden = false;
+      const dtypeNow = detectDeviceTypeByCode(State._onbScannedCode || "");
+      const card = $("#onbParamCard");
+      if (card) card.hidden = !isGenericConfigDeviceType(dtypeNow);
     })();
   });
 
@@ -5693,12 +6399,28 @@ function wireOnboarding() {
     const name = $("#onbName").value.trim() || "新水泵设备";
     const code = State._onbScannedCode || `BP-${Math.floor(Math.random() * 9e5 + 1e5)}`;
     const dtype = detectDeviceTypeByCode(code);
+    const paramConfig = isGenericConfigDeviceType(dtype)
+      ? {
+          runHz: $("#pcRunHz")?.value?.trim?.() || "",
+          setHz: $("#pcSetHz")?.value?.trim?.() || "",
+          busV: $("#pcBusV")?.value?.trim?.() || "",
+          outV: $("#pcOutV")?.value?.trim?.() || "",
+          outI: $("#pcOutI")?.value?.trim?.() || "",
+          outP: $("#pcOutP")?.value?.trim?.() || "",
+          torque: $("#pcTorque")?.value?.trim?.() || "",
+          runState: $("#pcRunState")?.value?.trim?.() || "",
+          cmd: $("#pcCmd")?.value?.trim?.() || "",
+          fault: $("#pcFault")?.value?.trim?.() || "",
+        }
+      : null;
     const device = {
       id: `dev_${Math.random().toString(16).slice(2, 8)}`,
       name,
       code,
       typeId: dtype.id,
       typeLabel: dtype.label,
+      isGeneric: Boolean(isGenericConfigDeviceType(dtype)),
+      paramConfig,
       ownerUserId: State.sessionUserId,
       shares: [],
       status: "stopped",
