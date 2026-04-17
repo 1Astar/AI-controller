@@ -1261,6 +1261,38 @@ select.input {
 .list-item__title { font-size: 13px; font-weight: 600; color: var(--txt); }
 .list-item__sub   { font-size: 11px; color: var(--txt-3); margin-top: 2px; }
 
+/* 帮助中心：强调可点击入口（查看更多问题） */
+.help-more-highlight {
+  border-color: rgba(26,127,212,0.45);
+  box-shadow: 0 0 0 2px rgba(26,127,212,0.12) inset;
+  position: relative;
+  animation: helpMorePulse 1.6s ease-in-out infinite;
+}
+.help-more-highlight::after {
+  content: "可点击";
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1a7fd4;
+  background: rgba(26,127,212,0.10);
+  border: 1px solid rgba(26,127,212,0.30);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.help-more-arrow {
+  margin-left: 8px;
+  color: #1a7fd4;
+  font-weight: 800;
+  font-size: 14px;
+}
+@keyframes helpMorePulse {
+  0% { box-shadow: 0 0 0 2px rgba(26,127,212,0.10) inset; }
+  50% { box-shadow: 0 0 0 2px rgba(26,127,212,0.24) inset, 0 0 0 3px rgba(26,127,212,0.10); }
+  100% { box-shadow: 0 0 0 2px rgba(26,127,212,0.10) inset; }
+}
+
 .empty { text-align: center; padding: 16px 0; color: var(--txt-3); font-size: 12px; }
 
 /* ====================================================
@@ -2294,9 +2326,9 @@ dialog[open] { animation: dialog-in 0.2s ease; }
                     <div class="list-item__sub">先看告警代码，检查阀门/管路堵塞，再尝试降低档位。</div>
                   </div>
                 </div>
-                <div class="list-item" id="btnHelpMoreInMe" style="cursor:pointer;">
+                <div class="list-item help-more-highlight" id="btnHelpMoreInMe" style="cursor:pointer;" title="点击打开问题与解决措施">
                   <div class="list-item__main">
-                    <div class="list-item__title">查看更多问题</div>
+                    <div class="list-item__title">查看更多问题 <span class="help-more-arrow">›</span></div>
                     <div class="list-item__sub">在“问题与解决措施”弹窗中可按故障码/标题搜索。点击此条可打开。</div>
                   </div>
                 </div>
@@ -3278,7 +3310,16 @@ const fmtTime = (d = new Date()) => {
 };
 
 const store = {
-  load() { return null; }, // 禁用持久化，避免旧状态污染
+  load() {
+    try {
+      const raw = localStorage.getItem("pump_proto_state") || "";
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch {
+      return null;
+    }
+  },
   save(state) {
     localStorage.setItem("pump_proto_state", JSON.stringify(state));
   }
@@ -3288,9 +3329,7 @@ const store = {
 const SESSION_USER_ID = "u_session_self";
 
 const State = (() => {
-  // 每次启动强制清除旧缓存，避免旧告警/旧故障状态导致反复弹窗
-  store.save(null);
-  const seed = null;
+  const seed = store.load();
   const devices =
     seed?.devices ??
     [
@@ -3406,6 +3445,109 @@ const State = (() => {
   state.persist = () => store.save(state);
   return state;
 })();
+
+let __currentTicketId = "";
+
+function loadBackendTicketsBridge() {
+  try {
+    const raw = localStorage.getItem("cledic_tickets_v1") || "";
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function normalizeTicketRow(raw = {}) {
+  return {
+    id: String(raw.id || "").trim(),
+    createdAt: Number(raw.createdAt || Date.now()),
+    updatedAt: Number(raw.updatedAt || Date.now()),
+    status: String(raw.status || "submitted"),
+    deviceId: String(raw.deviceId || ""),
+    deviceCode: String(raw.deviceCode || ""),
+    deviceName: String(raw.deviceName || ""),
+    phone: String(raw.phone || "").replace(/\s/g, ""),
+    desc: String(raw.desc || ""),
+    files: Array.isArray(raw.files) ? raw.files : [],
+    feedback: raw.feedback && typeof raw.feedback === "object" ? raw.feedback : null,
+    history: Array.isArray(raw.history) ? raw.history : [],
+    assignedTo: String(raw.assignedTo || ""),
+    assignedRole: String(raw.assignedRole || ""),
+    source: String(raw.source || ""),
+  };
+}
+
+function mergeTicketsPreferNewer(baseRows, incomingRows) {
+  const map = new Map();
+  (Array.isArray(baseRows) ? baseRows : []).forEach((r) => {
+    const row = normalizeTicketRow(r);
+    if (row.id) map.set(row.id, row);
+  });
+  (Array.isArray(incomingRows) ? incomingRows : []).forEach((r) => {
+    const row = normalizeTicketRow(r);
+    if (!row.id) return;
+    const prev = map.get(row.id);
+    if (!prev) {
+      map.set(row.id, row);
+      return;
+    }
+    const takeIncoming = Number(row.updatedAt || 0) >= Number(prev.updatedAt || 0);
+    map.set(row.id, takeIncoming ? { ...prev, ...row } : prev);
+  });
+  return [...map.values()].sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+}
+
+function upsertTicketToBackendBridge(ticket) {
+  const row = normalizeTicketRow(ticket);
+  if (!row.id) return;
+  let list = [];
+  try {
+    const raw = localStorage.getItem("cledic_tickets_v1") || "";
+    const parsed = raw ? JSON.parse(raw) : [];
+    list = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    list = [];
+  }
+  const idx = list.findIndex((x) => String(x?.id || "").trim() === row.id);
+  if (idx >= 0) list[idx] = { ...(list[idx] || {}), ...row, updatedAt: Date.now() };
+  else list.unshift({ ...row, updatedAt: Date.now() });
+  try {
+    localStorage.setItem("cledic_tickets_v1", JSON.stringify(list));
+  } catch {
+    // ignore
+  }
+}
+
+function isTicketVisibleToCurrentUser(t) {
+  const row = normalizeTicketRow(t);
+  const code = String(row.deviceCode || "").trim();
+  const did = String(row.deviceId || "").trim();
+  const myDeviceIds = new Set((State.devices || []).map((d) => String(d.id || "").trim()).filter(Boolean));
+  const myDeviceCodes = new Set((State.devices || []).map((d) => String(d.code || "").trim()).filter(Boolean));
+  const byDevice = (did && myDeviceIds.has(did)) || (code && myDeviceCodes.has(code));
+  if (byDevice) return true;
+  const enteredPhone = String($("#svcPhone")?.value || "").replace(/\s/g, "");
+  const tPhone = String(row.phone || "").replace(/\s/g, "");
+  const byPhone = /^1\d{10}$/.test(enteredPhone) && enteredPhone === tPhone;
+  return byPhone;
+}
+
+function syncTicketsFromProtoStorage() {
+  const latest = store.load();
+  const protoRows = Array.isArray(latest?.tickets) ? latest.tickets : [];
+  const backendRows = loadBackendTicketsBridge();
+  const merged = mergeTicketsPreferNewer(protoRows, backendRows);
+  State.tickets = merged.filter((t) => isTicketVisibleToCurrentUser(t));
+  State.persist();
+  renderTickets();
+  if (__currentTicketId) {
+    const stillExists = State.tickets.some((x) => String(x?.id || "").trim() === __currentTicketId);
+    const dlgOpen = Boolean(document.getElementById("dlgTicketDetail")?.open);
+    if (stillExists && dlgOpen) openTicketDetailDialog(__currentTicketId);
+  }
+}
 
 function fmtDurationSec(sec) {
   const s = Math.max(0, Math.floor(Number(sec) || 0));
@@ -4114,10 +4256,14 @@ function renderMeTickets() {
     item.className = "list-item";
     item.style.cursor = "pointer";
     const createdAt = t.createdAt ? new Date(t.createdAt).toLocaleString() : "—";
+    const sourceTag =
+      String(t.source || "").trim() === "admin-manual"
+        ? `<span style="margin-left:6px;padding:2px 8px;border-radius:999px;border:1px solid rgba(15,23,42,.12);background:rgba(15,23,42,.04);font-size:11px;color:var(--txt-2);">子管理员代建</span>`
+        : "";
     item.innerHTML = `
       <div class="list-item__main">
         <div class="list-item__title">${t.id || "—"}</div>
-        <div class="list-item__sub">${createdAt} · ${t.deviceName || "—"}（${t.deviceCode || "—"}）</div>
+        <div class="list-item__sub">${createdAt} · ${t.deviceName || "—"}（${t.deviceCode || "—"}）${sourceTag}</div>
       </div>
       <div class="chip" style="${meta.style}">${meta.label}</div>
     `;
@@ -4193,7 +4339,7 @@ function ticketStatusMeta(status) {
   if (s === "accepted") return { label: "已受理", style: "border-color:rgba(26,127,212,.40);background:rgba(26,127,212,.14);color:var(--blue);" };
   if (s === "processing") return { label: "处理中", style: "border-color:rgba(217,119,6,.35);background:rgba(217,119,6,.14);color:var(--amber);" };
   if (s === "done") return { label: "已完成", style: "border-color:rgba(22,163,74,.35);background:rgba(22,163,74,.12);color:var(--green);" };
-  if (s === "closed") return { label: "已关闭", style: "border-color:rgba(55,65,81,.35);background:rgba(55,65,81,.10);color:var(--txt-2);" };
+  if (s === "closed") return { label: "已解决", style: "border-color:rgba(22,163,74,.35);background:rgba(22,163,74,.12);color:var(--green);" };
   return { label: "未知", style: "border-color:rgba(55,65,81,.25);background:rgba(55,65,81,.08);color:var(--txt-2);" };
 }
 
@@ -5117,12 +5263,62 @@ function alertTicketDetail(ticketId) {
 }
 
 function openTicketDetailDialog(ticketId) {
+  __currentTicketId = String(ticketId || "").trim();
   const t = (State.tickets || []).find((x) => x.id === ticketId);
   if (!t) return;
   const createdAt = t.createdAt ? new Date(t.createdAt).toLocaleString() : "-";
   const meta = ticketStatusMeta(t.status);
   const feedback = t.feedback && typeof t.feedback === "object" ? t.feedback : { score: 0, comment: "" };
-  const canRate = String(t.status || "") === "done";
+  const canRate = ["done", "closed"].includes(String(t.status || ""));
+  const canResolve = ["processing", "done"].includes(String(t.status || ""));
+  const sourceText =
+    String(t.source || "").trim() === "admin-manual"
+      ? "来源：子管理员代建工单（为你创建）"
+      : "来源：用户自主报修";
+  const initialScore = Math.max(0, Math.min(5, Number(feedback.score || 0)));
+  const starsHtml = [1, 2, 3, 4, 5]
+    .map(
+      (s) =>
+        `<button type="button" data-ticket-star="${s}" style="border:0;background:transparent;cursor:pointer;font-size:22px;line-height:1;color:${s <= initialScore ? "#f59e0b" : "#cbd5e1"};">★</button>`
+    )
+    .join("");
+  const actionLabel = (a) => {
+    const k = String(a || "").trim();
+    if (k === "submit") return "用户提交";
+    if (k === "submit_by_admin") return "后台建单";
+    if (k === "reply_user") return "已回信给用户";
+    if (k === "phone_callback") return "已电话沟通";
+    if (k === "progress") return "处理进展更新";
+    if (k === "finish") return "标记处理完成";
+    if (k === "feedback") return "用户评分反馈";
+    if (k === "user_note") return "用户补充反馈";
+    if (k === "user_resolved") return "用户确认已解决";
+    return "处理记录";
+  };
+  const progressHtml = (() => {
+    const history = Array.isArray(t.history) ? t.history : [];
+    if (!history.length) return '<div class="subtle">处理中可持续补充内容；当前暂无处理记录。</div>';
+    return history
+      .slice()
+      .sort((a, b) => Number(b.at || 0) - Number(a.at || 0))
+      .slice(0, 6)
+      .map((h) => {
+        const at = new Date(Number(h.at || Date.now())).toLocaleString();
+        const msg = escapeHtml(h.msg || "-");
+        const act = actionLabel(h.action);
+        return `
+          <div style="position:relative;padding:10px 10px 10px 14px;border:1px solid rgba(15,23,42,.08);border-radius:10px;background:#fff;">
+            <span style="position:absolute;left:-1px;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px;background:rgba(26,127,212,.55);"></span>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(26,127,212,.10);color:#1a7fd4;border:1px solid rgba(26,127,212,.25);">${escapeHtml(act)}</span>
+              <span class="subtle" style="font-size:11px;">${escapeHtml(at)}</span>
+            </div>
+            <div style="margin-top:6px;line-height:1.55;color:var(--txt-2);">${msg}</div>
+          </div>
+        `;
+      })
+      .join("");
+  })();
   const box = $("#ticketDetailPretty");
   if (!box) return;
   box.innerHTML = `
@@ -5133,6 +5329,7 @@ function openTicketDetailDialog(ticketId) {
       </div>
       <div class="subtle" style="margin-top:6px;">${createdAt} · ${t.deviceName || "—"}（${t.deviceCode || "—"}）</div>
       <div class="subtle" style="margin-top:4px;">联系电话：${t.phone || "—"}</div>
+      <div class="subtle" style="margin-top:4px;">${sourceText}</div>
       <div style="margin-top:10px;padding:10px;border:1px solid rgba(15,23,42,.10);border-radius:12px;background:#fff;">
         <div class="subtle">问题描述</div>
         <div style="margin-top:6px;white-space:pre-wrap;line-height:1.6;color:var(--txt-2);">${escapeHtml(t.desc || "—")}</div>
@@ -5140,47 +5337,94 @@ function openTicketDetailDialog(ticketId) {
       <div class="subtle" style="margin-top:8px;">附件：${(t.files || []).length} 个（原型仅记录元数据）</div>
       <div style="margin-top:10px;padding:10px;border:1px solid rgba(15,23,42,.10);border-radius:12px;background:#fff;">
         <div class="subtle">处理进展</div>
-        <div style="margin-top:6px;line-height:1.6;color:var(--txt-2);">${
-          (Array.isArray(t.history) && t.history.length)
-            ? t.history
-                .slice()
-                .sort((a, b) => Number(b.at || 0) - Number(a.at || 0))
-                .slice(0, 6)
-                .map((h) => `${new Date(Number(h.at || Date.now())).toLocaleString()} · ${escapeHtml(h.msg || "-")}`)
-                .join("<br/>")
-            : "处理中可持续补充内容；当前暂无处理记录。"
-        }</div>
+        <div style="margin-top:8px;display:grid;gap:8px;">${progressHtml}</div>
       </div>
       <div class="subtle" style="margin-top:8px;">说明：子管理员处理动作会自动把状态变为“处理中”；处理完成后可评分并填写意见。</div>
+      <div style="margin-top:10px;padding:10px;border:1px solid rgba(15,23,42,.10);border-radius:12px;background:#fff;">
+        <div class="subtle">用户反馈 / 补充说明（处理中可留言）</div>
+        <textarea id="ticketUserNote" class="input" style="margin-top:8px;min-height:78px;padding:10px;" placeholder="可补充现场信息、诉求或确认意见"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          ${
+            canResolve
+              ? `<button id="btnTicketUserResolved" class="btn btn--primary" style="padding:8px 12px;background:var(--green);border-color:rgba(22,163,74,.45);">已解决</button>`
+              : ""
+          }
+          <button id="btnTicketUserNoteSave" class="btn" style="padding:8px 12px;">提交反馈</button>
+        </div>
+      </div>
       ${
         canRate
           ? `<div style="margin-top:10px;padding:10px;border:1px solid rgba(22,163,74,.25);border-radius:12px;background:#fff;">
-              <div class="subtle">服务评分与意见</div>
-              <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
-                <select id="ticketFeedbackScore" class="input" style="width:120px;padding:8px 10px;">
-                  <option value="5" ${Number(feedback.score || 0) === 5 ? "selected" : ""}>5分 很满意</option>
-                  <option value="4" ${Number(feedback.score || 0) === 4 ? "selected" : ""}>4分 满意</option>
-                  <option value="3" ${Number(feedback.score || 0) === 3 ? "selected" : ""}>3分 一般</option>
-                  <option value="2" ${Number(feedback.score || 0) === 2 ? "selected" : ""}>2分 待改进</option>
-                  <option value="1" ${Number(feedback.score || 0) === 1 ? "selected" : ""}>1分 不满意</option>
-                </select>
-                <button id="btnTicketFeedbackSave" class="btn btn--primary" style="padding:8px 12px;">提交反馈</button>
+              <div class="subtle">服务评分（五星）与意见</div>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:8px;">
+                ${starsHtml}
+                <span id="ticketStarHint" class="subtle">${initialScore ? `${initialScore} 星` : "请选择星级"}</span>
               </div>
               <textarea id="ticketFeedbackComment" class="input" style="margin-top:8px;min-height:78px;padding:10px;" placeholder="补充意见（可选）">${escapeHtml(feedback.comment || "")}</textarea>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                <button id="btnTicketFeedbackSave" class="btn btn--primary" style="padding:8px 12px;">提交评分</button>
+              </div>
             </div>`
           : ""
       }
     </div>
   `;
+  $("#btnTicketUserNoteSave")?.addEventListener("click", () => {
+    const note = String($("#ticketUserNote")?.value || "").trim();
+    if (!note) return;
+    t.updatedAt = Date.now();
+    t.history = Array.isArray(t.history) ? t.history : [];
+    t.history.unshift({ at: Date.now(), by: "user", action: "user_note", msg: `用户反馈：${note}` });
+    State.persist();
+    upsertTicketToBackendBridge(t);
+    renderTickets();
+    logCmd("工单反馈", "OK", `工单 ${t.id} 已补充用户反馈`);
+    openTicketDetailDialog(t.id);
+  });
+  $("#btnTicketUserResolved")?.addEventListener("click", () => {
+    const note = String($("#ticketUserNote")?.value || "").trim();
+    t.status = "done";
+    t.updatedAt = Date.now();
+    t.history = Array.isArray(t.history) ? t.history : [];
+    t.history.unshift({
+      at: Date.now(),
+      by: "user",
+      action: "user_resolved",
+      msg: note ? `用户确认已解决：${note}` : "用户确认已解决，工单关闭",
+    });
+    State.persist();
+    upsertTicketToBackendBridge(t);
+    renderTickets();
+    logCmd("工单反馈", "OK", `工单 ${t.id} 用户确认已解决`);
+    openTicketDetailDialog(t.id);
+  });
   if (canRate) {
+    let selectedScore = initialScore;
+    const paintStars = (score) => {
+      $$("[data-ticket-star]", box).forEach((el) => {
+        const s = Number(el.getAttribute("data-ticket-star") || 0);
+        el.style.color = s <= score ? "#f59e0b" : "#cbd5e1";
+      });
+      const hint = $("#ticketStarHint");
+      if (hint) hint.textContent = score ? `${score} 星` : "请选择星级";
+    };
+    $$("[data-ticket-star]", box).forEach((el) => {
+      el.addEventListener("click", () => {
+        selectedScore = Number(el.getAttribute("data-ticket-star") || 0);
+        paintStars(selectedScore);
+      });
+    });
+    paintStars(selectedScore);
     $("#btnTicketFeedbackSave")?.addEventListener("click", () => {
-      const score = Number($("#ticketFeedbackScore")?.value || 5);
+      const score = Number(selectedScore || 0);
+      if (!(score >= 1 && score <= 5)) return;
       const comment = String($("#ticketFeedbackComment")?.value || "").trim();
       t.feedback = { score, comment, at: Date.now() };
       t.updatedAt = Date.now();
       t.history = Array.isArray(t.history) ? t.history : [];
       t.history.unshift({ at: Date.now(), by: "user", action: "feedback", msg: `用户评分 ${score} 分${comment ? `：${comment}` : ""}` });
       State.persist();
+      upsertTicketToBackendBridge(t);
       renderTickets();
       logCmd("工单反馈", "OK", `工单 ${t.id} 已评分 ${score} 分`);
       openTicketDetailDialog(t.id);
@@ -6733,6 +6977,19 @@ function boot() {
   }
 
   renderAll();
+  // 启动即对齐后台工单状态，避免停留在旧快照
+  syncTicketsFromProtoStorage();
+  document.getElementById("dlgTicketDetail")?.addEventListener("close", () => {
+    __currentTicketId = "";
+  });
+  window.addEventListener("storage", (e) => {
+    if (e.key !== "pump_proto_state" && e.key !== "cledic_tickets_v1") return;
+    syncTicketsFromProtoStorage();
+  });
+  // 某些 file:// 场景下 storage 事件不稳定，做轻量轮询兜底
+  window.setInterval(() => {
+    syncTicketsFromProtoStorage();
+  }, 3000);
   // 启动时：将所有已存在告警标记为已读并记录，避免刷新页面反复弹窗
   State.alarms.forEach((a) => {
     a.unread = false;

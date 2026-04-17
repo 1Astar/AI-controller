@@ -2774,7 +2774,54 @@
           return arr;
         },
         save(list) {
-          CLOUD.save(CLOUD.keys.tickets, Array.isArray(list) ? list : []);
+          const next = Array.isArray(list) ? list : [];
+          CLOUD.save(CLOUD.keys.tickets, next);
+          // Back-sync to user-side prototype store so app-side ticket status stays updated.
+          this.syncToUserProto(next);
+        },
+        syncToUserProto(tickets) {
+          const rows = Array.isArray(tickets) ? tickets : [];
+          let state = {};
+          try {
+            const raw = localStorage.getItem("pump_proto_state") || "";
+            state = raw ? JSON.parse(raw) || {} : {};
+          } catch {
+            state = {};
+          }
+          const current = Array.isArray(state?.tickets) ? state.tickets : [];
+          const byId = new Map();
+          current.forEach((t) => {
+            const id = String(t?.id || "").trim();
+            if (id) byId.set(id, t);
+          });
+          rows.forEach((t) => {
+            const id = String(t?.id || "").trim();
+            if (!id) return;
+            const prev = byId.get(id) || {};
+            byId.set(id, {
+              ...prev,
+              id,
+              createdAt: Number(t?.createdAt || prev?.createdAt || Date.now()),
+              updatedAt: Number(t?.updatedAt || Date.now()),
+              status: String(t?.status || prev?.status || "submitted"),
+              deviceId: String(t?.deviceId || prev?.deviceId || ""),
+              deviceCode: String(t?.deviceCode || prev?.deviceCode || ""),
+              deviceName: String(t?.deviceName || prev?.deviceName || ""),
+              phone: String(t?.phone || prev?.phone || "").replace(/\s/g, ""),
+              desc: String(t?.desc || prev?.desc || ""),
+              files: Array.isArray(t?.files) ? t.files : Array.isArray(prev?.files) ? prev.files : [],
+              feedback: t?.feedback && typeof t.feedback === "object" ? t.feedback : prev?.feedback || null,
+              assignedTo: String(t?.assignedTo || prev?.assignedTo || ""),
+              assignedRole: String(t?.assignedRole || prev?.assignedRole || ""),
+              history: Array.isArray(t?.history) ? t.history : Array.isArray(prev?.history) ? prev.history : [],
+            });
+          });
+          const merged = [...byId.values()].sort((a, b) => Number(b?.createdAt || 0) - Number(a?.createdAt || 0));
+          try {
+            localStorage.setItem("pump_proto_state", JSON.stringify({ ...(state || {}), tickets: merged }));
+          } catch {
+            // ignore
+          }
         },
         upsert(ticket) {
           const id = String(ticket?.id || "").trim();
@@ -2857,6 +2904,27 @@
           });
         },
       };
+
+      // 清理误操作“回退记录”，并将已确认解决的工单恢复为完成态（便于用户评分）
+      function cleanupRollbackArtifactsAndResolveDone(ticketId) {
+        const id = String(ticketId || "").trim();
+        if (!id) return;
+        const list = TICKET_STORE.load();
+        const idx = list.findIndex((x) => String(x?.id || "").trim() === id);
+        if (idx < 0) return;
+        const cur = list[idx] || {};
+        const history = (Array.isArray(cur.history) ? cur.history : []).filter(
+          (h) => String(h?.action || "").trim() !== "rollback_to_processing"
+        );
+        const hasUserResolved = history.some((h) => String(h?.action || "").trim() === "user_resolved");
+        const nextStatus = hasUserResolved ? "done" : String(cur.status || "submitted");
+        const changed =
+          history.length !== (Array.isArray(cur.history) ? cur.history.length : 0) ||
+          String(cur.status || "") !== nextStatus;
+        if (!changed) return;
+        list[idx] = { ...cur, status: nextStatus, history, updatedAt: Date.now() };
+        TICKET_STORE.save(list);
+      }
 
       // --------------------
       // Issue KB (问题解决措施)
@@ -4154,23 +4222,32 @@
           });
           if (ch) CLOUD.save(CLOUD.keys.deviceAccess, next);
         }
-        const tid = "T202604150001";
         const list = TICKET_STORE.load();
-        const idx = list.findIndex((x) => String(x.id || "").trim() === tid);
-        if (idx >= 0) {
+        if (Array.isArray(list) && list.length) {
           const reg = CLOUD.listDeviceRegistry() || [];
-          const row = reg.find((d) => String(d.code || "").trim() === "AGRI10001") || {};
-          list[idx] = {
-            ...list[idx],
-            deviceCode: "AGRI10001",
-            deviceName: String(row.name || "东侧机井泵"),
-            deviceId: String(row.deviceId || list[idx].deviceId || ""),
-            phone: NU,
-            assignedTo: "agri_mgr",
-            assignedRole: "project",
-            updatedAt: Date.now(),
-          };
-          TICKET_STORE.save(list);
+          const row = reg.find((d) => String(d.code || "").trim() === "CLEDIC-6789123456") || {};
+          let tCh = false;
+          const nextT = list.map((t) => {
+            const id = String(t.id || "").trim();
+            const code = String(t.deviceCode || "").trim();
+            const name = String(t.deviceName || "").trim();
+            const shouldRemap =
+              id === "T202604150001" ||
+              (code === "AGRI10002" && /北侧回水泵/.test(name));
+            if (!shouldRemap) return t;
+            tCh = true;
+            return {
+              ...t,
+              deviceCode: "CLEDIC-6789123456",
+              deviceName: String(row.name || "1号工业园排污泵"),
+              deviceId: String(row.deviceId || t.deviceId || ""),
+              phone: NU,
+              assignedTo: "agri_mgr",
+              assignedRole: "project",
+              updatedAt: Date.now(),
+            };
+          });
+          if (tCh) TICKET_STORE.save(nextT);
         }
 
         // 演示主用户 13800000001 仅归属农业；修正历史上按工单设备名误判到「工业园区」的登记与绑定，避免用户列表同号拆成两行。
@@ -4207,6 +4284,93 @@
             if (bch) CLOUD.save(CLOUD.keys.bindings, nextB);
           }
         })();
+      }
+
+      // 补齐指定演示数据：主用户 13800000000 的两台设备 + 子管理员归属
+      function ensureRequestedOwnerDevices() {
+        const ownerPhone = "13800000000";
+        const now = Date.now();
+        const devicesToEnsure = [
+          { code: "CLEDIC-6789123456", name: "1号工业园排污泵", project: "农业灌溉", model: "CLEDIC-PUMP-4G" },
+          { code: "CLEDIC-1359876420", name: "2号园区提升泵", project: "农业灌溉", model: "CLEDIC-PUMP-4G" },
+        ];
+
+        // ensure owner user exists
+        const users = CLOUD.listUsers() || [];
+        if (!users.some((u) => String(u.phone || "").replace(/\s/g, "") === ownerPhone)) {
+          const nextUsers = users.concat([
+            {
+              userId: `u_owner_${ownerPhone}`,
+              name: "张三主用户",
+              phone: ownerPhone,
+              project: "农业灌溉",
+              role: "owner",
+              createdAt: now,
+            },
+          ]);
+          CLOUD.save(CLOUD.keys.users, nextUsers);
+        }
+
+        // resolve agriculture sub-admin username (historical agri_mgr may be merged/renamed)
+        let agriManager = "";
+        try {
+          agriManager = resolveExistingProjectAdminUsername("agri_mgr", "农业灌溉");
+        } catch {
+          agriManager = "";
+        }
+        if (!agriManager) {
+          const fallback = ADMIN_ACCOUNTS.load().find(
+            (a) => a.role === "project" && normalizeSubAdminProjectLabel(a.project) === "农业灌溉" && a.enabled !== false
+          );
+          agriManager = String(fallback?.username || "").trim();
+        }
+
+        const reg = CLOUD.listDeviceRegistry() || [];
+        let regChanged = false;
+        devicesToEnsure.forEach((d) => {
+          const idx = reg.findIndex((x) => String(x.code || "").trim() === d.code);
+          if (idx < 0) {
+            reg.unshift({
+              code: d.code,
+              name: d.name,
+              model: d.model,
+              place: "农业灌溉示例站点",
+              fw: "v1.2.4",
+              project: d.project,
+              status: "running",
+              managerUsername: agriManager,
+              createdAt: now,
+              updatedAt: now,
+              deviceConfig: { useCommon: true, maxHz: 50, polePairs: 2, gearFreqs: [10, 20, 30, 40, 50] },
+            });
+            regChanged = true;
+          } else {
+            const cur = reg[idx] || {};
+            const next = {
+              ...cur,
+              code: d.code,
+              name: String(cur.name || "").trim() || d.name,
+              model: String(cur.model || "").trim() || d.model,
+              project: "农业灌溉",
+              managerUsername: agriManager || String(cur.managerUsername || cur.adminUsername || "").trim(),
+              updatedAt: now,
+            };
+            if (JSON.stringify(next) !== JSON.stringify(cur)) {
+              reg[idx] = next;
+              regChanged = true;
+            }
+          }
+          DEVICE_ACCESS_STORE.upsert(d.code, {
+            ownerPhone,
+            members: (DEVICE_ACCESS_STORE.get(d.code)?.members || []).filter(Boolean),
+          });
+          upsertBindingForSn(d.code, ownerPhone);
+        });
+        if (regChanged) CLOUD.save(CLOUD.keys.devices, reg);
+
+        if (agriManager) {
+          SUBADMIN_OWNER_STORE.upsert(agriManager, ownerPhone);
+        }
       }
 
       function getAdminScope() {
@@ -6775,6 +6939,8 @@
         if (!box) return;
         const route = resolveTicketRouting(ticket || {});
         const status = String(ticket?.status || "submitted");
+        const hist = Array.isArray(ticket?.history) ? ticket.history : [];
+        const hasUserNote = hist.some((h) => String(h?.action || "").trim() === "user_note");
         const cand = Array.isArray(route.subAdminCandidates) ? route.subAdminCandidates : [];
         const u = String(route.subAdminUsername || "").trim();
         const uniquelyMatched = Boolean(u || cand.length === 1);
@@ -6813,7 +6979,10 @@
           {
             id: "project_follow",
             title: "子管理员跟进",
-            desc: status === "processing" || status === "done" || status === "closed" ? "已进入处理阶段" : "待跟进",
+            desc:
+              status === "processing" || status === "done" || status === "closed"
+                ? (hasUserNote ? "用户已补充反馈，待确认" : "已进入处理阶段")
+                : "待跟进",
             state: status === "processing" ? "current" : (status === "done" || status === "closed" ? "done" : "pending"),
           },
           {
@@ -8729,6 +8898,8 @@
         // 默认演示工单：确保后台能看到，并可与用户端对齐
         TICKET_STORE.ensureDemoTicket();
         syncAgriDemoOwnerAndTicketT202604150001();
+        ensureRequestedOwnerDevices();
+        cleanupRollbackArtifactsAndResolveDone("T202604179924");
         mergeSubAdminAccountsByStaffCode({ silent: true });
         syncSubAdminOwnerMapFromDevices();
         try {
