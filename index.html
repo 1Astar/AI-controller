@@ -6692,6 +6692,43 @@ function wireOnboarding() {
     State.currentDeviceId = device.id;
     State.lastSync = fmtTime();
     State.persist();
+
+    // 经销商扫码命中：仅在显式确认“加入我的设备管理”后才写入后台设备归属，避免误扫误绑。
+    const dealer = getMatchedDealerAccountForScanner();
+    if (dealer) {
+      const dealerName = String(dealer.name || dealer.username || "").trim() || "当前经销商";
+      const shouldClaim = window.confirm(
+        `检测到当前扫码账号属于经销商：${dealerName}\n\n是否将设备「${code}」加入该经销商的设备管理？\n\n- 确定：加入设备管理（写入归属）\n- 取消：仅查看，不变更归属`
+      );
+      if (shouldClaim) {
+        const ok = upsertDealerDeviceRegistryRow({
+          code,
+          name,
+          managerUsername: String(dealer.username || "").trim(),
+        });
+        appendDealerClaimAudit({
+          action: "claim_by_scan",
+          deviceCode: code,
+          scannerDealerUsername: String(dealer.username || "").trim(),
+          scannerDealerName: dealerName,
+          note: "经销商扫码确认后加入设备管理",
+        });
+        if (ok) {
+          alert(`已加入经销商设备管理：${dealerName}\n设备编码：${code}`);
+        } else {
+          alert("加入经销商设备管理失败，请稍后重试。");
+        }
+      } else {
+        appendDealerClaimAudit({
+          action: "scan_view_only",
+          deviceCode: code,
+          scannerDealerUsername: String(dealer.username || "").trim(),
+          scannerDealerName: dealerName,
+          note: "经销商扫码仅查看，未变更归属",
+        });
+      }
+    }
+
     closeDialog("dlgOnboarding");
     renderAll();
     alert(`已添加设备：${name}\n类型：${dtype.label}\n编码：${code}\n（原型演示）`);
@@ -6751,6 +6788,88 @@ function wireAlarms() {
 
 function wait(ms) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function loadJsonArrayFromStorage(key) {
+  try {
+    const raw = localStorage.getItem(String(key || "")) || "";
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadJsonObjectFromStorage(key) {
+  try {
+    const raw = localStorage.getItem(String(key || "")) || "";
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function getMatchedDealerAccountForScanner() {
+  const adminSession = loadJsonObjectFromStorage("cledic_admin_role_v1");
+  const username = String(adminSession?.username || "").trim();
+  const role = String(adminSession?.role || "").trim();
+  if (!username || role !== "project") return null;
+  const accounts = loadJsonArrayFromStorage("cledic_admin_accounts_v1");
+  const hit = accounts.find(
+    (a) => String(a?.username || "").trim() === username && String(a?.role || "").trim() === "project" && a?.enabled !== false
+  );
+  return hit || null;
+}
+
+function upsertDealerDeviceRegistryRow({ code, name, managerUsername }) {
+  const deviceCode = String(code || "").trim();
+  const manager = String(managerUsername || "").trim();
+  if (!deviceCode || !manager) return false;
+  const list = loadJsonArrayFromStorage("cledic_devices_v1");
+  const idx = list.findIndex((d) => String(d?.code || "").trim() === deviceCode);
+  const now = Date.now();
+  const prev = idx >= 0 ? list[idx] : {};
+  const next = {
+    code: deviceCode,
+    name: String(name || deviceCode).trim(),
+    model: String(prev?.model || "-"),
+    place: String(prev?.place || "-"),
+    fw: String(prev?.fw || "-"),
+    project: String(prev?.project || ""),
+    managerUsername: manager,
+    status: String(prev?.status || "stopped"),
+    metrics: prev?.metrics || {
+      p: 0, q: 0, i: 0, v: 0,
+      wlPct: 40, wlM: 1.6,
+      rpm: 0, head: 0,
+      vIn: 0, vOut: 0, iOut: 0,
+      temp: 26,
+      runSec: 0,
+      totalSec: 0,
+      gear: 3,
+      dir: "forward",
+    },
+    lastSync: String(prev?.lastSync || fmtTime()),
+    updatedAt: now,
+    createdAt: Number(prev?.createdAt || now),
+  };
+  if (idx >= 0) list[idx] = { ...prev, ...next };
+  else list.unshift(next);
+  localStorage.setItem("cledic_devices_v1", JSON.stringify(list));
+  return true;
+}
+
+function appendDealerClaimAudit(row) {
+  const list = loadJsonArrayFromStorage("cledic_dealer_claim_audit_v1");
+  list.unshift({
+    id: `audit_${Math.random().toString(16).slice(2, 10)}`,
+    at: Date.now(),
+    ...row,
+  });
+  localStorage.setItem("cledic_dealer_claim_audit_v1", JSON.stringify(list.slice(0, 500)));
 }
 
 let _cmdOverlayCancel = false;

@@ -481,6 +481,112 @@
                   </div>
                 </div>
               </div>
+              <div id="deviceAssignPanel" class="px-5 pt-4 hidden">
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="shuffle" class="h-4 w-4 text-slate-700"></i>
+                    <div class="font-semibold">设备归属与批量迁移</div>
+                    <div class="ml-auto text-[11px] text-slate-500">适用于设备导入、子管理员更替、解绑用户</div>
+                  </div>
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <div>
+                      <label class="text-xs font-semibold text-slate-600">目标子管理员</label>
+                      <select id="deviceAssignTargetManager" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300">
+                        <option value="">请选择目标子管理员</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-xs font-semibold text-slate-600">来源子管理员（整组迁移时使用）</label>
+                      <select id="deviceAssignSourceManager" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300">
+                        <option value="">请选择来源子管理员</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-xs font-semibold text-slate-600">可选：主用户手机号（11 位）</label>
+                      <input id="deviceAssignOwnerPhone" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="导入或批量分配时可同时设置主用户" />
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <button id="btnDeviceAssignSelected" type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition">
+                      <i data-lucide="arrow-right-left" class="h-3.5 w-3.5"></i>
+                      已选设备变更子管理员
+                    </button>
+                    <button id="btnDeviceUnbindSelectedOwner" type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-white border border-rose-200 text-rose-700 font-semibold text-xs hover:bg-rose-50 transition">
+                      <i data-lucide="unlink" class="h-3.5 w-3.5"></i>
+                      已选设备解绑用户
+                    </button>
+                    <button id="btnDeviceTransferAllFromSource" type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition">
+                      <i data-lucide="git-compare-arrows" class="h-3.5 w-3.5"></i>
+                      来源管理员全部设备迁移
+                    </button>
+                    <button id="btnDeviceAssignTemplate" type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition">
+                      <i data-lucide="download" class="h-3.5 w-3.5"></i>
+                      设备导入模板
+                    </button>
+                    <button id="btnDeviceAssignImport" type="button" class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-sky-600 text-white font-semibold text-xs hover:bg-sky-700 transition">
+                      <i data-lucide="upload" class="h-3.5 w-3.5"></i>
+                      导入多个设备并归属
+                    </button>
+                    <input id="deviceAssignImportFile" type="file" accept=".csv,.json,.xlsx,.xls" class="hidden" />
+                    <div id="deviceAssignHint" class="ml-auto text-xs text-slate-500"></div>
+                  </div>
+                  <div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                    <div class="rounded-xl border border-amber-200 bg-amber-50">
+                      <div class="px-3 py-2 border-b border-amber-200 flex items-center gap-2">
+                        <i data-lucide="inbox" class="h-4 w-4 text-amber-700"></i>
+                        <div class="text-sm font-semibold text-amber-900">待认领设备</div>
+                        <div id="deviceClaimPendingCount" class="ml-auto text-xs text-amber-700">0 台</div>
+                      </div>
+                      <div class="px-3 py-2 text-xs text-amber-800">扫码后未归属经销商的设备会显示在这里，便于总管理员审核。</div>
+                      <div class="px-3 pb-3">
+                        <div class="max-h-44 overflow-auto rounded-lg border border-amber-200 bg-white">
+                          <table class="w-full text-xs">
+                            <thead class="text-amber-700 bg-amber-50 border-b border-amber-200">
+                              <tr>
+                                <th class="text-left py-2 px-2 font-semibold w-12">选择</th>
+                                <th class="text-left py-2 px-2 font-semibold">设备</th>
+                                <th class="text-left py-2 px-2 font-semibold">型号</th>
+                                <th class="text-left py-2 px-2 font-semibold">项目</th>
+                              </tr>
+                            </thead>
+                            <tbody id="deviceClaimPendingBody"></tbody>
+                          </table>
+                        </div>
+                        <div class="mt-2 flex items-center gap-2">
+                          <button id="btnDeviceClaimPendingSelectAll" type="button" class="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-lg bg-white border border-amber-200 text-amber-800 text-xs font-semibold hover:bg-amber-100 transition">全选</button>
+                          <button id="btnDeviceClaimPendingToSelected" type="button" class="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition">加入“已选设备”</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-white">
+                      <div class="px-3 py-2 border-b border-slate-200 flex items-center gap-2">
+                        <i data-lucide="clipboard-list" class="h-4 w-4 text-slate-700"></i>
+                        <div class="text-sm font-semibold text-slate-800">认领日志</div>
+                        <div id="deviceClaimAuditCount" class="ml-auto text-xs text-slate-500">0 条</div>
+                      </div>
+                      <div class="px-3 py-2 grid grid-cols-1 md:grid-cols-2 gap-2 border-b border-slate-100">
+                        <select id="deviceClaimLogDealerFilter" class="h-8 rounded-lg bg-white border border-slate-200 px-2 text-xs outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-300">
+                          <option value="__ALL__">全部经销商</option>
+                        </select>
+                        <input id="deviceClaimLogDeviceFilter" class="h-8 rounded-lg bg-white border border-slate-200 px-2 text-xs outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-300" placeholder="筛选设备编码" />
+                      </div>
+                      <div class="max-h-52 overflow-auto">
+                        <table class="w-full text-xs">
+                          <thead class="text-slate-500 bg-slate-50 border-b border-slate-200">
+                            <tr>
+                              <th class="text-left py-2 px-2 font-semibold">时间</th>
+                              <th class="text-left py-2 px-2 font-semibold">经销商</th>
+                              <th class="text-left py-2 px-2 font-semibold">设备</th>
+                              <th class="text-left py-2 px-2 font-semibold">动作</th>
+                            </tr>
+                          </thead>
+                          <tbody id="deviceClaimAuditBody"></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="p-5 overflow-auto scrollbar-slim">
                 <table class="w-full text-sm">
                   <thead class="text-xs text-slate-500">
@@ -602,16 +708,101 @@
                       <i data-lucide="download" class="h-4 w-4"></i>
                       模板下载
                     </button>
-                    <button
-                      id="btnBindingsPrefixBindImport"
-                      type="button"
-                      class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-sky-600 text-white font-semibold text-sm hover:bg-sky-700 transition"
-                    >
-                      <i data-lucide="upload" class="h-4 w-4"></i>
-                      导入
-                    </button>
-                    <input id="bindingsPrefixBindImportFile" type="file" accept=".csv,.json,.xlsx,.xls" class="hidden" />
                     <div id="bindingsPrefixBindHint" class="ml-auto text-xs text-slate-500"></div>
+                  </div>
+                </div>
+
+                <!-- 总管理员：按设备清单批量归属（不依赖 SN 前缀） -->
+                <div
+                  id="bindingsListAssignPanel"
+                  class="hidden p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3"
+                >
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="list-plus" class="h-4 w-4 text-slate-700"></i>
+                    <div class="font-semibold">按设备清单批量归属子管理员</div>
+                    <div class="ml-auto text-[11px] text-slate-500">不依赖 SN 前缀，适合厂家先生产后分销场景</div>
+                  </div>
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div>
+                      <label class="text-xs font-semibold text-slate-600">目标子管理员</label>
+                      <select
+                        id="bindingsListAssignManager"
+                        class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+                      >
+                        <option value="">请选择子管理员</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-xs font-semibold text-slate-600">可选：主用户手机号（11 位）</label>
+                      <input
+                        id="bindingsListAssignOwner"
+                        class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+                        placeholder="为空则仅归属子管理员，不改主用户"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-slate-600">设备编码列表（每行一个，支持逗号/分号/空格）</label>
+                    <textarea
+                      id="bindingsListAssignCodes"
+                      rows="4"
+                      class="mt-1 w-full rounded-xl bg-white border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300"
+                      placeholder="例如：&#10;AGRI00001&#10;AGRI00002&#10;IND10001"
+                    ></textarea>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      id="btnBindingsListAssignApply"
+                      type="button"
+                      class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition"
+                    >
+                      <i data-lucide="check-check" class="h-4 w-4"></i>
+                      批量归属
+                    </button>
+                    <div id="bindingsListAssignHint" class="ml-auto text-xs text-slate-500"></div>
+                  </div>
+                </div>
+
+                <div
+                  id="bindingsPendingPanel"
+                  class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-3"
+                >
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="inbox" class="h-4 w-4 text-amber-700"></i>
+                    <div class="font-semibold text-amber-900">待分配设备（未归属子管理员）</div>
+                    <div id="bindingsPendingCount" class="ml-auto text-[11px] text-amber-700">0 台</div>
+                  </div>
+                  <div class="text-xs text-amber-800">
+                    厂家先出货时可先入库，后续由总管理员在此勾选设备，填入上方“设备清单批量归属”后统一分配。
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      id="btnBindingsPendingSelectAll"
+                      type="button"
+                      class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-white border border-amber-200 text-amber-800 font-semibold text-xs hover:bg-amber-100 transition"
+                    >
+                      全选
+                    </button>
+                    <button
+                      id="btnBindingsPendingFillCodes"
+                      type="button"
+                      class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-xl bg-amber-600 text-white font-semibold text-xs hover:bg-amber-700 transition"
+                    >
+                      填入上方清单
+                    </button>
+                  </div>
+                  <div class="max-h-44 overflow-auto rounded-xl border border-amber-200 bg-white">
+                    <table class="w-full text-xs">
+                      <thead class="text-amber-700 bg-amber-50 border-b border-amber-200">
+                        <tr>
+                          <th class="text-left py-2 px-3 font-semibold w-12">选择</th>
+                          <th class="text-left py-2 px-3 font-semibold">设备编码</th>
+                          <th class="text-left py-2 px-3 font-semibold">型号</th>
+                          <th class="text-left py-2 px-3 font-semibold">项目</th>
+                        </tr>
+                      </thead>
+                      <tbody id="bindingsPendingBody"></tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -1057,20 +1248,11 @@
                       <i data-lucide="download" class="h-4 w-4"></i>
                       模板下载
                     </button>
-                    <button
-                      id="btnPrefixBindImport"
-                      type="button"
-                      class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-sky-600 text-white font-semibold text-sm hover:bg-sky-700 transition"
-                    >
-                      <i data-lucide="upload" class="h-4 w-4"></i>
-                      导入
-                    </button>
-                    <input id="prefixBindImportFile" type="file" accept=".csv,.json,.xlsx,.xls" class="hidden" />
                     <div id="prefixBindHint" class="ml-auto text-xs text-slate-500"></div>
                   </div>
 
                   <div class="text-xs text-slate-500">
-                    导入/批量归属会把当前前缀下所有已登记设备的主用户与绑定成员写入到权限表中；绑定关系（bindings）仅写主用户。
+                    批量归属会把当前前缀下所有已登记设备的主用户与绑定成员写入到权限表中；绑定关系（bindings）仅写主用户。
                   </div>
                 </div>
 
@@ -2380,6 +2562,54 @@
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#39;");
       }
+      const DEALER_TERM_FROM = "子管理员";
+      const DEALER_TERM_TO = "代理商/经销商";
+      function replaceDealerTermText(s) {
+        const text = String(s ?? "");
+        return text.includes(DEALER_TERM_FROM) ? text.split(DEALER_TERM_FROM).join(DEALER_TERM_TO) : text;
+      }
+      function applyDealerTerminology(root) {
+        const node = root || document.body;
+        if (!node) return;
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+          const t = walker.currentNode;
+          const raw = String(t.nodeValue || "");
+          if (!raw || !raw.includes(DEALER_TERM_FROM)) continue;
+          t.nodeValue = replaceDealerTermText(raw);
+        }
+        const attrs = ["title", "placeholder", "aria-label"];
+        const elements = node.nodeType === 1 ? [node, ...node.querySelectorAll("*")] : [...node.querySelectorAll?.("*") || []];
+        elements.forEach((el) => {
+          attrs.forEach((k) => {
+            const v = el.getAttribute?.(k);
+            if (!v || !String(v).includes(DEALER_TERM_FROM)) return;
+            el.setAttribute(k, replaceDealerTermText(v));
+          });
+        });
+      }
+      function startDealerTerminologyObserver() {
+        applyDealerTerminology(document.body);
+        const ob = new MutationObserver((list) => {
+          list.forEach((m) => {
+            if (m.type === "characterData" && m.target) {
+              const raw = String(m.target.nodeValue || "");
+              if (raw.includes(DEALER_TERM_FROM)) m.target.nodeValue = replaceDealerTermText(raw);
+              return;
+            }
+            (m.addedNodes || []).forEach((n) => {
+              if (!n) return;
+              if (n.nodeType === 3) {
+                const raw = String(n.nodeValue || "");
+                if (raw.includes(DEALER_TERM_FROM)) n.nodeValue = replaceDealerTermText(raw);
+                return;
+              }
+              if (n.nodeType === 1) applyDealerTerminology(n);
+            });
+          });
+        });
+        ob.observe(document.body, { childList: true, subtree: true, characterData: true });
+      }
       function getStaticIssueKb() {
         return Array.isArray(window.CLEDIC_STATIC_ISSUE_KB) ? window.CLEDIC_STATIC_ISSUE_KB : [];
       }
@@ -3476,6 +3706,10 @@
           const list = this.load();
           const username = this.slugifyNameToUsername(displayName);
           if (!username) return { ok: false, reason: "empty_username" };
+          const nameNorm = String(displayName || "").trim();
+          if (nameNorm && list.some((a) => a.role === "project" && String(a.name || "").trim() === nameNorm)) {
+            return { ok: false, reason: "duplicated_name", name: nameNorm };
+          }
           if (list.some((a) => String(a.username || "").trim() === username)) {
             return { ok: false, reason: "duplicated_username", username };
           }
@@ -3856,7 +4090,12 @@
         }
         const res = ADMIN_ACCOUNTS.createSubAdmin(name, project);
         if (!res.ok) {
-          const msg = res.reason === "duplicated_username" ? `账号已存在：${res.username}` : "账号不能为空，请检查输入。";
+          const msg =
+            res.reason === "duplicated_username"
+              ? `账号已存在：${res.username}`
+              : res.reason === "duplicated_name"
+                ? `姓名已存在：${res.name}`
+                : "账号不能为空，请检查输入。";
           if (hint) hint.textContent = msg;
           showToast("创建失败", msg);
           return;
@@ -4852,7 +5091,8 @@
         panelSubAdmin?.classList.toggle("hidden", isPerms || !allowSubAdmin);
         AccessUi.tab = mode;
         // 子管理员（项目管理员）才需要“按 SN 前缀批量归属”
-        $("#accessPrefixBindPanel")?.classList.toggle("hidden", scope.role !== "project");
+        // 已下线：按 SN 前缀批量归属入口（经销商页不再展示）
+        $("#accessPrefixBindPanel")?.classList.add("hidden");
         if (!isPerms) renderSubAdminList();
       }
 
@@ -5523,11 +5763,20 @@
         $$("[data-dev-bind]", body).forEach((btn) => {
           btn.addEventListener("click", () => openDeviceBindRoles(btn.getAttribute("data-dev-bind")));
         });
+        renderPendingClaimPanelForDevices();
+        renderDealerClaimAuditPanel();
       }
 
       // --------------------
       // 用户绑定：渲染
       // --------------------
+      function renderPendingBindingsPanel() {
+        const panel = $("#bindingsPendingPanel");
+        if (!panel) return;
+        // 已迁移到“设备管理”Tab，人员配置页隐藏此面板，避免重复入口
+        panel.classList.add("hidden");
+      }
+
       function renderBindings(filter = "") {
         const body = $("#bindingTableBody");
         body.innerHTML = "";
@@ -5673,6 +5922,7 @@
             btn.textContent = nowHidden ? "收起" : "展开子用户";
           });
         });
+        renderPendingBindingsPanel();
       }
 
       // --------------------
@@ -6561,6 +6811,296 @@
           updated += 1;
         });
         return { ok: true, matchedCodes, updated };
+      }
+
+      function parseDeviceCodeList(raw) {
+        return Array.from(
+          new Set(
+            String(raw || "")
+              .split(/[\s,;，；]+/g)
+              .map((x) => String(x || "").trim())
+              .filter(Boolean)
+          )
+        );
+      }
+
+      function applyDeviceListAssignToSubAdmin({ managerUsername, codes, ownerPhoneRaw }) {
+        const scope = getAdminScope();
+        if (scope.role !== "super") return { ok: false, reason: "scope_not_super" };
+        const manager = String(managerUsername || "").trim();
+        if (!manager) return { ok: false, reason: "empty_manager" };
+        const list = Array.isArray(codes) ? codes.map((x) => String(x || "").trim()).filter(Boolean) : [];
+        if (!list.length) return { ok: false, reason: "empty_codes" };
+
+        const ownerPhone = String(ownerPhoneRaw || "").trim() ? normalizePhone11(ownerPhoneRaw) : "";
+        if (ownerPhone && !isPhone11(ownerPhone)) return { ok: false, reason: "invalid_owner_phone" };
+
+        const allAdmins = ADMIN_ACCOUNTS.load();
+        const hitAdmin = allAdmins.find((a) => String(a.username || "").trim() === manager && a.role === "project");
+        if (!hitAdmin) return { ok: false, reason: "invalid_manager" };
+
+        let updated = 0;
+        list.forEach((code) => {
+          const cleanCode = String(code || "").trim();
+          if (!cleanCode) return;
+          upsertDeviceRegistry({ code: cleanCode, name: cleanCode, managerUsername: manager });
+          if (ownerPhone) {
+            const old = DEVICE_ACCESS_STORE.get(cleanCode) || { members: [], memberPerms: {} };
+            DEVICE_ACCESS_STORE.upsert(cleanCode, {
+              ownerPhone,
+              members: Array.isArray(old.members) ? old.members : [],
+              memberPerms: old.memberPerms && typeof old.memberPerms === "object" ? old.memberPerms : {},
+            });
+            upsertBindingForSn(cleanCode, ownerPhone);
+          }
+          updated += 1;
+        });
+        return { ok: true, updated };
+      }
+
+      function listEnabledProjectAdmins() {
+        return ADMIN_ACCOUNTS.load().filter((a) => a.role === "project" && a.enabled !== false);
+      }
+
+      function renderManagerSelectOptions(selectId, emptyLabel = "请选择子管理员") {
+        const sel = $(selectId);
+        if (!sel) return;
+        const current = String(sel.value || "").trim();
+        const opts = listEnabledProjectAdmins()
+          .map((a) => {
+            const u = String(a.username || "").trim();
+            const lab = formatSubAdminDisplay(u);
+            const p = String(a.project || "").trim();
+            return `<option value="${escapeHtml(u)}">${escapeHtml(lab)}${p ? ` · ${escapeHtml(p)}` : ""}</option>`;
+          })
+          .join("");
+        sel.innerHTML = `<option value="">${escapeHtml(emptyLabel)}</option>${opts}`;
+        if (current && [...sel.options].some((o) => o.value === current)) sel.value = current;
+      }
+
+      function getSelectedDeviceCodes() {
+        return [...DeviceUi.selected].map((x) => String(x || "").trim()).filter(Boolean);
+      }
+
+      function reassignDevicesToManager(codes, managerUsername) {
+        const manager = String(managerUsername || "").trim();
+        const list = Array.isArray(codes) ? codes.map((x) => String(x || "").trim()).filter(Boolean) : [];
+        if (!manager) return { ok: false, reason: "empty_manager" };
+        if (!list.length) return { ok: false, reason: "empty_codes" };
+        const hitAdmin = listEnabledProjectAdmins().find((a) => String(a.username || "").trim() === manager);
+        if (!hitAdmin) return { ok: false, reason: "invalid_manager" };
+        list.forEach((code) => {
+          upsertDeviceRegistry({ code, name: code, managerUsername: manager });
+        });
+        return { ok: true, updated: list.length };
+      }
+
+      function unbindUsersForDevices(codes) {
+        const list = Array.isArray(codes) ? codes.map((x) => String(x || "").trim()).filter(Boolean) : [];
+        if (!list.length) return { ok: false, reason: "empty_codes" };
+        list.forEach((code) => {
+          DEVICE_ACCESS_STORE.upsert(code, { ownerPhone: "", members: [], memberPerms: {} });
+          upsertBindingForSn(code, "");
+        });
+        return { ok: true, updated: list.length };
+      }
+
+      function transferDevicesBetweenManagers(fromManager, toManager) {
+        const from = String(fromManager || "").trim();
+        const to = String(toManager || "").trim();
+        if (!from) return { ok: false, reason: "empty_from_manager" };
+        if (!to) return { ok: false, reason: "empty_to_manager" };
+        if (from === to) return { ok: false, reason: "same_manager" };
+        const reg = CLOUD.listDeviceRegistry() || [];
+        const codes = reg
+          .filter((d) => String(d.managerUsername || d.adminUsername || "").trim() === from)
+          .map((d) => String(d.code || "").trim())
+          .filter(Boolean);
+        if (!codes.length) return { ok: false, reason: "no_source_devices" };
+        return reassignDevicesToManager(codes, to);
+      }
+
+      function buildDeviceAssignTemplateCsv() {
+        const rows = [
+          ["deviceCode", "managerUsername", "ownerPhone", "project", "model", "place", "fw"],
+          ["AGRI00001", "agri_mgr", "13800000001", "农业灌溉", "CLEDIC-PUMP-4G", "A区泵站", "v1.2.4"],
+          ["IND10001", "ind_mgr", "", "工业园区", "CLEDIC-PUMP-IND-01", "B区车间", "v1.2.1"],
+        ];
+        return rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+      }
+
+      async function importDeviceAssignFile(file) {
+        const name = String(file?.name || "").toLowerCase();
+        let arr = [];
+        if (name.endsWith(".json")) {
+          const raw = await file.text();
+          const parsed = JSON.parse(raw);
+          arr = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.rows) ? parsed.rows : [];
+        } else if (name.endsWith(".csv")) {
+          arr = parseCsvRows(await file.text());
+        } else if ((name.endsWith(".xlsx") || name.endsWith(".xls")) && window.XLSX) {
+          const data = await file.arrayBuffer();
+          const wb = window.XLSX.read(data, { type: "array" });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          arr = window.XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        } else {
+          return { ok: false, reason: "unsupported_file" };
+        }
+        if (!Array.isArray(arr)) return { ok: false, reason: "invalid_rows" };
+        return { ok: true, rows: arr };
+      }
+
+      function applyDeviceAssignImportRows(rows, fallbackManager, fallbackOwnerPhone) {
+        const list = Array.isArray(rows) ? rows : [];
+        if (!list.length) return { ok: false, reason: "empty_rows" };
+        const managers = new Set(listEnabledProjectAdmins().map((a) => String(a.username || "").trim()));
+        const fallbackManagerU = String(fallbackManager || "").trim();
+        const fallbackOwner = String(fallbackOwnerPhone || "").trim() ? normalizePhone11(fallbackOwnerPhone) : "";
+        if (fallbackOwner && !isPhone11(fallbackOwner)) return { ok: false, reason: "invalid_owner_phone" };
+        let okCount = 0;
+        let skipped = 0;
+        let ownerUpdated = 0;
+        list.forEach((r) => {
+          const code = String(r?.deviceCode || r?.code || r?.sn || r?.设备编码 || r?.设备SN || "").trim();
+          if (!code) {
+            skipped += 1;
+            return;
+          }
+          const manager = String(r?.managerUsername || r?.manager || r?.subAdmin || r?.子管理员 || fallbackManagerU || "").trim();
+          if (!manager || !managers.has(manager)) {
+            skipped += 1;
+            return;
+          }
+          const ownerRaw = String(r?.ownerPhone || r?.owner || r?.主用户 || fallbackOwner || "").trim();
+          const ownerPhone = ownerRaw ? normalizePhone11(ownerRaw) : "";
+          if (ownerPhone && !isPhone11(ownerPhone)) {
+            skipped += 1;
+            return;
+          }
+          upsertDeviceRegistry({
+            code,
+            name: String(r?.name || code),
+            project: String(r?.project || "").trim(),
+            model: String(r?.model || "").trim() || "-",
+            place: String(r?.place || "").trim() || "-",
+            fw: String(r?.fw || "").trim() || "-",
+            managerUsername: manager,
+          });
+          if (ownerPhone) {
+            const old = DEVICE_ACCESS_STORE.get(code) || { members: [], memberPerms: {} };
+            DEVICE_ACCESS_STORE.upsert(code, {
+              ownerPhone,
+              members: Array.isArray(old.members) ? old.members : [],
+              memberPerms: old.memberPerms && typeof old.memberPerms === "object" ? old.memberPerms : {},
+            });
+            upsertBindingForSn(code, ownerPhone);
+            ownerUpdated += 1;
+          }
+          okCount += 1;
+        });
+        return { ok: true, updated: okCount, skipped, ownerUpdated };
+      }
+
+      function loadDealerClaimAuditLogs() {
+        try {
+          const raw = localStorage.getItem("cledic_dealer_claim_audit_v1");
+          if (!raw) return [];
+          const arr = JSON.parse(raw);
+          return Array.isArray(arr) ? arr : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function actionLabelForDealerClaim(action) {
+        const a = String(action || "").trim();
+        if (a === "claim_by_scan") return "扫码认领";
+        if (a === "scan_view_only") return "扫码仅查看";
+        return a || "未知动作";
+      }
+
+      function renderDealerClaimAuditPanel() {
+        const body = $("#deviceClaimAuditBody");
+        const countEl = $("#deviceClaimAuditCount");
+        const dealerSel = $("#deviceClaimLogDealerFilter");
+        const deviceInput = $("#deviceClaimLogDeviceFilter");
+        if (!body || !countEl || !dealerSel || !deviceInput) return;
+        const scope = getAdminScope();
+        if (scope.role !== "super") return;
+        const logs = loadDealerClaimAuditLogs()
+          .slice()
+          .sort((a, b) => Number(b.at || 0) - Number(a.at || 0))
+          .slice(0, 400);
+        const currentDealer = String(dealerSel.value || "__ALL__");
+        const map = new Map();
+        logs.forEach((x) => {
+          const u = String(x.scannerDealerUsername || "").trim();
+          if (!u) return;
+          const n = String(x.scannerDealerName || u).trim();
+          map.set(u, n);
+        });
+        dealerSel.innerHTML =
+          `<option value="__ALL__">全部经销商</option>` +
+          [...map.entries()]
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([u, n]) => `<option value="${escapeHtml(u)}">${escapeHtml(n)}（${escapeHtml(u)}）</option>`)
+            .join("");
+        if (currentDealer !== "__ALL__" && [...dealerSel.options].some((o) => o.value === currentDealer)) dealerSel.value = currentDealer;
+
+        const dealerFilter = String(dealerSel.value || "__ALL__");
+        const deviceFilter = String(deviceInput.value || "").trim().toLowerCase();
+        const filtered = logs.filter((x) => {
+          const u = String(x.scannerDealerUsername || "").trim();
+          const d = String(x.deviceCode || "").trim().toLowerCase();
+          if (dealerFilter !== "__ALL__" && u !== dealerFilter) return false;
+          if (deviceFilter && !d.includes(deviceFilter)) return false;
+          return true;
+        });
+        countEl.textContent = `${filtered.length} 条`;
+        body.innerHTML = "";
+        if (!filtered.length) {
+          body.innerHTML = `<tr><td colspan="4" class="py-3 px-2 text-slate-400">暂无认领日志</td></tr>`;
+          return;
+        }
+        filtered.slice(0, 200).forEach((x) => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100";
+          tr.innerHTML = `
+            <td class="py-2 px-2 text-slate-600">${escapeHtml(new Date(Number(x.at || Date.now())).toLocaleString())}</td>
+            <td class="py-2 px-2 text-slate-700">${escapeHtml(String(x.scannerDealerName || x.scannerDealerUsername || "-"))}</td>
+            <td class="py-2 px-2 font-mono text-slate-700">${escapeHtml(String(x.deviceCode || "-"))}</td>
+            <td class="py-2 px-2 text-slate-700">${escapeHtml(actionLabelForDealerClaim(x.action))}</td>
+          `;
+          body.appendChild(tr);
+        });
+      }
+
+      function renderPendingClaimPanelForDevices() {
+        const body = $("#deviceClaimPendingBody");
+        const countEl = $("#deviceClaimPendingCount");
+        if (!body || !countEl) return;
+        const scope = getAdminScope();
+        if (scope.role !== "super") return;
+        const rows = buildDeviceRowsFromCloud().filter((r) => !String(r.managerUsername || "").trim());
+        countEl.textContent = `${rows.length} 台`;
+        body.innerHTML = "";
+        if (!rows.length) {
+          body.innerHTML = `<tr><td colspan="4" class="py-3 px-2 text-slate-400">暂无待认领设备</td></tr>`;
+          return;
+        }
+        rows.slice(0, 400).forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100";
+          tr.innerHTML = `
+            <td class="py-2 px-2">
+              <input type="checkbox" class="h-4 w-4 rounded border-slate-300 accent-amber-600" data-claim-pending-code="${escapeHtml(String(r.sn || ""))}" />
+            </td>
+            <td class="py-2 px-2 font-mono text-slate-700">${escapeHtml(String(r.sn || "-"))}</td>
+            <td class="py-2 px-2 text-slate-700">${escapeHtml(String(r.model || "-"))}</td>
+            <td class="py-2 px-2 text-slate-700">${escapeHtml(String(r.project || "-"))}</td>
+          `;
+          body.appendChild(tr);
+        });
       }
 
       function buildPrefixBindTemplateCsv() {
@@ -7805,70 +8345,21 @@
           const dupHint = subAdminDuplicateNameHintFor(a, projectAdminsForHints);
           const tr = document.createElement("tr");
           tr.className = "border-b border-slate-100 last:border-b-0";
-          const statusPill =
-            a.enabled !== false
-              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-              : "bg-slate-50 text-slate-600 border-slate-200";
-          const statusDot =
-            a.enabled !== false ? "bg-emerald-500" : "bg-slate-400";
           tr.innerHTML = `
             <td class="py-3" title="登录账号（系统内部）：${escapeHtml(a.username)} · 工号请在下方树形卡片「编辑工号」修改">
               <div class="flex flex-wrap items-center gap-x-2 gap-y-1">${formatSubAdminNameWithStaffInlineHtml(a)}</div>
               ${dupHint ? `<div class="mt-1.5 text-[11px] text-amber-800 leading-snug">${escapeHtml(dupHint)}</div>` : ""}
             </td>
             <td class="py-3 text-sm text-slate-700">${a.project || "-"}</td>
-            <td class="py-3">
-              <span class="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-1 rounded-full border ${statusPill}">
-                <span class="h-2 w-2 rounded-full ${statusDot}"></span>
-                ${a.enabled !== false ? "启用" : "停用"}
-              </span>
-            </td>
+            <td class="py-3 text-sm text-slate-400">-</td>
             <td class="py-3 text-right">
-              <div class="inline-flex items-center gap-2 flex-wrap justify-end">
-                <select
-                  class="h-8 w-[180px] rounded-xl bg-white border border-slate-200 px-2 text-xs outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-300"
-                  data-subadmin-owner-input="${a.username}"
-                >${ownerSelectHtml(a.username)}</select>
-                <button
-                  class="h-8 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
-                  data-subadmin-act="bindOwner"
-                  data-username="${a.username}"
-                >
-                  添加用户
-                </button>
-                <select
-                  class="h-8 w-[220px] rounded-xl bg-white border border-slate-200 px-2 text-xs outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-300"
-                  data-subadmin-device-input="${a.username}"
-                >${deviceSelectHtml(a.username)}</select>
-                <button
-                  class="h-8 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
-                  data-subadmin-act="bindDevice"
-                  data-username="${a.username}"
-                >
-                  添加设备
-                </button>
-                <button
-                  class="h-8 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
-                  data-subadmin-act="reset"
-                  data-username="${a.username}"
-                >
-                  重置密码
-                </button>
-                <button
-                  class="h-8 px-3 rounded-xl bg-white border border-rose-200 text-rose-700 text-xs font-semibold hover:bg-rose-50 transition"
-                  data-subadmin-act="delete"
-                  data-username="${a.username}"
-                >
-                  删除
-                </button>
-                <button
-                  class="h-8 px-3 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition"
-                  data-subadmin-act="toggle"
-                  data-username="${a.username}"
-                >
-                  ${a.enabled !== false ? "停用" : "启用"}
-                </button>
-              </div>
+              <button
+                class="h-8 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
+                data-subadmin-act="reset"
+                data-username="${a.username}"
+              >
+                重置密码
+              </button>
             </td>
           `;
           bodies.forEach((b) => b.appendChild(tr.cloneNode(true)));
@@ -7944,44 +8435,13 @@
                   <button
                     type="button"
                     class="h-8 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
-                    data-sub-tree-quick="bindOwner"
-                    data-username="${key}"
-                  >添加用户</button>
-                  <button
-                    type="button"
-                    class="h-8 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
-                    data-sub-tree-quick="bindDevice"
-                    data-username="${key}"
-                  >添加设备</button>
-                  <button
-                    type="button"
-                    class="h-8 px-3 rounded-xl bg-white border border-sky-200 text-sky-800 text-xs font-semibold hover:bg-sky-50 transition"
-                    data-sub-tree-quick="editStaff"
-                    data-username="${key}"
-                  >编辑工号</button>
-                  <button
-                    type="button"
-                    class="h-8 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
                     data-sub-tree-quick="reset"
                     data-username="${key}"
                   >重置密码</button>
-                  <button
-                    type="button"
-                    class="h-8 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
-                    data-sub-tree-quick="toggle"
-                    data-username="${key}"
-                  >${a.enabled !== false ? "停用" : "启用"}</button>
-                  <button
-                    type="button"
-                    class="h-8 px-3 rounded-xl bg-white border border-rose-200 text-rose-700 text-xs font-semibold hover:bg-rose-50 transition"
-                    data-sub-tree-quick="delete"
-                    data-username="${key}"
-                  >删除</button>
                 </span>
-                <span class="text-xs px-2 py-0.5 rounded-full ${a.enabled !== false ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-50 text-slate-600 border border-slate-200"}">${a.enabled !== false ? "启用" : "停用"}</span>
               </div>
               <div class="hidden p-3 pt-0" data-sub-tree-detail="${key}">
-                <div class="text-xs text-slate-500 mb-1">登录账号（系统内部）：<span class="font-mono text-slate-700">${escapeHtml(key)}</span> · 项目：${a.project || "-"} · 工号：${escapeHtml(String(a.staffCode || "").trim() || "未设置")}（点击卡片工具栏「编辑工号」修改）</div>
+                <div class="text-xs text-slate-500 mb-1">登录账号（系统内部）：<span class="font-mono text-slate-700">${escapeHtml(key)}</span> · 项目：${a.project || "-"} · 工号：${escapeHtml(String(a.staffCode || "").trim() || "未设置")}</div>
                 ${ownersHtml || '<div class="text-xs text-slate-400">筛选后无匹配数据</div>'}
               </div>
             `;
@@ -8883,6 +9343,7 @@
       }
 
       function boot() {
+        startDealerTerminologyObserver();
         // 确保有默认总管理员账号
         ADMIN_ACCOUNTS.ensureDefaultSuper();
         // 确保有默认型号字典
@@ -9086,6 +9547,13 @@
 
         // devices
         renderDevices("");
+        const deviceAssignPanel = $("#deviceAssignPanel");
+        if (deviceAssignPanel) {
+          const scope = getAdminScope();
+          deviceAssignPanel.classList.toggle("hidden", scope.role !== "super");
+        }
+        renderManagerSelectOptions("#deviceAssignTargetManager", "请选择目标子管理员");
+        renderManagerSelectOptions("#deviceAssignSourceManager", "请选择来源子管理员");
         $("#deviceSearch")?.addEventListener("input", (e) => renderDevices(e.target.value));
         $("#deviceProjectFilter")?.addEventListener("change", () => renderDevices($("#deviceSearch")?.value || ""));
         $("#deviceUserFilter")?.addEventListener("change", () => renderDevices($("#deviceSearch")?.value || ""));
@@ -9115,6 +9583,126 @@
           showToast("已删除", `已删除 ${list.length} 台设备。`);
           renderDevices($("#deviceSearch")?.value || "");
         });
+        $("#btnDeviceAssignSelected")?.addEventListener("click", () => {
+          const list = getSelectedDeviceCodes();
+          const manager = String($("#deviceAssignTargetManager")?.value || "").trim();
+          const res = reassignDevicesToManager(list, manager);
+          const hint = $("#deviceAssignHint");
+          if (!res?.ok) {
+            const msgMap = {
+              empty_manager: "请选择目标子管理员",
+              empty_codes: "请先勾选设备",
+              invalid_manager: "目标子管理员不存在或不可用",
+            };
+            if (hint) hint.textContent = "";
+            showToast("变更失败", msgMap[String(res?.reason || "")] || "请检查输入");
+            return;
+          }
+          if (hint) hint.textContent = `已变更 ${res.updated} 台设备的子管理员`;
+          showToast("变更完成", `已变更 ${res.updated} 台设备`);
+          renderDevices($("#deviceSearch")?.value || "");
+          renderBindings($("#bindingSearch")?.value || "");
+          renderUserAccess();
+        });
+        $("#btnDeviceUnbindSelectedOwner")?.addEventListener("click", () => {
+          const list = getSelectedDeviceCodes();
+          const res = unbindUsersForDevices(list);
+          const hint = $("#deviceAssignHint");
+          if (!res?.ok) {
+            if (hint) hint.textContent = "";
+            showToast("解绑失败", "请先勾选设备。");
+            return;
+          }
+          if (hint) hint.textContent = `已解绑 ${res.updated} 台设备的用户关系`;
+          showToast("解绑完成", `已解绑 ${res.updated} 台设备`);
+          renderDevices($("#deviceSearch")?.value || "");
+          renderBindings($("#bindingSearch")?.value || "");
+          renderUserAccess();
+        });
+        $("#btnDeviceTransferAllFromSource")?.addEventListener("click", () => {
+          const fromManager = String($("#deviceAssignSourceManager")?.value || "").trim();
+          const toManager = String($("#deviceAssignTargetManager")?.value || "").trim();
+          const res = transferDevicesBetweenManagers(fromManager, toManager);
+          const hint = $("#deviceAssignHint");
+          if (!res?.ok) {
+            const msgMap = {
+              empty_from_manager: "请选择来源子管理员",
+              empty_to_manager: "请选择目标子管理员",
+              same_manager: "来源和目标子管理员不能相同",
+              no_source_devices: "来源子管理员当前没有设备",
+              invalid_manager: "目标子管理员不存在或不可用",
+            };
+            if (hint) hint.textContent = "";
+            showToast("迁移失败", msgMap[String(res?.reason || "")] || "请检查输入");
+            return;
+          }
+          if (hint) hint.textContent = `已迁移 ${res.updated} 台设备`;
+          showToast("迁移完成", `已从来源子管理员迁移 ${res.updated} 台设备`);
+          renderDevices($("#deviceSearch")?.value || "");
+          renderBindings($("#bindingSearch")?.value || "");
+          renderUserAccess();
+        });
+        $("#btnDeviceAssignTemplate")?.addEventListener("click", () => {
+          const csv = buildDeviceAssignTemplateCsv();
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "device-assign-template.csv";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast("模板已下载", "按模板填设备编码、子管理员账号后导入。");
+        });
+        $("#btnDeviceAssignImport")?.addEventListener("click", () => $("#deviceAssignImportFile")?.click());
+        $("#deviceAssignImportFile")?.addEventListener("change", async (ev) => {
+          const file = ev?.target?.files?.[0];
+          if (!file) return;
+          const parsed = await importDeviceAssignFile(file);
+          if (!parsed?.ok) {
+            showToast("导入失败", "文件格式不支持或解析错误。");
+            ev.target.value = "";
+            return;
+          }
+          const rows = Array.isArray(parsed?.rows) ? parsed.rows : [];
+          const fallbackManager = String($("#deviceAssignTargetManager")?.value || "").trim();
+          const fallbackOwnerPhone = String($("#deviceAssignOwnerPhone")?.value || "").trim();
+          const res = applyDeviceAssignImportRows(rows, fallbackManager, fallbackOwnerPhone);
+          const hint = $("#deviceAssignHint");
+          if (!res?.ok) {
+            const msgMap = {
+              empty_rows: "文件没有可用数据行",
+              invalid_owner_phone: "主用户手机号格式不正确（11 位）",
+            };
+            if (hint) hint.textContent = "";
+            showToast("导入失败", msgMap[String(res?.reason || "")] || "请检查模板内容");
+            ev.target.value = "";
+            return;
+          }
+          if (hint) hint.textContent = `导入生效 ${res.updated} 台，跳过 ${res.skipped} 条`;
+          showToast("导入完成", `生效 ${res.updated} 台，跳过 ${res.skipped} 条${res.ownerUpdated ? `，同步主用户 ${res.ownerUpdated} 台` : ""}`);
+          ev.target.value = "";
+          renderDevices($("#deviceSearch")?.value || "");
+          renderBindings($("#bindingSearch")?.value || "");
+          renderUserAccess();
+        });
+        $("#btnDeviceClaimPendingSelectAll")?.addEventListener("click", () => {
+          $$('input[data-claim-pending-code]').forEach((el) => {
+            el.checked = true;
+          });
+        });
+        $("#btnDeviceClaimPendingToSelected")?.addEventListener("click", () => {
+          const list = $$('input[data-claim-pending-code]:checked')
+            .map((el) => String(el.getAttribute("data-claim-pending-code") || "").trim())
+            .filter(Boolean);
+          if (!list.length) return showToast("未选择设备", "请先勾选待认领设备。");
+          list.forEach((sn) => DeviceUi.selected.add(sn));
+          renderDevices($("#deviceSearch")?.value || "");
+          showToast("已加入已选", `已加入 ${list.length} 台待认领设备，可直接批量变更归属。`);
+        });
+        $("#deviceClaimLogDealerFilter")?.addEventListener("change", () => renderDealerClaimAuditPanel());
+        $("#deviceClaimLogDeviceFilter")?.addEventListener("input", () => renderDealerClaimAuditPanel());
         function showDlgDeviceNew() {
           const dlg = $("#dlgDeviceNew");
           if (!dlg) return;
@@ -9366,9 +9954,69 @@
         // bindings: prefix batch bind for project admins
         const bindingsPrefixPanel = $("#bindingsPrefixBindPanel");
         if (bindingsPrefixPanel) {
-          const scope = getAdminScope();
-          bindingsPrefixPanel.classList.toggle("hidden", scope.role !== "project");
+          // 已下线：按 SN 前缀批量归属入口（经销商页不再展示）
+          bindingsPrefixPanel.classList.add("hidden");
         }
+        const bindingsListAssignPanel = $("#bindingsListAssignPanel");
+        if (bindingsListAssignPanel) {
+          // 已迁移到“设备管理”Tab，人员配置页隐藏此入口
+          bindingsListAssignPanel.classList.add("hidden");
+        }
+        const listAssignManagerSel = $("#bindingsListAssignManager");
+        if (listAssignManagerSel) {
+          const opts = ADMIN_ACCOUNTS.load()
+            .filter((a) => a.role === "project" && a.enabled !== false)
+            .map((a) => {
+              const u = String(a.username || "").trim();
+              const lab = formatSubAdminDisplay(u);
+              const p = String(a.project || "").trim();
+              return `<option value="${escapeHtml(u)}">${escapeHtml(lab)}${p ? ` · ${escapeHtml(p)}` : ""}</option>`;
+            })
+            .join("");
+          listAssignManagerSel.innerHTML = `<option value="">请选择子管理员</option>${opts}`;
+        }
+        $("#btnBindingsListAssignApply")?.addEventListener("click", () => {
+          const managerUsername = String($("#bindingsListAssignManager")?.value || "").trim();
+          const ownerPhoneRaw = String($("#bindingsListAssignOwner")?.value || "").trim();
+          const codesRaw = String($("#bindingsListAssignCodes")?.value || "");
+          const codes = parseDeviceCodeList(codesRaw);
+          const res = applyDeviceListAssignToSubAdmin({ managerUsername, codes, ownerPhoneRaw });
+          const hint = $("#bindingsListAssignHint");
+          if (!res?.ok) {
+            const msgMap = {
+              scope_not_super: "仅总管理员可使用该功能",
+              empty_manager: "请选择子管理员",
+              empty_codes: "请先输入设备编码列表",
+              invalid_owner_phone: "主用户手机号格式不正确（11 位）",
+              invalid_manager: "目标子管理员不存在或不可用",
+            };
+            if (hint) hint.textContent = "";
+            showToast("批量归属失败", msgMap[String(res?.reason || "")] || "请检查输入");
+            return;
+          }
+          if (hint) hint.textContent = `已归属 ${res.updated} 台设备`;
+          showToast("批量归属完成", `已归属 ${res.updated} 台设备到子管理员`);
+          renderBindings($("#bindingSearch")?.value || "");
+          renderUserAccess();
+        });
+        $("#btnBindingsPendingSelectAll")?.addEventListener("click", () => {
+          const checks = $$('input[data-pending-code]');
+          checks.forEach((el) => {
+            el.checked = true;
+          });
+        });
+        $("#btnBindingsPendingFillCodes")?.addEventListener("click", () => {
+          const selected = $$('input[data-pending-code]:checked')
+            .map((el) => String(el.getAttribute("data-pending-code") || "").trim())
+            .filter(Boolean);
+          if (!selected.length) {
+            showToast("未选择设备", "请先在待分配列表中勾选设备。");
+            return;
+          }
+          const ta = $("#bindingsListAssignCodes");
+          if (ta) ta.value = selected.join("\n");
+          showToast("已填入", `已填入 ${selected.length} 台设备，请选择子管理员后批量归属。`);
+        });
         $("#btnBindingsPrefixBindApply")?.addEventListener("click", () => {
           const scope = getAdminScope();
           if (scope.role !== "project") return showToast("权限不足", "仅子管理员可使用该功能。");
@@ -10216,10 +10864,16 @@
             }
             const res = ADMIN_ACCOUNTS.createSubAdmin(name, project);
             if (!res.ok) {
+              const msg =
+                res.reason === "duplicated_username"
+                  ? `账号已存在：${res.username}`
+                  : res.reason === "duplicated_name"
+                    ? `姓名已存在：${res.name}`
+                    : "账号不能为空，请检查输入。";
               if (hint) {
-                hint.textContent = res.reason === "duplicated_username" ? `账号已存在：${res.username}` : "账号不能为空，请检查输入。";
+                hint.textContent = msg;
               }
-              showToast("创建失败", res.reason === "duplicated_username" ? `账号已存在：${res.username}` : "账号不能为空，请检查输入。");
+              showToast("创建失败", msg);
               return;
             }
             const acc = res.account;
