@@ -135,7 +135,7 @@
                 data-view="userAccess"
               >
                 <i data-lucide="shield" class="h-[16px] w-[16px] text-slate-300"></i>
-                <span class="font-medium whitespace-nowrap">权限设定</span>
+                <span class="font-medium whitespace-nowrap">子管理员管理</span>
               </button>
             </div>
           </div>
@@ -530,7 +530,7 @@
                     <input id="deviceAssignImportFile" type="file" accept=".csv,.json,.xlsx,.xls" class="hidden" />
                     <div id="deviceAssignHint" class="ml-auto text-xs text-slate-500"></div>
                   </div>
-                  <div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                  <div class="grid grid-cols-1 xl:grid-cols-2 gap-3 hidden" aria-hidden="true">
                     <div class="rounded-xl border border-amber-200 bg-amber-50">
                       <div class="px-3 py-2 border-b border-amber-200 flex items-center gap-2">
                         <i data-lucide="inbox" class="h-4 w-4 text-amber-700"></i>
@@ -623,7 +623,7 @@
               <div class="px-5 pt-4">
                 <div class="inline-flex items-center gap-2 p-1 rounded-xl bg-slate-100 border border-slate-200">
                   <button id="btnPeopleTabUsers" class="h-8 px-3 rounded-lg bg-slate-900 text-white text-xs font-semibold">用户列表</button>
-                  <button id="btnPeopleTabPerms" class="h-8 px-3 rounded-lg bg-white text-slate-700 text-xs font-semibold border border-slate-200">权限设定</button>
+                  <button id="btnPeopleTabPerms" class="h-8 px-3 rounded-lg bg-white text-slate-700 text-xs font-semibold border border-slate-200">子管理员管理</button>
                 </div>
               </div>
               <div class="px-5 pt-4 space-y-3">
@@ -1118,12 +1118,11 @@
             <div class="mb-3">
               <div class="inline-flex items-center gap-2 p-1 rounded-xl bg-slate-100 border border-slate-200">
                 <button id="btnPeopleTabUsers2" class="h-8 px-3 rounded-lg bg-white text-slate-700 text-xs font-semibold border border-slate-200">用户列表</button>
-                <button id="btnPeopleTabPerms2" class="h-8 px-3 rounded-lg bg-slate-900 text-white text-xs font-semibold">权限设定</button>
-                <button id="btnPeopleTabSubAdmins2" class="h-8 px-3 rounded-lg bg-white text-slate-700 text-xs font-semibold border border-slate-200">子管理员管理</button>
+                <button id="btnPeopleTabSubAdmins2" class="h-8 px-3 rounded-lg bg-slate-900 text-white text-xs font-semibold">子管理员管理</button>
               </div>
             </div>
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
-              <div id="accessDeviceColumn" class="xl:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-panel">
+              <div id="accessDeviceColumn" class="hidden xl:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-panel" aria-hidden="true">
                 <div class="p-5 border-b border-slate-100 flex items-center gap-2">
                   <i data-lucide="cpu" class="h-4 w-4 text-slate-700"></i>
                   <div class="font-semibold">选择设备</div>
@@ -1139,14 +1138,14 @@
                   </div>
                 </div>
               </div>
-              <div id="accessRightColumn" class="xl:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-panel">
+              <div id="accessRightColumn" class="xl:col-span-12 bg-white rounded-2xl border border-slate-200 shadow-panel">
                 <div class="p-5 border-b border-slate-100 flex items-center gap-2">
                   <i data-lucide="user-round-cog" class="h-4 w-4 text-slate-700"></i>
                   <div class="font-semibold">主用户与绑定成员</div>
                   <div id="accessDeviceTitle" class="ml-2 text-xs text-slate-500">未选择设备</div>
                 </div>
                 <div class="p-5 space-y-4">
-                  <div id="accessDeviceMgmtPanel" class="space-y-4">
+                  <div id="accessDeviceMgmtPanel" class="space-y-4 hidden" aria-hidden="true">
                   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
                       <div class="flex items-center gap-2">
@@ -1265,8 +1264,8 @@
                     <div id="accessRelationGraph" class="mt-3"></div>
                   </div>
                   </div>
-                  <div id="accessSubAdminPanel" class="hidden">
-                    <div class="p-4 rounded-2xl bg-white border border-slate-200">
+                  <div id="accessSubAdminPanel">
+                    <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-panel">
                       <div class="text-xs text-slate-500">子管理员（点击展开）→ 主用户 → 设备与子用户（含权限）</div>
                       <div class="mt-3 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
                         子用户权限仅支持：只读（看数据）/ 可控（启停+档位）/ 可复位。支持同一子用户被多个主用户共享。
@@ -2563,7 +2562,7 @@
           .replace(/'/g, "&#39;");
       }
       const DEALER_TERM_FROM = "子管理员";
-      const DEALER_TERM_TO = "代理商/经销商";
+      const DEALER_TERM_TO = "经销商";
       function replaceDealerTermText(s) {
         const text = String(s ?? "");
         return text.includes(DEALER_TERM_FROM) ? text.split(DEALER_TERM_FROM).join(DEALER_TERM_TO) : text;
@@ -5023,8 +5022,7 @@
         setTabState("btnPeopleTabUsers", view === "bindings");
         setTabState("btnPeopleTabPerms", view === "userAccess");
         setTabState("btnPeopleTabUsers2", view === "bindings");
-        setTabState("btnPeopleTabPerms2", view === "userAccess" && String(AccessUi.tab || "perms") !== "subadmin");
-        setTabState("btnPeopleTabSubAdmins2", view === "userAccess" && String(AccessUi.tab || "perms") === "subadmin");
+        setTabState("btnPeopleTabSubAdmins2", view === "userAccess");
         const setGroupOpen = (groupId, iconId, open) => {
           const group = $("#" + groupId);
           const icon = $("#" + iconId);
@@ -5045,8 +5043,8 @@
           setModelsPage(ModelUi.page || "editor");
         }
         if (view === "userAccess") {
-          renderUserAccess();
-          setUserAccessTab(AccessUi.tab || "perms");
+          // 已移除：设备-主用户-成员权限设定页（与设备管理重复）
+          setUserAccessTab("subadmin");
         }
         if (view === "tickets") renderTickets($("#ticketSearch")?.value || "");
         if (view === "issues") renderIssues($("#issueSearch")?.value || "");
@@ -5058,11 +5056,11 @@
 
       function setUserAccessTab(tab) {
         const scope = getAdminScope();
-        const wantsSubAdmin = String(tab || "perms") === "subadmin";
         const allowSubAdmin = scope.role === "super";
-        const mode = allowSubAdmin && wantsSubAdmin ? "subadmin" : "perms";
-        const isPerms = mode === "perms";
-        const btnPerms = $("#btnPeopleTabPerms2");
+        // 已移除：原“权限设定（设备-主用户-成员）”页，仅保留“子管理员管理”
+        const mode = "subadmin";
+        const isPerms = false;
+        const btnPerms = null;
         const btnSubAdmin = $("#btnPeopleTabSubAdmins2");
         const leftCol = $("#accessDeviceColumn");
         const rightCol = $("#accessRightColumn");
@@ -5070,30 +5068,19 @@
         const panelSubAdmin = $("#accessSubAdminPanel");
         // 子管理员不允许管理子管理员：隐藏入口并强制回到权限设定
         if (btnSubAdmin) btnSubAdmin.classList.toggle("hidden", !allowSubAdmin);
-        btnPerms?.classList.toggle("bg-slate-900", isPerms);
-        btnPerms?.classList.toggle("text-white", isPerms);
-        btnPerms?.classList.toggle("bg-white", !isPerms);
-        btnPerms?.classList.toggle("text-slate-700", !isPerms);
-        btnPerms?.classList.toggle("border", !isPerms);
-        btnPerms?.classList.toggle("border-slate-200", !isPerms);
-        if (allowSubAdmin) {
-          btnSubAdmin?.classList.toggle("bg-slate-900", !isPerms);
-          btnSubAdmin?.classList.toggle("text-white", !isPerms);
-          btnSubAdmin?.classList.toggle("bg-white", isPerms);
-          btnSubAdmin?.classList.toggle("text-slate-700", isPerms);
-          btnSubAdmin?.classList.toggle("border", isPerms);
-          btnSubAdmin?.classList.toggle("border-slate-200", isPerms);
-        }
-        leftCol?.classList.toggle("hidden", !isPerms);
-        rightCol?.classList.toggle("xl:col-span-8", isPerms);
-        rightCol?.classList.toggle("xl:col-span-12", !isPerms);
-        panelDevice?.classList.toggle("hidden", !isPerms);
-        panelSubAdmin?.classList.toggle("hidden", isPerms || !allowSubAdmin);
+        btnSubAdmin?.classList.add("bg-slate-900", "text-white");
+        btnSubAdmin?.classList.remove("bg-white", "text-slate-700", "border", "border-slate-200");
+        leftCol?.classList.add("hidden");
+        rightCol?.classList.remove("hidden");
+        rightCol?.classList.remove("xl:col-span-8");
+        rightCol?.classList.add("xl:col-span-12");
+        panelDevice?.classList.add("hidden");
+        panelSubAdmin?.classList.toggle("hidden", !allowSubAdmin);
         AccessUi.tab = mode;
         // 子管理员（项目管理员）才需要“按 SN 前缀批量归属”
         // 已下线：按 SN 前缀批量归属入口（经销商页不再展示）
         $("#accessPrefixBindPanel")?.classList.add("hidden");
-        if (!isPerms) renderSubAdminList();
+        if (allowSubAdmin) renderSubAdminList();
       }
 
       // --------------------
@@ -5763,8 +5750,7 @@
         $$("[data-dev-bind]", body).forEach((btn) => {
           btn.addEventListener("click", () => openDeviceBindRoles(btn.getAttribute("data-dev-bind")));
         });
-        renderPendingClaimPanelForDevices();
-        renderDealerClaimAuditPanel();
+        // 已隐藏：待认领设备 / 认领日志（与设备管理流程重复）
       }
 
       // --------------------
@@ -7166,6 +7152,18 @@
         return { label: "未知", cls: "bg-slate-50 text-slate-700 border-slate-200" };
       }
 
+      function getEffectiveTicketStatus(ticket) {
+        const raw = String(ticket?.status || "submitted");
+        if (raw === "processing" || raw === "done" || raw === "closed") return raw;
+        const history = Array.isArray(ticket?.history) ? ticket.history : [];
+        const responded = history.some((h) => {
+          const act = String(h?.action || "").trim();
+          return act === "reply_user" || act === "phone_callback" || act === "progress" || act === "super_comment";
+        });
+        if (responded && (raw === "submitted" || raw === "accepted")) return "processing";
+        return raw;
+      }
+
       function buildTicketNewDeviceOptions() {
         const sel = $("#ticketNewDevice");
         if (!sel) return;
@@ -7478,7 +7476,7 @@
         const box = $("#ticketFlowSteps");
         if (!box) return;
         const route = resolveTicketRouting(ticket || {});
-        const status = String(ticket?.status || "submitted");
+        const status = getEffectiveTicketStatus(ticket);
         const hist = Array.isArray(ticket?.history) ? ticket.history : [];
         const hasUserNote = hist.some((h) => String(h?.action || "").trim() === "user_note");
         const cand = Array.isArray(route.subAdminCandidates) ? route.subAdminCandidates : [];
@@ -7673,7 +7671,7 @@
               isUnrouted
             );
           })
-          .filter((t) => (statusSel === "__ALL__" ? true : String(t.status || "submitted") === String(statusSel)))
+          .filter((t) => (statusSel === "__ALL__" ? true : getEffectiveTicketStatus(t) === String(statusSel)))
           .filter((t) => {
             if (!q) return true;
             const route = resolveTicketRouting(t);
@@ -7687,7 +7685,7 @@
         body.innerHTML = "";
         if (empty) empty.classList.toggle("hidden", list.length !== 0);
         list.forEach((t) => {
-          const st = ticketStatusLabel(t.status);
+          const st = ticketStatusLabel(getEffectiveTicketStatus(t));
           const tr = document.createElement("tr");
           tr.className = "border-b border-slate-100 last:border-b-0";
           const assignText = ticketAssignText(t);
@@ -7738,7 +7736,7 @@
         $("#ticketDetailDevice2").textContent = `SN：${t.deviceCode || "-"} · 设备ID：${t.deviceId || "-"}`;
         $("#ticketDetailUser").textContent = adminDisplayPhone(t.phone || "");
         $("#ticketDetailTime").textContent = `提交时间：${new Date(Number(t.createdAt || Date.now())).toLocaleString()}`;
-        $("#ticketDetailStatus").textContent = ticketStatusLabel(t.status).label;
+        $("#ticketDetailStatus").textContent = ticketStatusLabel(getEffectiveTicketStatus(t)).label;
         $("#ticketDetailAssign").textContent = ticketAssignText(t);
         $("#ticketDetailDesc").textContent = t.desc || "-";
 
@@ -7822,7 +7820,7 @@
         const history = Array.isArray(list[idx].history) ? list[idx].history : [];
         history.unshift({ at: now, by, role, action, msg });
         let nextStatus = String(list[idx].status || "submitted");
-        if (action === "reply_user" || action === "phone_callback" || action === "progress") {
+        if (action === "reply_user" || action === "phone_callback" || action === "progress" || action === "super_comment") {
           if (nextStatus === "submitted" || nextStatus === "accepted") nextStatus = "processing";
         }
         if (action === "finish") nextStatus = "done";
@@ -9491,9 +9489,9 @@
 
         const toPeopleUsers = () => setView("bindings");
         const toPeoplePerms = () => {
-          AccessUi.tab = "perms";
+          AccessUi.tab = "subadmin";
           setView("userAccess");
-          setUserAccessTab("perms");
+          setUserAccessTab("subadmin");
         };
         const toPeopleSubAdmins = () => {
           AccessUi.tab = "subadmin";
@@ -9503,9 +9501,8 @@
         $("#btnPeopleTabUsers")?.addEventListener("click", toPeopleUsers);
         $("#btnPeopleTabPerms")?.addEventListener("click", toPeoplePerms);
         $("#btnPeopleTabUsers2")?.addEventListener("click", toPeopleUsers);
-        $("#btnPeopleTabPerms2")?.addEventListener("click", toPeoplePerms);
         $("#btnPeopleTabSubAdmins2")?.addEventListener("click", toPeopleSubAdmins);
-        setUserAccessTab("perms");
+        setUserAccessTab("subadmin");
 
         $("#navSnConfig")?.addEventListener("click", () => {
           setView("factory");

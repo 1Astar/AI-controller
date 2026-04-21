@@ -3303,6 +3303,7 @@ function renderGearButtons() {
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const CUSTOMER_SERVICE_PHONE = "400-800-1234";
 
 const fmtTime = (d = new Date()) => {
   const pad2 = (n) => String(n).padStart(2, "0");
@@ -4251,7 +4252,7 @@ function renderMeTickets() {
   list.innerHTML = "";
   if (empty) empty.hidden = rows.length > 0;
   rows.forEach((t) => {
-    const meta = ticketStatusMeta(t.status);
+    const meta = ticketStatusMeta(getEffectiveTicketStatus(t));
     const item = document.createElement("div");
     item.className = "list-item";
     item.style.cursor = "pointer";
@@ -4343,6 +4344,19 @@ function ticketStatusMeta(status) {
   return { label: "未知", style: "border-color:rgba(55,65,81,.25);background:rgba(55,65,81,.08);color:var(--txt-2);" };
 }
 
+function getEffectiveTicketStatus(ticket) {
+  const raw = String(ticket?.status || "submitted");
+  if (!ticket || raw === "processing" || raw === "done" || raw === "closed") return raw;
+  const history = Array.isArray(ticket.history) ? ticket.history : [];
+  const hasResponse = history.some((h) => {
+    const a = String(h?.action || "").trim();
+    return a === "reply_user" || a === "phone_callback" || a === "progress" || a === "super_comment";
+  });
+  // 兜底：只要总管理员/经销商任一方已有响应动作，即视为“处理中”
+  if (hasResponse && (raw === "submitted" || raw === "accepted")) return "processing";
+  return raw;
+}
+
 function renderTickets() {
   const list = $("#ticketList");
   const empty = $("#ticketEmpty");
@@ -4353,7 +4367,8 @@ function renderTickets() {
   list.innerHTML = "";
 
   rows.forEach((t) => {
-    const meta = ticketStatusMeta(t.status);
+    const status = getEffectiveTicketStatus(t);
+    const meta = ticketStatusMeta(status);
     const item = document.createElement("div");
     item.className = "list-item";
     item.style.cursor = "pointer";
@@ -5227,7 +5242,7 @@ function openAlarmDetail(alarmId) {
   renderHeader();
 
   const t = (State.tickets || []).find((x) => x.deviceId === a.deviceId) || null;
-  const tMeta = t ? ticketStatusMeta(t.status) : null;
+  const tMeta = t ? ticketStatusMeta(getEffectiveTicketStatus(t)) : null;
   const tLine = t
     ? `<div class="subtle" style="margin-top:6px;">工单：<span style="${tMeta?.style || ""}padding:2px 8px;border-radius:999px;border:1px solid rgba(15,23,42,.12);">${tMeta?.label || "—"}</span>（点击查看详情）</div>`
     : `<div class="subtle" style="margin-top:6px;">工单：—</div>`;
@@ -5267,10 +5282,11 @@ function openTicketDetailDialog(ticketId) {
   const t = (State.tickets || []).find((x) => x.id === ticketId);
   if (!t) return;
   const createdAt = t.createdAt ? new Date(t.createdAt).toLocaleString() : "-";
-  const meta = ticketStatusMeta(t.status);
+  const status = getEffectiveTicketStatus(t);
+  const meta = ticketStatusMeta(status);
   const feedback = t.feedback && typeof t.feedback === "object" ? t.feedback : { score: 0, comment: "" };
-  const canRate = ["done", "closed"].includes(String(t.status || ""));
-  const canResolve = ["processing", "done"].includes(String(t.status || ""));
+  const canRate = ["done", "closed"].includes(String(status || ""));
+  const canResolve = ["processing", "done"].includes(String(status || ""));
   const sourceText =
     String(t.source || "").trim() === "admin-manual"
       ? "来源：子管理员代建工单（为你创建）"
@@ -5329,6 +5345,7 @@ function openTicketDetailDialog(ticketId) {
       </div>
       <div class="subtle" style="margin-top:6px;">${createdAt} · ${t.deviceName || "—"}（${t.deviceCode || "—"}）</div>
       <div class="subtle" style="margin-top:4px;">联系电话：${t.phone || "—"}</div>
+      <div class="subtle" style="margin-top:4px;">客服电话：${CUSTOMER_SERVICE_PHONE}</div>
       <div class="subtle" style="margin-top:4px;">${sourceText}</div>
       <div style="margin-top:10px;padding:10px;border:1px solid rgba(15,23,42,.10);border-radius:12px;background:#fff;">
         <div class="subtle">问题描述</div>
