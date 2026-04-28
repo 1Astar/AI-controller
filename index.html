@@ -2297,7 +2297,16 @@ dialog[open] { animation: dialog-in 0.2s ease; }
                 <div class="card__title">我的工单</div>
                 <div class="subtle">直接查看各工单状态，点击条目查看详情</div>
               </div>
-              <button class="ghost-btn" id="btnServiceQuick">遇到问题</button>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                <button class="ghost-btn" id="btnServiceQuick">遇到问题</button>
+                <button
+                  type="button"
+                  id="btnServicePhoneQuick"
+                  class="subtle"
+                  style="background:none;border:none;padding:0;color:var(--blue);font-size:12px;cursor:pointer;text-decoration:underline;"
+                  title="点击复制客服电话"
+                >电话占位（点击复制）</button>
+              </div>
             </div>
             <div class="card__body">
               <div class="list" id="meTicketList"></div>
@@ -2506,7 +2515,7 @@ dialog[open] { animation: dialog-in 0.2s ease; }
       <div class="dialog__body">
         <div class="steps">
           <div class="step is-active" data-step="1">1 扫码</div>
-          <div class="step" data-step="2">2 4G 连接</div>
+          <div class="step" data-step="2">2 联网</div>
           <div class="step" data-step="3">3 命名</div>
         </div>
 
@@ -2536,6 +2545,30 @@ dialog[open] { animation: dialog-in 0.2s ease; }
 
         <div class="wiz" id="wiz2" hidden>
           <div class="subtle" id="linkTypeText">4G 云连接中…</div>
+          <div class="field" id="wifiPwdField" hidden style="margin-top: 10px;">
+            <div class="field__k">WiFi 名称</div>
+            <div class="type-tabs" style="margin-bottom:8px;">
+              <button type="button" class="type-tab" id="btnWifiModeScan">扫描附近 WiFi</button>
+              <button type="button" class="type-tab" id="btnWifiModeManual">手动输入 WiFi 名称</button>
+            </div>
+            <div id="wifiScanBox">
+              <div class="row" style="justify-content:flex-start;gap:8px;margin-bottom:8px;">
+                <button type="button" class="btn btn--ghost" id="btnWifiScanNearby">扫描附近 WiFi（示例）</button>
+              </div>
+              <select class="input" id="wifiSsidSelect">
+                <option value="">请先扫描并选择 WiFi</option>
+              </select>
+            </div>
+            <div id="wifiManualBox" hidden style="margin-top:8px;">
+              <input class="input" id="onbWifiSsid" placeholder="请输入 WiFi 名称（SSID）" />
+            </div>
+            <div class="field__k">WiFi 密码</div>
+            <input class="input" id="onbWifiPwd" type="password" placeholder="请输入 2.4G WiFi 密码" />
+            <div class="row" style="justify-content:flex-start;margin-top:8px;">
+              <button type="button" class="btn btn--primary" id="btnWifiConfirm">确认联网</button>
+            </div>
+            <div class="subtle" style="margin-top:6px;">仅 WiFi 版设备需要填写；4G 版将自动跳过此步骤。</div>
+          </div>
           <div class="progress">
             <div class="progress__bar" id="onbBar" style="width: 20%"></div>
           </div>
@@ -2691,6 +2724,10 @@ dialog[open] { animation: dialog-in 0.2s ease; }
       </div>
       <div class="dialog__body">
         <div class="subtle" id="svcHint">提交后将生成工单（原型：本地保存）。</div>
+        <div class="subtle" style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span id="svcServicePhoneText">客服电话：--</span>
+          <button id="btnSvcCopyServicePhone" type="button" class="ghost-btn" style="height:28px;min-height:28px;padding:0 10px;font-size:12px;">复制电话</button>
+        </div>
 
         <div class="svc-meta">
           <div class="field">
@@ -2974,6 +3011,7 @@ const DEVICE_TYPES = {
     kind: "other",
     label: "通用设备（可配置参数）",
     codePrefix: "GEN-",
+    netType: "wifi",
     configurable: true,
     tutorial: [
       "这是通用设备：需要先配置“数据读取/控制下发”的参数对应关系。",
@@ -2986,6 +3024,7 @@ const DEVICE_TYPES = {
     kind: "other",
     label: "回水器",
     codePrefix: "HBS-",
+    netType: "wifi",
     configurable: false,
     tutorial: [
       "硬件配置：按住面板【设置】+【确定】≥5秒，听到提示音后进入配网模式。",
@@ -2999,6 +3038,7 @@ const DEVICE_TYPES = {
     kind: "pump",
     label: "高速升泵",
     codePrefix: "HSP-",
+    netType: "4g",
     configurable: false,
     tutorial: [
       "确认进出水阀门处于正确状态，避免憋压。",
@@ -3011,6 +3051,7 @@ const DEVICE_TYPES = {
     kind: "pump",
     label: "增压泵",
     codePrefix: "BP-",
+    netType: "wifi",
     configurable: false,
     tutorial: [
       "上电自检完成后，确保水源与管路无明显漏水。",
@@ -3023,6 +3064,7 @@ const DEVICE_TYPES = {
     kind: "pump",
     label: "CA系列增压泵",
     codePrefix: "CA-",
+    netType: "wifi",
     configurable: false,
     tutorial: [
       "确认铭牌型号与电压匹配（220/380）。",
@@ -3035,6 +3077,7 @@ const DEVICE_TYPES = {
     kind: "pump",
     label: "SGW系列",
     codePrefix: "SGW-",
+    netType: "4g",
     configurable: false,
     tutorial: [
       "确认电源接线与接地可靠，现场安全后再操作。",
@@ -3047,6 +3090,7 @@ const DEVICE_TYPES = {
     kind: "other",
     label: "风机控制器",
     codePrefix: "FAN-",
+    netType: "4g",
     configurable: false,
     tutorial: [
       "确认风机电源与接线正确，避免误操作。",
@@ -3059,6 +3103,7 @@ const DEVICE_TYPES = {
     kind: "other",
     label: "压缩机控制器",
     codePrefix: "CMP-",
+    netType: "4g",
     configurable: false,
     tutorial: [
       "确认三相电压与接线正确（如为380V）。",
@@ -3071,6 +3116,7 @@ const DEVICE_TYPES = {
     kind: "other",
     label: "阀门控制器",
     codePrefix: "VAL-",
+    netType: "wifi",
     configurable: false,
     tutorial: [
       "确认阀门行程与限位设置正确。",
@@ -3091,6 +3137,10 @@ function detectDeviceTypeByCode(code) {
     Object.values(DEVICE_TYPES).find((t) => t.codePrefix && c.startsWith(String(t.codePrefix).toUpperCase())) ||
     DEVICE_TYPES.booster
   );
+}
+
+function getDeviceNetTypeLabel(dtype) {
+  return getNetworkTypeForDeviceType(dtype) === "wifi" ? "WiFi版" : "4G版";
 }
 
 function renderDeviceTypePicker() {
@@ -3130,7 +3180,7 @@ function renderDeviceTypePicker() {
   filtered.forEach((t) => {
     const card = document.createElement("div");
     card.className = "type-card" + (State.onboardingTypeId === t.id ? " is-active" : "");
-    card.innerHTML = `<div><div class="type-card__title">${t.label}</div><div class="type-card__sub">码前缀：${t.codePrefix || "—"}</div></div>`;
+    card.innerHTML = `<div><div class="type-card__title">${t.label}</div><div class="type-card__sub">${getDeviceNetTypeLabel(t)} · 码前缀：${t.codePrefix || "—"}</div></div>`;
     card.addEventListener("click", () => {
       State.onboardingTypeId = t.id;
       State.onboardingKindId = t.kind || State.onboardingKindId;
@@ -3142,13 +3192,13 @@ function renderDeviceTypePicker() {
 
   const cur = types.find((x) => x.id === State.onboardingTypeId) || types[0];
   const kindLabel = (DEVICE_KINDS.find((k) => k.id === (cur.kind || State.onboardingKindId)) || DEVICE_KINDS[0]).label;
-  hint.textContent = `已选择：${kindLabel} · ${cur.label}（扫码码前缀示例：${cur.codePrefix}xxxxxx）。`;
+  hint.textContent = `已选择：${kindLabel} · ${cur.label} · ${getDeviceNetTypeLabel(cur)}（扫码码前缀示例：${cur.codePrefix}xxxxxx）。`;
 }
 
 function openTutorialForType(typeId) {
   const t = DEVICE_TYPES[typeId] || DEVICE_TYPES.booster;
   $("#tutorialTitle").textContent = `配置教程：${t.label}`;
-  $("#tutorialSub").textContent = `识别码前缀：${t.codePrefix || "—"}（原型文案，可替换为正式教程）`;
+  $("#tutorialSub").textContent = `设备版本：${getDeviceNetTypeLabel(t)} · 识别码前缀：${t.codePrefix || "—"}（原型文案，可替换为正式教程）`;
   const box = $("#tutorialSteps");
   box.innerHTML = "";
   (t.tutorial || []).forEach((txt, idx) => {
@@ -3698,6 +3748,32 @@ function closeDialog(id) {
   const dlg = document.getElementById(id);
   if (!dlg) return;
   dlg.close();
+}
+
+async function copyTextToClipboard(text) {
+  const value = String(text || "").trim();
+  if (!value) return false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch (_) {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = value;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return !!ok;
+  } catch (_) {
+    return false;
+  }
 }
 
 function resolveAlarmsForDevice(deviceId) {
@@ -5077,12 +5153,13 @@ function renderDevicePicker() {
     ensureDeviceSharing(d);
     const owner = isDeviceOwner(d);
     const s = statusToDot(d.status);
+    const dtype = detectDeviceTypeByCode(d.code);
     const item = document.createElement("div");
     item.className = "list-item";
     item.innerHTML = `
       <div class="list-item__main">
         <div class="list-item__title">${d.name}</div>
-        <div class="list-item__sub">${d.code} · ${owner ? "归属设备" : "分享设备"}</div>
+        <div class="list-item__sub">${getDeviceNetTypeLabel(dtype)} · ${d.code} · ${owner ? "归属设备" : "分享设备"}</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
         <div class="chip chip--${d.status === "running" ? "on" : "off"}">${s.pill[1]}</div>
@@ -5136,12 +5213,13 @@ function renderDeviceList() {
     ensureDeviceSharing(d);
     const owner = isDeviceOwner(d);
     const s = statusToDot(d.status);
+    const dtype = detectDeviceTypeByCode(d.code);
     const item = document.createElement("div");
     item.className = "list-item";
     item.innerHTML = `
       <div class="list-item__main">
         <div class="list-item__title">${d.name}</div>
-        <div class="list-item__sub">${d.typeLabel ? (d.typeLabel + " · ") : ""}${d.code} · ${owner ? "归属设备（最高权限）" : "分享绑定设备"} · 最后同步 ${State.lastSync}</div>
+        <div class="list-item__sub">${getDeviceNetTypeLabel(dtype)} · ${d.typeLabel ? (d.typeLabel + " · ") : ""}${d.code} · ${owner ? "归属设备（最高权限）" : "分享绑定设备"} · 最后同步 ${State.lastSync}</div>
       </div>
       <div class="chip chip--${d.status === "running" ? "on" : "off"}">${s.pill[1]}</div>
     `;
@@ -5345,7 +5423,10 @@ function openTicketDetailDialog(ticketId) {
       </div>
       <div class="subtle" style="margin-top:6px;">${createdAt} · ${t.deviceName || "—"}（${t.deviceCode || "—"}）</div>
       <div class="subtle" style="margin-top:4px;">联系电话：${t.phone || "—"}</div>
-      <div class="subtle" style="margin-top:4px;">客服电话：${CUSTOMER_SERVICE_PHONE}</div>
+      <div class="subtle" style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span>客服电话：${CUSTOMER_SERVICE_PHONE}</span>
+        <button id="btnCopyServicePhone" type="button" class="ghost-btn" style="height:28px;min-height:28px;padding:0 10px;font-size:12px;">复制电话</button>
+      </div>
       <div class="subtle" style="margin-top:4px;">${sourceText}</div>
       <div style="margin-top:10px;padding:10px;border:1px solid rgba(15,23,42,.10);border-radius:12px;background:#fff;">
         <div class="subtle">问题描述</div>
@@ -5414,6 +5495,14 @@ function openTicketDetailDialog(ticketId) {
     renderTickets();
     logCmd("工单反馈", "OK", `工单 ${t.id} 用户确认已解决`);
     openTicketDetailDialog(t.id);
+  });
+  $("#btnCopyServicePhone")?.addEventListener("click", async () => {
+    const ok = await copyTextToClipboard(CUSTOMER_SERVICE_PHONE);
+    if (ok) {
+      alert("已复制客服电话，请在拨号界面粘贴后拨打。");
+      return;
+    }
+    alert(`复制失败，请手动拨打：${CUSTOMER_SERVICE_PHONE}`);
   });
   if (canRate) {
     let selectedScore = initialScore;
@@ -6548,6 +6637,28 @@ function wireMePage() {
   $("#btnServiceQuick")?.addEventListener("click", () => {
     openServiceDialog({ source: "me" });
   });
+  const svcServicePhoneText = $("#svcServicePhoneText");
+  if (svcServicePhoneText) svcServicePhoneText.textContent = `客服电话：${CUSTOMER_SERVICE_PHONE}`;
+  $("#btnSvcCopyServicePhone")?.addEventListener("click", async () => {
+    const ok = await copyTextToClipboard(CUSTOMER_SERVICE_PHONE);
+    if (ok) {
+      alert("已复制客服电话，请在拨号界面粘贴后拨打。");
+      return;
+    }
+    alert(`复制失败，请手动拨打：${CUSTOMER_SERVICE_PHONE}`);
+  });
+  const btnServicePhoneQuick = $("#btnServicePhoneQuick");
+  if (btnServicePhoneQuick) {
+    btnServicePhoneQuick.textContent = `电话占位：${CUSTOMER_SERVICE_PHONE}`;
+    btnServicePhoneQuick.addEventListener("click", async () => {
+      const ok = await copyTextToClipboard(CUSTOMER_SERVICE_PHONE);
+      if (ok) {
+        alert("已复制客服电话，请在拨号界面粘贴后拨打。");
+        return;
+      }
+      alert(`复制失败，请手动拨打：${CUSTOMER_SERVICE_PHONE}`);
+    });
+  }
   $("#btnServiceInTicketCenter")?.addEventListener("click", () => {
     openServiceDialog({ source: "me" });
   });
@@ -6602,12 +6713,45 @@ function resetOnboarding() {
   $("#wiz2").hidden = true;
   $("#wiz3").hidden = true;
   $("#onbBar").style.width = "20%";
-  $("#linkTypeText").textContent = "4G 云连接中…";
+  $("#linkTypeText").textContent = "等待扫码后自动识别 WiFi / 4G 连接方式…";
+  const wifiField = $("#wifiPwdField");
+  if (wifiField) wifiField.hidden = true;
+  setWifiMode("scan");
+  const ssidSelect = $("#wifiSsidSelect");
+  if (ssidSelect) ssidSelect.innerHTML = '<option value="">请先扫描并选择 WiFi</option>';
+  const wifiSsid = $("#onbWifiSsid");
+  if (wifiSsid) wifiSsid.value = "";
+  const wifiPwd = $("#onbWifiPwd");
+  if (wifiPwd) wifiPwd.value = "";
+  State._onbWifiReady = false;
   renderDeviceTypePicker();
 }
 
 function isGenericConfigDeviceType(dtype) {
   return Boolean(dtype && dtype.configurable);
+}
+
+function getNetworkTypeForDeviceType(dtype) {
+  return dtype && dtype.netType === "4g" ? "4g" : "wifi";
+}
+
+function setWifiMode(mode) {
+  const isScan = mode !== "manual";
+  const btnScan = $("#btnWifiModeScan");
+  const btnManual = $("#btnWifiModeManual");
+  const scanBox = $("#wifiScanBox");
+  const manualBox = $("#wifiManualBox");
+  if (btnScan) btnScan.classList.toggle("is-active", isScan);
+  if (btnManual) btnManual.classList.toggle("is-active", !isScan);
+  if (scanBox) scanBox.hidden = !isScan;
+  if (manualBox) manualBox.hidden = isScan;
+}
+
+function getSelectedWifiSsid() {
+  const manualBox = $("#wifiManualBox");
+  const isManual = manualBox && !manualBox.hidden;
+  if (isManual) return String($("#onbWifiSsid")?.value || "").trim();
+  return String($("#wifiSsidSelect")?.value || "").trim();
 }
 
 function setStep(n) {
@@ -6618,6 +6762,44 @@ function wireOnboarding() {
   $("#btnOpenTutorial")?.addEventListener("click", () => openTutorialForType(State.onboardingTypeId));
 
   $("#typeSearch")?.addEventListener("input", () => renderDeviceTypePicker());
+  $("#btnWifiModeScan")?.addEventListener("click", () => setWifiMode("scan"));
+  $("#btnWifiModeManual")?.addEventListener("click", () => setWifiMode("manual"));
+  $("#btnWifiScanNearby")?.addEventListener("click", () => {
+    const mockSsids = ["YOKING-Factory-2.4G", "Office-WiFi-2.4G", "PumpRoom-AP", "Warehouse-2.4G"];
+    const select = $("#wifiSsidSelect");
+    if (!select) return;
+    select.innerHTML = '<option value="">请选择 WiFi</option>' +
+      mockSsids.map((ssid) => `<option value="${escapeHtml(ssid)}">${escapeHtml(ssid)}</option>`).join("");
+    select.value = mockSsids[0];
+    $("#linkTypeText").textContent = "WiFi 版设备：已扫描到附近 WiFi，请输入密码后继续联网…";
+  });
+  $("#btnWifiConfirm")?.addEventListener("click", async () => {
+    const code = String(State._onbScannedCode || "");
+    const dtypeNow = detectDeviceTypeByCode(code);
+    if (getNetworkTypeForDeviceType(dtypeNow) !== "wifi") return;
+    const ssid = getSelectedWifiSsid();
+    const pwd = String($("#onbWifiPwd")?.value || "").trim();
+    if (!ssid) {
+      $("#linkTypeText").textContent = "请先“扫描选择”或“手动输入”WiFi 名称。";
+      return;
+    }
+    if (!pwd) {
+      $("#linkTypeText").textContent = "请输入 WiFi 密码后再确认联网。";
+      return;
+    }
+    State._onbWifiReady = true;
+    $("#linkTypeText").textContent = `WiFi 版设备：连接路由器 ${ssid} 中…`;
+    $("#onbBar").style.width = "65%";
+    await wait(700);
+    $("#linkTypeText").textContent = "WiFi 版设备：已联网，正在绑定设备…";
+    $("#onbBar").style.width = "100%";
+    await wait(300);
+    setStep(3);
+    $("#wiz2").hidden = true;
+    $("#wiz3").hidden = false;
+    const card = $("#onbParamCard");
+    if (card) card.hidden = !isGenericConfigDeviceType(dtypeNow);
+  });
 
   $("#btnScanNearby")?.addEventListener("click", () => {
     // 原型：扫描附近设备 -> 假装发现一个设备码，并据此识别类型
@@ -6628,29 +6810,44 @@ function wireOnboarding() {
     State.onboardingKindId = detected.kind || State.onboardingKindId;
     State.persist();
     renderDeviceTypePicker();
-    alert(`扫描到设备：${code}\n识别为：${detected.label}（原型）`);
+    alert(`扫描到设备：${code}\n识别为：${detected.label}（${getDeviceNetTypeLabel(detected)}，原型）`);
   });
 
   $("#btnMockScan").addEventListener("click", () => {
     // 原型：模拟扫码 -> 生成带前缀的编码
     const t = DEVICE_TYPES[State.onboardingTypeId] || DEVICE_TYPES.booster;
     const code = `${t.codePrefix}${Math.floor(Math.random() * 9e5 + 1e5)}`;
+    const dtypeNow = detectDeviceTypeByCode(code);
+    const networkType = getNetworkTypeForDeviceType(dtypeNow);
     State._onbScannedCode = code;
     setStep(2);
     $("#wiz1").hidden = true;
     $("#wiz2").hidden = false;
-    // fake progress（默认 4G）
+    const wifiField = $("#wifiPwdField");
+    if (wifiField) wifiField.hidden = networkType !== "wifi";
+    if (networkType === "wifi") setWifiMode("scan");
+    State._onbWifiReady = false;
+    $("#linkTypeText").textContent =
+      networkType === "wifi" ? "WiFi 版设备：请先选择 WiFi 名称，再输入密码联网…" : "4G 版设备：4G 网络连接中…";
+    // fake progress（扫码后自动按设备类型分流）
     (async () => {
       $("#onbBar").style.width = "35%";
+      if (networkType === "wifi") {
+        $("#linkTypeText").textContent = "WiFi 版设备：请填写 WiFi 信息并点击“确认联网”。";
+        return;
+      } else {
+        $("#linkTypeText").textContent = "4G 版设备：网络初始化中…";
+      }
       await wait(500);
       $("#onbBar").style.width = "65%";
       await wait(700);
+      $("#linkTypeText").textContent =
+        networkType === "wifi" ? "WiFi 版设备：已联网，正在绑定设备…" : "4G 版设备：已联网，正在绑定设备…";
       $("#onbBar").style.width = "100%";
       await wait(300);
       setStep(3);
       $("#wiz2").hidden = true;
       $("#wiz3").hidden = false;
-      const dtypeNow = detectDeviceTypeByCode(State._onbScannedCode || "");
       const card = $("#onbParamCard");
       if (card) card.hidden = !isGenericConfigDeviceType(dtypeNow);
     })();

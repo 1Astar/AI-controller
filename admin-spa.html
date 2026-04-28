@@ -1920,6 +1920,23 @@
               <label class="text-xs font-semibold text-slate-600">型号</label>
               <input id="newDevModel" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="CLEDIC-PUMP-4G" />
             </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-xs font-semibold text-slate-600">网络类型（net_type）</label>
+                <select id="newDevNetType" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300">
+                  <option value="4g">4g</option>
+                  <option value="wifi">wifi</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-slate-600">二维码格式版本</label>
+                <input id="newDevQrVersion" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="v1" value="v1" />
+              </div>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-600">AP 热点名称（ap_ssid，可选）</label>
+              <input id="newDevApSsid" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="YOKING_3456（仅 WiFi 设备）" />
+            </div>
             <div>
               <label class="text-xs font-semibold text-slate-600">安装地点</label>
               <input id="newDevPlace" class="mt-1 h-10 w-full rounded-xl bg-white border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-300" placeholder="泵房A / 机井2#" />
@@ -2036,6 +2053,10 @@
             </div>
             <div class="mt-3 text-xs text-slate-500">
               token：<span id="newDevToken" class="font-mono break-all">-</span>
+            </div>
+            <div class="mt-3">
+              <div class="text-xs font-semibold text-slate-600">二维码内容（JSON）</div>
+              <textarea id="newDevQrPayload" class="mt-1 w-full min-h-[140px] rounded-xl bg-white border border-slate-200 px-3 py-2 text-[11px] font-mono outline-none" readonly placeholder='{"sn":"CLEDIC6789123456","net_type":"4g"}'></textarea>
             </div>
           </div>
         </div>
@@ -4956,6 +4977,10 @@
           model: row.model || "-",
           place: row.place || "-",
           fw: row.fw || "-",
+          netType: String(row.netType || prev.netType || "4g").toLowerCase() === "wifi" ? "wifi" : "4g",
+          apSsid: String(row.apSsid || prev.apSsid || "").trim(),
+          qrVersion: String(row.qrVersion || prev.qrVersion || "v1").trim() || "v1",
+          qrPayload: String(row.qrPayload || prev.qrPayload || "").trim(),
           project: String(row.project || prev.project || "").trim(),
           managerUsername: String(row.managerUsername || row.adminUsername || prev.managerUsername || prev.adminUsername || "").trim(),
           status: row.status || "stopped",
@@ -5095,6 +5120,10 @@
       function qrImgUrlForBindToken(token) {
         const payloadUrl = `index.html?bindToken=${encodeURIComponent(token)}`;
         return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(payloadUrl)}`;
+      }
+
+      function qrImgUrlForText(text) {
+        return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(String(text || ""))}`;
       }
 
       function renderFactory() {
@@ -9164,6 +9193,10 @@
         $("#newDevModel").value = row.model || "-";
         $("#newDevPlace").value = row.place || "-";
         $("#newDevFw").value = row.fw || "-";
+        $("#newDevNetType").value = String(row.netType || "4g").toLowerCase() === "wifi" ? "wifi" : "4g";
+        $("#newDevQrVersion").value = String(row.qrVersion || "v1").trim() || "v1";
+        $("#newDevApSsid").value = String(row.apSsid || "").trim();
+        $("#newDevNetType")?.dispatchEvent(new Event("change"));
         const isGeneric = Boolean(row.isGeneric);
         $("#newDevIsGeneric").checked = isGeneric;
         $("#newDevParamBox")?.classList.toggle("hidden", !isGeneric);
@@ -9191,6 +9224,8 @@
         $("#newDevHint").textContent = "";
         $("#newDevToken").textContent = "-";
         $("#newDevQrImg").removeAttribute("src");
+        $("#newDevQrPayload").value = String(row.qrPayload || "");
+        newDevTokenValue = "";
         if (!dlg.open) dlg.showModal();
         lucide.createIcons();
       }
@@ -9709,6 +9744,8 @@
           $("#newDevHint").textContent = "";
           $("#newDevToken").textContent = "-";
           $("#newDevQrImg").removeAttribute("src");
+          $("#newDevQrPayload").value = "";
+          newDevTokenValue = "";
           const adminInfo = ADMIN_STORE.load();
           const primarySub =
             adminInfo && adminInfo.role === "project" ? resolveSessionProjectAdminUsername() : "";
@@ -9749,6 +9786,9 @@
             const el = $(sel);
             if (el) el.value = "";
           });
+          $("#newDevNetType").value = "4g";
+          $("#newDevQrVersion").value = "v1";
+          $("#newDevApSsid").value = "";
           const schemaHint = $("#newDevParamSchemaHint");
           if (schemaHint) schemaHint.textContent = "";
           renderBindPhoneOptions("");
@@ -9814,14 +9854,53 @@
         $("#newDevUseCommonCfg")?.addEventListener("change", syncDeviceCfgMode);
         syncDeviceCfgMode();
 
+        const syncApSsidField = () => {
+          const isWifi = String($("#newDevNetType")?.value || "4g") === "wifi";
+          const ap = $("#newDevApSsid");
+          if (!ap) return;
+          ap.disabled = !isWifi;
+          ap.classList.toggle("bg-slate-100", !isWifi);
+          ap.classList.toggle("text-slate-400", !isWifi);
+          if (!isWifi) ap.value = "";
+        };
+        $("#newDevNetType")?.addEventListener("change", syncApSsidField);
+        syncApSsidField();
+
+        function buildNewDeviceQrPayload(sn, bindToken) {
+          const netType = String($("#newDevNetType")?.value || "").trim().toLowerCase();
+          const model = String($("#newDevModel")?.value || "").trim();
+          const apSsid = String($("#newDevApSsid")?.value || "").trim();
+          const qrVersion = String($("#newDevQrVersion")?.value || "").trim() || "v1";
+          const fwVersion = String($("#newDevFw")?.value || "").trim();
+          const payload = {
+            schema: "cledic_device_qr",
+            qr_version: qrVersion,
+            sn: String(sn || "").trim(),
+            net_type: netType === "wifi" ? "wifi" : "4g",
+            model: model || undefined,
+            ap_ssid: netType === "wifi" && apSsid ? apSsid : undefined,
+            fw_version: fwVersion || undefined,
+            bind_token: String(bindToken || "").trim() || undefined,
+            generated_at: Date.now(),
+          };
+          return payload;
+        }
+
         let newDevTokenValue = "";
         $("#btnNewDevGenQr")?.addEventListener("click", async () => {
           const sn = $("#newDevSn").value.trim();
           if (!sn) return showToast("缺少 SN", "请先输入设备 SN。");
+          const netType = String($("#newDevNetType")?.value || "").trim().toLowerCase();
+          if (netType !== "4g" && netType !== "wifi") {
+            return showToast("网络类型错误", "net_type 仅支持 4g 或 wifi。");
+          }
           const token = await makeBindToken(sn);
           newDevTokenValue = token;
+          const qrPayload = buildNewDeviceQrPayload(sn, token);
+          const qrPayloadText = JSON.stringify(qrPayload, null, 2);
           $("#newDevToken").textContent = token;
-          $("#newDevQrImg").src = qrImgUrlForBindToken(token);
+          $("#newDevQrPayload").value = qrPayloadText;
+          $("#newDevQrImg").src = qrImgUrlForText(qrPayloadText);
           $("#newDevHint").textContent = "已生成";
         });
 
@@ -9844,9 +9923,21 @@
           if (!newDevTokenValue) {
             const token = await makeBindToken(sn);
             newDevTokenValue = token;
+            const qrPayload = buildNewDeviceQrPayload(sn, token);
+            const qrPayloadText = JSON.stringify(qrPayload, null, 2);
             $("#newDevToken").textContent = token;
-            $("#newDevQrImg").src = qrImgUrlForBindToken(token);
+            $("#newDevQrPayload").value = qrPayloadText;
+            $("#newDevQrImg").src = qrImgUrlForText(qrPayloadText);
           }
+          const netType = String($("#newDevNetType")?.value || "").trim().toLowerCase();
+          if (netType !== "4g" && netType !== "wifi") {
+            return showToast("网络类型错误", "net_type 仅支持 4g 或 wifi。");
+          }
+          const apSsid = String($("#newDevApSsid")?.value || "").trim();
+          const qrVersion = String($("#newDevQrVersion")?.value || "").trim() || "v1";
+          const qrPayload = buildNewDeviceQrPayload(sn, newDevTokenValue);
+          const qrPayloadText = JSON.stringify(qrPayload, null, 2);
+          $("#newDevQrPayload").value = qrPayloadText;
           // 高级参数表（可选 JSON）
           const schemaHint = $("#newDevParamSchemaHint");
           if (schemaHint) schemaHint.textContent = "";
@@ -9868,6 +9959,10 @@
             model,
             place,
             fw,
+            netType,
+            apSsid: netType === "wifi" ? apSsid : "",
+            qrVersion,
+            qrPayload: qrPayloadText,
             managerUsername,
             status: "stopped",
             isGeneric,
