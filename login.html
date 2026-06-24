@@ -491,6 +491,102 @@
       box-shadow: 0 0 0 3px rgba(26,127,212,0.12);
       background:#fff;
     }
+    .proto-note-trigger {
+      border: none;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .proto-note-trigger:hover { background: rgba(255,255,255,0.35); }
+    .proto-note-panel {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 9999;
+      width: min(420px, calc(100vw - 32px));
+      max-height: min(70vh, 520px);
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(15,23,42,0.18);
+      display: flex;
+      flex-direction: column;
+    }
+    .proto-note-panel[hidden] { display: none; }
+    .proto-note-panel__head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .proto-note-panel__title { font-weight: 700; font-size: 14px; flex: 1; }
+    .proto-note-panel__close {
+      border: none;
+      background: #f1f5f9;
+      border-radius: 8px;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+    }
+    .proto-note-panel__body {
+      padding: 12px 14px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #475569;
+    }
+    .proto-note-panel__body p { margin: 0 0 8px; }
+    .proto-note-panel__body code {
+      font-size: 11px;
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+    .proto-note-panel__body .proto-flow {
+      font-size: 11px;
+      line-height: 1.55;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      overflow-x: auto;
+      white-space: pre;
+      font-family: ui-monospace, Consolas, monospace;
+      color: #334155;
+      margin: 8px 0;
+    }
+    .proto-note-panel__body .proto-mermaid {
+      margin: 8px 0;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow-x: auto;
+    }
+    .proto-note-panel__body .proto-mermaid svg {
+      max-width: 100%;
+      height: auto;
+    }
+    .proto-note-disclaimer {
+      font-size: 11px;
+      color: #94a3b8;
+      margin: 0 0 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px dashed #e2e8f0;
+    }
+    .auth-scanbox__title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
   </style>
 </head>
 <body>
@@ -518,14 +614,16 @@
 
     <!-- Auth Card -->
     <div class="auth-card">
-      <!-- 扫码即绑定：可先扫码再注册/登录 -->
       <div class="auth-scanbox">
         <div class="auth-scanbox__left">
-          <div class="auth-scanbox__title">静默注册：扫码即绑定</div>
-          <div class="auth-scanbox__sub" id="scanHint">未扫描设备（可先扫码，再注册/登录）</div>
-          <input class="auth-scanbox__input" id="bindLocationName" placeholder="安装地点（可选，如：1号工业园泵房）" />
+          <div class="auth-scanbox__title-row">
+            <div class="auth-scanbox__title">先扫码，再登录配网</div>
+            <button type="button" class="proto-note-trigger" data-proto-note="login-scan" title="查看扫码配网流程备注">📝</button>
+          </div>
+          <div class="auth-scanbox__sub" id="scanHint">未扫描设备（可先扫码识别型号与 WiFi/4G，登录后继续配网）</div>
+          <input class="auth-scanbox__input" id="bindLocationName" placeholder="安装地点（可选，命名步骤可再改）" />
         </div>
-        <button type="button" class="auth-scanbox__btn" id="btnScanBind" onclick="scanAndCacheDevice()">扫码绑定</button>
+        <button type="button" class="auth-scanbox__btn" id="btnScanBind" onclick="scanAndCacheDevice()" title="仅识别 SN、型号与联网方式；配网在登录后 App 内完成">扫码识别</button>
       </div>
 
       <!-- Tab 切换 -->
@@ -695,8 +793,12 @@
     const AUTH_KEY = "cledic_auth_v1";
     const BINDINGS_KEY = "cledic_bindings_v1";
     const DEVICE_REG_KEY = "cledic_devices_v1";
+    const DEVICE_ACCESS_KEY = "cledic_device_access_v1";
+    const BIND_CONFLICT_KEY = "cledic_bind_conflicts_v1";
     const USERS_KEY = "cledic_users_v1";
     const PENDING_BIND_KEY = "cledic_pending_bind_v1";
+    const SN_PREFIX_KEY = "cledic_sn_prefixes_v1";
+    const BIND_CONFLICT_MSG = "该设备已绑定其他主用户，请联系管理员/经销商处理。";
     // 后端绑定接口（占位）。接入后把它改成你的真实 URL。
     const BACKEND_BIND_URL = "";
 
@@ -722,47 +824,154 @@
       const el = document.getElementById("scanHint");
       if (!el) return;
       if (!pending?.code) {
-        el.innerHTML = "未扫描设备（可先扫码，再注册/登录）";
+        el.innerHTML = "未扫描设备（可先扫码识别型号与 WiFi/4G，<b>登录后</b>在 App 内配网）";
         return;
       }
       const suffix = String(pending.code).slice(-4);
-      const model = pending.model ? ` · 型号：${pending.model}` : "";
+      const netLabel = pending.netType === "wifi" ? "WiFi版" : pending.netType === "4g" ? "4G版" : "联网方式待识别";
+      const model = pending.modelLabel || pending.model ? ` · 型号：${pending.modelLabel || pending.model}` : "";
       const loc = pending.locationName ? ` · 地点：${pending.locationName}` : "";
-      el.innerHTML = `已扫描：<b>${pending.name || "水泵设备"}</b>（${suffix}） · ${pending.code}${model}${loc}`;
+      el.innerHTML = `已识别：<b>${pending.name || "水泵设备"}</b>（${suffix}） · ${pending.code}${model} · ${netLabel}${loc}<br><span style="font-size:12px;color:#64748b;">登录后将自动进入「配网 → 命名」，此处不直接绑定。</span>`;
+    }
+
+    const QR_SLUG_STORE_KEY = "cledic_qr_short_slugs_v1";
+
+    /** 超短链 slug → SN + token（原型读 localStorage） */
+    function resolveQrShortSlugLogin(slug) {
+      const key = String(slug || "").trim();
+      if (!key) return { code: "", bindToken: "" };
+      if (typeof window.__cledicResolveQrShortSlug === "function") {
+        const hit = window.__cledicResolveQrShortSlug(key);
+        return {
+          code: normalizeDeviceCode(hit.sn || ""),
+          bindToken: String(hit.bindToken || "").trim(),
+        };
+      }
+      try {
+        const map = JSON.parse(localStorage.getItem(QR_SLUG_STORE_KEY) || "{}");
+        const row = map[key];
+        if (!row) return { code: "", bindToken: "" };
+        return {
+          code: normalizeDeviceCode(row.sn || ""),
+          bindToken: String(row.bindToken || "").trim(),
+        };
+      } catch {
+        return { code: "", bindToken: "" };
+      }
     }
 
     function normalizeDeviceCode(raw) {
-      const v = String(raw || "").trim();
-      if (!v) return "";
-      // 兼容二维码内容里带前缀/URL
-      const m = v.match(/CLEDIC-\d{10}/i);
-      return (m ? m[0] : v).toUpperCase();
+      const text = String(raw || "").trim();
+      if (!text) return "";
+      if (text.startsWith("{") && text.endsWith("}")) {
+        const obj = safeJsonParse(text, null);
+        if (obj && typeof obj === "object") {
+          return normalizeDeviceCode(obj.sn || obj.code || obj.deviceCode || "");
+        }
+      }
+      if (/^https?:\/\//i.test(text) || text.includes("?") || text.includes("/d/") || text.includes("/s/")) {
+        try {
+          const u = new URL(text.startsWith("http") ? text : `https://app.cledic.cn${text.startsWith("/") ? "" : "/"}${text}`, location.href);
+          const slugM = u.pathname.match(/\/s\/([^/?#]+)/i);
+          if (slugM) {
+            const resolved = resolveQrShortSlugLogin(decodeURIComponent(slugM[1]));
+            if (resolved.code) return resolved.code;
+          }
+          const pathSn = u.pathname.match(/\/d\/([^/?#]+)/i);
+          if (pathSn) return normalizeDeviceCode(decodeURIComponent(pathSn[1]));
+          const fromQuery = u.searchParams.get("sn") || u.searchParams.get("code") || u.searchParams.get("deviceCode") || "";
+          if (fromQuery) return normalizeDeviceCode(fromQuery);
+        } catch {
+          // fallthrough
+        }
+      }
+      const upper = text.toUpperCase().replace(/\s/g, "");
+      const cledic = upper.match(/CLEDIC-\d{10}/);
+      if (cledic) return cledic[0];
+      return upper;
+    }
+
+    function resolveSnPrefixRuleLogin(deviceCode) {
+      const code = normalizeDeviceCode(deviceCode);
+      if (!code) return null;
+      const rules = loadJson(SN_PREFIX_KEY, []);
+      const matched = (Array.isArray(rules) ? rules : [])
+        .map((r) => ({ ...r, prefix: String(r.prefix || r.snPrefix || "").trim().toUpperCase() }))
+        .filter((r) => r.prefix && code.startsWith(r.prefix))
+        .sort((a, b) => b.prefix.length - a.prefix.length);
+      return matched[0] || null;
+    }
+
+    /** 登录页扫码：识别型号与联网方式（与 index 配网向导数据源一致） */
+    function resolveLoginScanMeta(raw) {
+      const parsed = parseQrPayload(raw);
+      const code = normalizeDeviceCode(parsed.code || raw);
+      if (!code) return null;
+      const regList = loadJson(DEVICE_REG_KEY, []);
+      const reg = (Array.isArray(regList) ? regList : []).find((x) => String(x.code || "").trim() === code);
+      const rule = resolveSnPrefixRuleLogin(code);
+      let netType = String(parsed.netType || reg?.netType || "").toLowerCase();
+      if (netType !== "wifi" && netType !== "4g") {
+        const prefixNet = { HSP: "4g", SGW: "4g", BP: "wifi", CA: "wifi", FAN: "wifi", CMP: "4g", AGRI: "wifi", IND: "4g" };
+        const head = code.replace(/[^A-Z]/g, "").slice(0, 4);
+        for (const [p, n] of Object.entries(prefixNet)) {
+          if (code.startsWith(p)) netType = n;
+        }
+      }
+      const modelLabel = String(rule?.modelCode || parsed.model || reg?.model || "").trim();
+      return {
+        code,
+        netType: netType === "wifi" || netType === "4g" ? netType : "wifi",
+        model: String(parsed.model || reg?.model || "").trim(),
+        modelLabel,
+        locationName: String(parsed.locationName || "").trim(),
+        bindToken: String(parsed.bindToken || "").trim(),
+      };
+    }
+
+    function redirectAfterAuth() {
+      const pending = loadJson(PENDING_BIND_KEY, null);
+      if (pending?.code) {
+        window.location.href = "index.html?continueOnboarding=1";
+        return;
+      }
+      window.location.href = "index.html";
     }
 
     function parseQrPayload(raw) {
       const text = String(raw || "").trim();
       if (!text) return { code: "", model: "", locationName: "" };
 
-      // JSON: {"code":"CLEDIC-...","model":"...","locationName":"..."}
+      // JSON: {"sn":"...","net_type":"4g","model":"..."} 或 cledic_device_qr
       if (text.startsWith("{") && text.endsWith("}")) {
         const obj = safeJsonParse(text, null);
         if (obj && typeof obj === "object") {
-          const code = normalizeDeviceCode(obj.code || obj.sn || obj.deviceCode || "");
+          const code = normalizeDeviceCode(obj.sn || obj.code || obj.deviceCode || "");
           const model = String(obj.model || obj.deviceModel || "").trim();
           const locationName = String(obj.locationName || obj.location || obj.site || "").trim();
-          return { code, model, locationName };
+          const netType = String(obj.net_type || obj.netType || "").trim().toLowerCase();
+          return { code, model, locationName, netType };
         }
       }
 
-      // URL / query: ...?sn=...&model=...&locationName=...
-      if (/^https?:\/\//i.test(text) || text.includes("?")) {
+      // URL / 短链: https://app.cledic.cn/d/{SN}?t=... 或 https://cledic.cn/s/{slug}
+      if (/^https?:\/\//i.test(text) || text.includes("?") || text.includes("/d/") || text.includes("/s/")) {
         try {
-          const u = new URL(text, location.href);
+          const u = new URL(text.startsWith("http") ? text : `https://app.cledic.cn${text.startsWith("/") ? "" : "/"}${text}`, location.href);
+          const slugM = u.pathname.match(/\/s\/([^/?#]+)/i);
+          if (slugM) {
+            const resolved = resolveQrShortSlugLogin(decodeURIComponent(slugM[1]));
+            if (resolved.code) return { ...resolved, model: "", locationName: "" };
+          }
           const sp = u.searchParams;
-          const code = normalizeDeviceCode(sp.get("code") || sp.get("sn") || sp.get("deviceCode") || "");
+          const pathSn = u.pathname.match(/\/d\/([^/?#]+)/i);
+          const code = normalizeDeviceCode(
+            pathSn ? decodeURIComponent(pathSn[1]) : sp.get("code") || sp.get("sn") || sp.get("deviceCode") || ""
+          );
+          const bindToken = String(sp.get("t") || sp.get("bind_token") || sp.get("bindToken") || "").trim();
           const model = String(sp.get("model") || sp.get("deviceModel") || "").trim();
           const locationName = String(sp.get("locationName") || sp.get("location") || sp.get("site") || "").trim();
-          return { code, model, locationName };
+          return { code, model, locationName, bindToken };
         } catch {
           // fallthrough
         }
@@ -786,33 +995,38 @@
       }
 
       // plain: contains device code only
-      return { code: normalizeDeviceCode(text), model: "", locationName: "" };
+      return { code: normalizeDeviceCode(text), model: "", locationName: "", netType: "" };
     }
 
-    // 扫码并缓存：允许先扫码再注册/登录
+    // 扫码并缓存：登录后进入 App 配网向导，不在此页完成绑定
     function scanAndCacheDevice() {
-      const raw = prompt("扫码结果（原型：粘贴设备码/二维码内容）", "CLEDIC-6789123456");
-      const parsed = parseQrPayload(raw);
-      const code = parsed.code;
-      if (!/^CLEDIC-\d{10}$/.test(code)) {
-        alert("设备码格式不正确（示例：CLEDIC-6789123456）");
+      const raw = prompt(
+        "扫码结果（原型：粘贴短链或 SN）",
+        "https://app.cledic.cn/d/AGRI10001"
+      );
+      if (!raw) return;
+      const meta = resolveLoginScanMeta(raw);
+      if (!meta?.code) {
+        alert("未能识别设备 SN，请检查二维码内容。");
         return;
       }
-      const model = String(parsed.model || "").trim();
       const locationNameInput = document.getElementById("bindLocationName")?.value?.trim() || "";
-      const locationName = locationNameInput || String(parsed.locationName || "").trim();
+      const locationName = locationNameInput || meta.locationName || "";
       const pending = {
-        code,
-        name: `水泵设备（${code.slice(-4)}）`,
-        model,
+        code: meta.code,
+        name: `水泵设备（${meta.code.slice(-4)}）`,
+        model: meta.model,
+        modelLabel: meta.modelLabel,
+        netType: meta.netType,
         locationName,
-        scannedAt: Date.now()
+        scannedAt: Date.now(),
+        awaitOnboarding: true,
+        bindToken: String(meta.bindToken || "").trim() || undefined,
       };
       saveJson(PENDING_BIND_KEY, pending);
       setScanHint();
-      // 引导用户直接去注册
-      if (confirm("已扫描设备，是否立即注册/登录并完成绑定？")) {
-        switchTab("register");
+      if (confirm("已识别设备信息。请登录或注册，登录后将自动进入「配网 → 命名」步骤。\n\n是否现在去登录？")) {
+        switchTab("login");
       }
     }
 
@@ -899,6 +1113,43 @@
       }
     }
 
+    function getDeviceAccessOwnerPhone(deviceCode) {
+      const sn = String(deviceCode || "").trim();
+      if (!sn) return "";
+      const list = loadJson(DEVICE_ACCESS_KEY, []);
+      const row = (Array.isArray(list) ? list : []).find((x) => String(x.deviceCode || x.code || "").trim() === sn);
+      return String(row?.ownerPhone || "").replace(/\s/g, "");
+    }
+
+    function recordBindConflictIfNeeded({ deviceCode, applicantPhone, applicantName }) {
+      const sn = String(deviceCode || "").trim();
+      const applicant = String(applicantPhone || "").replace(/\s/g, "");
+      const owner = getDeviceAccessOwnerPhone(sn);
+      if (!owner || !applicant || owner === applicant) return false;
+      const list = loadJson(BIND_CONFLICT_KEY, []);
+      const arr = Array.isArray(list) ? list : [];
+      const exists = arr.some(
+        (x) =>
+          String(x.deviceCode || "").trim() === sn &&
+          String(x.applicantPhone || "").replace(/\s/g, "") === applicant &&
+          String(x.status || "pending") === "pending"
+      );
+      if (!exists) {
+        arr.unshift({
+          id: `bc_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+          deviceCode: sn,
+          currentOwnerPhone: owner,
+          applicantPhone: applicant,
+          applicantName: String(applicantName || "").trim(),
+          status: "pending",
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        saveJson(BIND_CONFLICT_KEY, arr);
+      }
+      return true;
+    }
+
     async function finalizePendingBindAfterAuth(auth) {
       const pending = loadJson(PENDING_BIND_KEY, null);
       if (!pending?.code) return null;
@@ -906,6 +1157,13 @@
       const name = pending.name || `水泵设备（${code.slice(-4)}）`;
       const model = String(pending.model || "").trim();
       const locationName = String(pending.locationName || "").trim();
+      const applicantPhone = String(auth?.phone || "").replace(/\s/g, "");
+      const owner = getDeviceAccessOwnerPhone(code);
+      if (owner && applicantPhone && owner !== applicantPhone) {
+        recordBindConflictIfNeeded({ deviceCode: code, applicantPhone, applicantName: auth?.name || "" });
+        alert(BIND_CONFLICT_MSG);
+        return null;
+      }
 
       addBindingForUser({ userId: auth.userId, phone: auth.phone, code, name });
       upsertDeviceRegistry({ code, name, status: "stopped", metrics: null, lastSync: "" });
@@ -1035,10 +1293,8 @@
           saveJson(USERS_KEY, users);
         }
 
-        // 如果先扫码了设备：登录成功后直接完成绑定并可见
-        finalizePendingBindAfterAuth(auth).finally(() => {
-          window.location.href = 'index.html';
-        });
+        // 登录成功后：若已扫码则进入 App 配网向导（不在登录页直接绑定）
+        redirectAfterAuth();
       }, 900);
     }
 
@@ -1068,22 +1324,107 @@
           saveJson(USERS_KEY, users);
         }
 
-        finalizePendingBindAfterAuth(auth).then((device) => {
-          if (device?.code) {
-            alert(`注册成功，已绑定设备：${device.name}\n编码：${device.code}`);
-            window.location.href = "index.html";
-            return;
-          }
-          alert('注册成功！（原型演示）');
-          switchTab('login');
-          btn.textContent = '立即注册 →';
-          btn.disabled = false;
-        });
+        const pending = loadJson(PENDING_BIND_KEY, null);
+        if (pending?.code) {
+          alert("注册成功！请继续完成设备配网与命名。");
+          redirectAfterAuth();
+          return;
+        }
+        alert('注册成功！（原型演示）');
+        switchTab('login');
+        btn.textContent = '立即注册 →';
+        btn.disabled = false;
       }, 900);
     }
 
     // 初始化扫码提示
     setScanHint();
+
+    (function initProtoNotePanel() {
+      function renderProtoMermaid(container) {
+        const nodes = container ? container.querySelectorAll(".proto-mermaid") : [];
+        if (!nodes.length) return Promise.resolve();
+        const run = () => {
+          window.mermaid.initialize({ startOnLoad: false, theme: "neutral", securityLevel: "loose" });
+          return window.mermaid.run({ nodes: Array.from(nodes) });
+        };
+        if (window.mermaid) return run();
+        return new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js";
+          s.onload = () => run().then(resolve).catch(reject);
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      const panel = document.getElementById("protoNotePanel");
+      const titleEl = document.getElementById("protoNotePanelTitle");
+      const bodyEl = document.getElementById("protoNotePanelBody");
+      const store = document.getElementById("proto-notes-store");
+      if (!panel || !store) return;
+      const showNote = (id) => {
+        const src = store.querySelector(`[data-note-id="${id}"]`);
+        if (!src) return;
+        if (titleEl) titleEl.textContent = src.getAttribute("data-note-title") || "原型备注";
+        if (bodyEl) {
+          bodyEl.innerHTML = src.innerHTML;
+          renderProtoMermaid(bodyEl).catch(() => {});
+        }
+        panel.hidden = false;
+      };
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-proto-note]");
+        if (!btn) return;
+        e.preventDefault();
+        showNote(String(btn.getAttribute("data-proto-note") || "").trim());
+      });
+      document.getElementById("protoNotePanelClose")?.addEventListener("click", () => {
+        panel.hidden = true;
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && panel && !panel.hidden) panel.hidden = true;
+      });
+    })();
   </script>
+
+  <div id="proto-notes-store" hidden aria-hidden="true">
+    <div data-note-id="login-scan" data-note-title="登录页 · 扫码配网">
+      <p><b>本页职责</b>：仅「扫码识别」，缓存设备信息；<b>不绑定、不配网、不写主用户</b>。</p>
+      <p><b>扫码时序（本页只走前两步）</b></p>
+      <pre class="proto-mermaid">sequenceDiagram
+  participant 用户
+  participant App
+  participant 云端
+
+  用户-&gt;&gt;App: 扫出厂贴纸（SN + token）
+  App-&gt;&gt;云端: 查询 SN 当前信息
+  云端--&gt;&gt;App: 型号、联网方式、经销商、是否可绑
+  Note over App: 本页到此为止，缓存 pending&lt;br/&gt;登录后进 index 继续配网</pre>
+      <pre class="proto-flow">本页写入 cledic_pending_bind_v1：
+  code · netType · modelLabel · locationName
+  awaitOnboarding = true
+
+登录/注册成功 → index?continueOnboarding=1
+  从配网第 ② 步联网开始，第 ③ 步完成才写主用户</pre>
+      <p class="proto-note-disclaimer">前后端约定仅供参考，能实现同等功能即可；完整时序与接口见后台 📝「扫码解析接口约定」。</p>
+      <p><b>为何不在登录页绑定？</b></p>
+      <ul style="margin:0 0 8px 18px;padding:0;font-size:12px;">
+        <li>未登录无法确定 owner 手机号</li>
+        <li>需先完成联网（WiFi 填网 / 4G 连云，均为第 2 步）再命名设备</li>
+        <li>避免未配网设备误占 owner 导致重复绑定工单</li>
+      </ul>
+      <p><b>未登录扫码后</b>：提示先登录/注册；pending 保留，登录后继续。</p>
+      <p><b>已有主用户</b>：若 pending 完成后检测到 owner 冲突 → 弹窗 + 写 bind_conflict（见 index 📝 配网）。</p>
+      <p><b>完整时序与三场景</b>：用户端「添加设备 / 配网」弹窗 📝；接口细节见后台 📝「扫码解析接口约定」。</p>
+    </div>
+  </div>
+
+  <div id="protoNotePanel" class="proto-note-panel" role="dialog" aria-labelledby="protoNotePanelTitle" hidden>
+    <div class="proto-note-panel__head">
+      <div id="protoNotePanelTitle" class="proto-note-panel__title">原型备注</div>
+      <button type="button" id="protoNotePanelClose" class="proto-note-panel__close" aria-label="关闭">✕</button>
+    </div>
+    <div id="protoNotePanelBody" class="proto-note-panel__body"></div>
+  </div>
 </body>
 </html>

@@ -1,0 +1,1687 @@
+{
+  "version": 1,
+  "source": "E:\\文档\\star\\产品\\CLEDIC\\控制器网关设备数据标定说明_(技术版).xlsx",
+  "generatedAt": "2026-05-28T14:00:53",
+  "models": [
+    {
+      "code": "CLEDIC-PUMP-4G",
+      "name": "标定说明导入（CLEDIC-PUMP-4G）",
+      "industry": "agri",
+      "fw": "v1.2.4",
+      "remark": "由 控制器网关设备数据标定说明_(技术版).xlsx 自动生成；寄存器空位已用表内设备A举例补齐",
+      "maxHz": 50,
+      "polePairs": 2,
+      "gearFreqs": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "paramConfig": {
+        "runHz": "2000",
+        "setHz": "2001",
+        "busV": "2002",
+        "outV": "2003",
+        "outI": "2004",
+        "outP": "2005",
+        "torque": "2006",
+        "runState": "2010",
+        "cmd": "2011",
+        "fault": "3000",
+        "runSec": "2007",
+        "totalSec": "2008",
+        "temp": "2009"
+      },
+      "paramSchema": "{\n  \"telemetry\": [\n    {\n      \"name\": \"数据读取\",\n      \"items\": [\n        {\n          \"name\": \"运行频率\",\n          \"addr\": \"2000\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 1\n        },\n        {\n          \"name\": \"设定频率\",\n          \"addr\": \"2001\",\n          \"unit\": \"\",\n          \"rw\": \"R/W\",\n          \"paramId\": 2\n        },\n        {\n          \"name\": \"母线电压\",\n          \"addr\": \"2002\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 3\n        },\n        {\n          \"name\": \"输出电压\",\n          \"addr\": \"2003\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 4\n        },\n        {\n          \"name\": \"输出电流\",\n          \"addr\": \"2004\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 5\n        },\n        {\n          \"name\": \"输出功率\",\n          \"addr\": \"2005\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 6\n        },\n        {\n          \"name\": \"输出转矩\",\n          \"addr\": \"2006\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 7\n        },\n        {\n          \"name\": \"当前运行时间\",\n          \"addr\": \"2007\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 8\n        },\n        {\n          \"name\": \"累计运行时间\",\n          \"addr\": \"2008\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 9\n        },\n        {\n          \"name\": \"温度\",\n          \"addr\": \"2009\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 10\n        },\n        {\n          \"name\": \"运行状态\",\n          \"addr\": \"2010\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 11\n        },\n        {\n          \"name\": \"参数ID 12\",\n          \"addr\": \"2010\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 12\n        },\n        {\n          \"name\": \"参数ID 13\",\n          \"addr\": \"2010\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 13\n        }\n      ]\n    }\n  ],\n  \"control\": {\n    \"cmd\": {\n      \"name\": \"电机控制下发-控制命令\",\n      \"addr\": \"2011\",\n      \"unit\": \"\",\n      \"rw\": \"W\",\n      \"enums\": [\n        \"控制命令\",\n        \"102\",\n        \"103\",\n        \"104\",\n        \"105\",\n        \"106\",\n        \"107\",\n        \"108\"\n      ]\n    },\n    \"setHz\": {\n      \"name\": \"电机控制下发-设定频率\",\n      \"addr\": \"2001\",\n      \"unit\": \"Hz\",\n      \"rw\": \"R/W\"\n    }\n  },\n  \"fault\": {\n    \"name\": \"故障码\",\n    \"addr\": \"3000\",\n    \"unit\": \"\",\n    \"rw\": \"R\"\n  }\n}",
+      "modelMap": [
+        {
+          "paramId": "1",
+          "register": "2000",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "运行频率"
+        },
+        {
+          "paramId": "2",
+          "register": "2001",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "设定频率"
+        },
+        {
+          "paramId": "3",
+          "register": "2002",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "母线电压"
+        },
+        {
+          "paramId": "4",
+          "register": "2003",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出电压"
+        },
+        {
+          "paramId": "5",
+          "register": "2004",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出电流"
+        },
+        {
+          "paramId": "6",
+          "register": "2005",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出功率"
+        },
+        {
+          "paramId": "7",
+          "register": "2006",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出转矩"
+        },
+        {
+          "paramId": "8",
+          "register": "2007",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "当前运行时间"
+        },
+        {
+          "paramId": "9",
+          "register": "2008",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "累计运行时间"
+        },
+        {
+          "paramId": "10",
+          "register": "2009",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "温度"
+        },
+        {
+          "paramId": "11",
+          "register": "2010",
+          "transformType": "5",
+          "transformValue": "0",
+          "unit": "",
+          "note": "运行状态"
+        },
+        {
+          "paramId": "12",
+          "register": "2010",
+          "transformType": "5",
+          "transformValue": "1",
+          "unit": "",
+          "note": "参数ID 12"
+        },
+        {
+          "paramId": "13",
+          "register": "2010",
+          "transformType": "5",
+          "transformValue": "2",
+          "unit": "",
+          "note": "参数ID 13"
+        },
+        {
+          "paramId": "101",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "0",
+          "unit": "",
+          "note": "控制命令"
+        },
+        {
+          "paramId": "102",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "1",
+          "unit": "",
+          "note": "控制-102"
+        },
+        {
+          "paramId": "103",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "2",
+          "unit": "",
+          "note": "控制-103"
+        },
+        {
+          "paramId": "104",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "3",
+          "unit": "",
+          "note": "控制-104"
+        },
+        {
+          "paramId": "105",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "4",
+          "unit": "",
+          "note": "控制-105"
+        },
+        {
+          "paramId": "106",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "5",
+          "unit": "",
+          "note": "控制-106"
+        },
+        {
+          "paramId": "107",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "6",
+          "unit": "",
+          "note": "控制-107"
+        },
+        {
+          "paramId": "108",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "7",
+          "unit": "",
+          "note": "控制-108"
+        },
+        {
+          "paramId": "109",
+          "register": "2001",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "控制-设定频率"
+        }
+      ],
+      "truthMap": [
+        {
+          "value": "0",
+          "label": "正转",
+          "note": "运行状态"
+        },
+        {
+          "value": "0",
+          "label": "正转",
+          "note": "控制命令"
+        }
+      ],
+      "faultRules": [
+        {
+          "paramId": 200,
+          "title": "无故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3000",
+              "value": "1"
+            },
+            {
+              "register": "3000",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "paramId": 201,
+          "title": "过流保护",
+          "matchType": "7",
+          "conditions": [
+            {
+              "register": "3001",
+              "value": "2"
+            },
+            {
+              "register": "3001",
+              "value": "4"
+            },
+            {
+              "register": "3001",
+              "value": "2"
+            },
+            {
+              "register": "3001",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "paramId": 202,
+          "title": "过压保护",
+          "matchType": "7",
+          "conditions": [
+            {
+              "register": "3002",
+              "value": "4"
+            },
+            {
+              "register": "3003",
+              "value": "5"
+            },
+            {
+              "register": "3002",
+              "value": "4"
+            },
+            {
+              "register": "3003",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "paramId": 203,
+          "title": "欠压保护",
+          "matchType": "7",
+          "conditions": [
+            {
+              "register": "3004",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "paramId": 204,
+          "title": "变频器过载保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3005",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "paramId": 205,
+          "title": "电机过载保护（电机堵转）",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3006",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "paramId": 206,
+          "title": "输入缺相保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3007",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "paramId": 207,
+          "title": "输出缺相保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3008",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "paramId": 208,
+          "title": "功率模块过温度",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3009",
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "paramId": 209,
+          "title": "数据储存异常",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3010",
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "paramId": 210,
+          "title": "回水/短路",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3011",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "paramId": 211,
+          "title": "缺水",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3012",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "paramId": 212,
+          "title": "压力值高压保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3013",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "paramId": 213,
+          "title": "水满",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3014",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "paramId": 214,
+          "title": "干转/掉负载保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3015",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "paramId": 215,
+          "title": "压力传感器故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3016",
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "paramId": 216,
+          "title": "逐波限流故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3017",
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "paramId": 217,
+          "title": "磁极位置检测失败",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3018",
+              "value": "8"
+            }
+          ]
+        },
+        {
+          "paramId": 218,
+          "title": "反电动势异常故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3011",
+              "value": "4"
+            },
+            {
+              "register": "3011",
+              "value": "4"
+            }
+          ]
+        }
+      ],
+      "gatewayProtocol": {
+        "telemetry": {
+          "mode": 1,
+          "example": "{\"id\":\"device\",\"time\":17600000,\"mode\":\"1\",\"data\":{\"1\":100,\"2\":100}}"
+        },
+        "alarm": {
+          "mode": 2,
+          "example": "{\"id\":\"device\",\"time\":17600000,\"mode\":\"2\",\"1000\":4}"
+        },
+        "control": {
+          "mode": 3,
+          "example": "{\"id\":\"device\",\"time\":17600000,\"mode\":\"3\",\"data\":{\"101\":0,\"109\":100}}"
+        }
+      }
+    },
+    {
+      "code": "CLEDIC-PUMP-WIFI",
+      "name": "标定说明导入（CLEDIC-PUMP-WIFI）",
+      "industry": "agri",
+      "fw": "v1.2.4",
+      "remark": "由 控制器网关设备数据标定说明_(技术版).xlsx 自动生成；寄存器空位已用表内设备A举例补齐",
+      "maxHz": 50,
+      "polePairs": 2,
+      "gearFreqs": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "paramConfig": {
+        "runHz": "2000",
+        "setHz": "2001",
+        "busV": "2002",
+        "outV": "2003",
+        "outI": "2004",
+        "outP": "2005",
+        "torque": "2006",
+        "runState": "2010",
+        "cmd": "2011",
+        "fault": "3000",
+        "runSec": "2007",
+        "totalSec": "2008",
+        "temp": "2009"
+      },
+      "paramSchema": "{\n  \"telemetry\": [\n    {\n      \"name\": \"数据读取\",\n      \"items\": [\n        {\n          \"name\": \"运行频率\",\n          \"addr\": \"2000\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 1\n        },\n        {\n          \"name\": \"设定频率\",\n          \"addr\": \"2001\",\n          \"unit\": \"\",\n          \"rw\": \"R/W\",\n          \"paramId\": 2\n        },\n        {\n          \"name\": \"母线电压\",\n          \"addr\": \"2002\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 3\n        },\n        {\n          \"name\": \"输出电压\",\n          \"addr\": \"2003\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 4\n        },\n        {\n          \"name\": \"输出电流\",\n          \"addr\": \"2004\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 5\n        },\n        {\n          \"name\": \"输出功率\",\n          \"addr\": \"2005\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 6\n        },\n        {\n          \"name\": \"输出转矩\",\n          \"addr\": \"2006\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 7\n        },\n        {\n          \"name\": \"当前运行时间\",\n          \"addr\": \"2007\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 8\n        },\n        {\n          \"name\": \"累计运行时间\",\n          \"addr\": \"2008\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 9\n        },\n        {\n          \"name\": \"温度\",\n          \"addr\": \"2009\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 10\n        },\n        {\n          \"name\": \"运行状态\",\n          \"addr\": \"2010\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 11\n        },\n        {\n          \"name\": \"参数ID 12\",\n          \"addr\": \"2010\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 12\n        },\n        {\n          \"name\": \"参数ID 13\",\n          \"addr\": \"2010\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 13\n        }\n      ]\n    }\n  ],\n  \"control\": {\n    \"cmd\": {\n      \"name\": \"电机控制下发-控制命令\",\n      \"addr\": \"2011\",\n      \"unit\": \"\",\n      \"rw\": \"W\",\n      \"enums\": [\n        \"控制命令\",\n        \"102\",\n        \"103\",\n        \"104\",\n        \"105\",\n        \"106\",\n        \"107\",\n        \"108\"\n      ]\n    },\n    \"setHz\": {\n      \"name\": \"电机控制下发-设定频率\",\n      \"addr\": \"2001\",\n      \"unit\": \"Hz\",\n      \"rw\": \"R/W\"\n    }\n  },\n  \"fault\": {\n    \"name\": \"故障码\",\n    \"addr\": \"3000\",\n    \"unit\": \"\",\n    \"rw\": \"R\"\n  }\n}",
+      "modelMap": [
+        {
+          "paramId": "1",
+          "register": "2000",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "运行频率"
+        },
+        {
+          "paramId": "2",
+          "register": "2001",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "设定频率"
+        },
+        {
+          "paramId": "3",
+          "register": "2002",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "母线电压"
+        },
+        {
+          "paramId": "4",
+          "register": "2003",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出电压"
+        },
+        {
+          "paramId": "5",
+          "register": "2004",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出电流"
+        },
+        {
+          "paramId": "6",
+          "register": "2005",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出功率"
+        },
+        {
+          "paramId": "7",
+          "register": "2006",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出转矩"
+        },
+        {
+          "paramId": "8",
+          "register": "2007",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "当前运行时间"
+        },
+        {
+          "paramId": "9",
+          "register": "2008",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "累计运行时间"
+        },
+        {
+          "paramId": "10",
+          "register": "2009",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "温度"
+        },
+        {
+          "paramId": "11",
+          "register": "2010",
+          "transformType": "5",
+          "transformValue": "0",
+          "unit": "",
+          "note": "运行状态"
+        },
+        {
+          "paramId": "12",
+          "register": "2010",
+          "transformType": "5",
+          "transformValue": "1",
+          "unit": "",
+          "note": "参数ID 12"
+        },
+        {
+          "paramId": "13",
+          "register": "2010",
+          "transformType": "5",
+          "transformValue": "2",
+          "unit": "",
+          "note": "参数ID 13"
+        },
+        {
+          "paramId": "101",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "0",
+          "unit": "",
+          "note": "控制命令"
+        },
+        {
+          "paramId": "102",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "1",
+          "unit": "",
+          "note": "控制-102"
+        },
+        {
+          "paramId": "103",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "2",
+          "unit": "",
+          "note": "控制-103"
+        },
+        {
+          "paramId": "104",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "3",
+          "unit": "",
+          "note": "控制-104"
+        },
+        {
+          "paramId": "105",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "4",
+          "unit": "",
+          "note": "控制-105"
+        },
+        {
+          "paramId": "106",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "5",
+          "unit": "",
+          "note": "控制-106"
+        },
+        {
+          "paramId": "107",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "6",
+          "unit": "",
+          "note": "控制-107"
+        },
+        {
+          "paramId": "108",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "7",
+          "unit": "",
+          "note": "控制-108"
+        },
+        {
+          "paramId": "109",
+          "register": "2001",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "控制-设定频率"
+        }
+      ],
+      "truthMap": [
+        {
+          "value": "0",
+          "label": "正转",
+          "note": "运行状态"
+        },
+        {
+          "value": "0",
+          "label": "正转",
+          "note": "控制命令"
+        }
+      ],
+      "faultRules": [
+        {
+          "paramId": 200,
+          "title": "无故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3000",
+              "value": "1"
+            },
+            {
+              "register": "3000",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "paramId": 201,
+          "title": "过流保护",
+          "matchType": "7",
+          "conditions": [
+            {
+              "register": "3001",
+              "value": "2"
+            },
+            {
+              "register": "3001",
+              "value": "4"
+            },
+            {
+              "register": "3001",
+              "value": "2"
+            },
+            {
+              "register": "3001",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "paramId": 202,
+          "title": "过压保护",
+          "matchType": "7",
+          "conditions": [
+            {
+              "register": "3002",
+              "value": "4"
+            },
+            {
+              "register": "3003",
+              "value": "5"
+            },
+            {
+              "register": "3002",
+              "value": "4"
+            },
+            {
+              "register": "3003",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "paramId": 203,
+          "title": "欠压保护",
+          "matchType": "7",
+          "conditions": [
+            {
+              "register": "3004",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "paramId": 204,
+          "title": "变频器过载保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3005",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "paramId": 205,
+          "title": "电机过载保护（电机堵转）",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3006",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "paramId": 206,
+          "title": "输入缺相保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3007",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "paramId": 207,
+          "title": "输出缺相保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3008",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "paramId": 208,
+          "title": "功率模块过温度",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3009",
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "paramId": 209,
+          "title": "数据储存异常",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3010",
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "paramId": 210,
+          "title": "回水/短路",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3011",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "paramId": 211,
+          "title": "缺水",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3012",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "paramId": 212,
+          "title": "压力值高压保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3013",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "paramId": 213,
+          "title": "水满",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3014",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "paramId": 214,
+          "title": "干转/掉负载保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3015",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "paramId": 215,
+          "title": "压力传感器故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3016",
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "paramId": 216,
+          "title": "逐波限流故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3017",
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "paramId": 217,
+          "title": "磁极位置检测失败",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3018",
+              "value": "8"
+            }
+          ]
+        },
+        {
+          "paramId": 218,
+          "title": "反电动势异常故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3011",
+              "value": "4"
+            },
+            {
+              "register": "3011",
+              "value": "4"
+            }
+          ]
+        }
+      ],
+      "gatewayProtocol": {
+        "telemetry": {
+          "mode": 1,
+          "example": "{\"id\":\"device\",\"time\":17600000,\"mode\":\"1\",\"data\":{\"1\":100,\"2\":100}}"
+        },
+        "alarm": {
+          "mode": 2,
+          "example": "{\"id\":\"device\",\"time\":17600000,\"mode\":\"2\",\"1000\":4}"
+        },
+        "control": {
+          "mode": 3,
+          "example": "{\"id\":\"device\",\"time\":17600000,\"mode\":\"3\",\"data\":{\"101\":0,\"109\":100}}"
+        }
+      }
+    },
+    {
+      "code": "CLEDIC-PUMP-IND-01",
+      "name": "标定说明导入（CLEDIC-PUMP-IND-01）",
+      "industry": "agri",
+      "fw": "v1.2.4",
+      "remark": "由 控制器网关设备数据标定说明_(技术版).xlsx 自动生成；寄存器空位已用表内设备A举例补齐",
+      "maxHz": 50,
+      "polePairs": 2,
+      "gearFreqs": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "paramConfig": {
+        "runHz": "2000",
+        "setHz": "2001",
+        "busV": "2002",
+        "outV": "2003",
+        "outI": "2004",
+        "outP": "2005",
+        "torque": "2006",
+        "runState": "2010",
+        "cmd": "2011",
+        "fault": "3000",
+        "runSec": "2007",
+        "totalSec": "2008",
+        "temp": "2009"
+      },
+      "paramSchema": "{\n  \"telemetry\": [\n    {\n      \"name\": \"数据读取\",\n      \"items\": [\n        {\n          \"name\": \"运行频率\",\n          \"addr\": \"2000\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 1\n        },\n        {\n          \"name\": \"设定频率\",\n          \"addr\": \"2001\",\n          \"unit\": \"\",\n          \"rw\": \"R/W\",\n          \"paramId\": 2\n        },\n        {\n          \"name\": \"母线电压\",\n          \"addr\": \"2002\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 3\n        },\n        {\n          \"name\": \"输出电压\",\n          \"addr\": \"2003\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 4\n        },\n        {\n          \"name\": \"输出电流\",\n          \"addr\": \"2004\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 5\n        },\n        {\n          \"name\": \"输出功率\",\n          \"addr\": \"2005\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 6\n        },\n        {\n          \"name\": \"输出转矩\",\n          \"addr\": \"2006\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 7\n        },\n        {\n          \"name\": \"当前运行时间\",\n          \"addr\": \"2007\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 8\n        },\n        {\n          \"name\": \"累计运行时间\",\n          \"addr\": \"2008\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 9\n        },\n        {\n          \"name\": \"温度\",\n          \"addr\": \"2009\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 10\n        },\n        {\n          \"name\": \"运行状态\",\n          \"addr\": \"2010\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 11\n        },\n        {\n          \"name\": \"参数ID 12\",\n          \"addr\": \"2010\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 12\n        },\n        {\n          \"name\": \"参数ID 13\",\n          \"addr\": \"2010\",\n          \"unit\": \"\",\n          \"rw\": \"R\",\n          \"paramId\": 13\n        }\n      ]\n    }\n  ],\n  \"control\": {\n    \"cmd\": {\n      \"name\": \"电机控制下发-控制命令\",\n      \"addr\": \"2011\",\n      \"unit\": \"\",\n      \"rw\": \"W\",\n      \"enums\": [\n        \"控制命令\",\n        \"102\",\n        \"103\",\n        \"104\",\n        \"105\",\n        \"106\",\n        \"107\",\n        \"108\"\n      ]\n    },\n    \"setHz\": {\n      \"name\": \"电机控制下发-设定频率\",\n      \"addr\": \"2001\",\n      \"unit\": \"Hz\",\n      \"rw\": \"R/W\"\n    }\n  },\n  \"fault\": {\n    \"name\": \"故障码\",\n    \"addr\": \"3000\",\n    \"unit\": \"\",\n    \"rw\": \"R\"\n  }\n}",
+      "modelMap": [
+        {
+          "paramId": "1",
+          "register": "2000",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "运行频率"
+        },
+        {
+          "paramId": "2",
+          "register": "2001",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "设定频率"
+        },
+        {
+          "paramId": "3",
+          "register": "2002",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "母线电压"
+        },
+        {
+          "paramId": "4",
+          "register": "2003",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出电压"
+        },
+        {
+          "paramId": "5",
+          "register": "2004",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出电流"
+        },
+        {
+          "paramId": "6",
+          "register": "2005",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出功率"
+        },
+        {
+          "paramId": "7",
+          "register": "2006",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "输出转矩"
+        },
+        {
+          "paramId": "8",
+          "register": "2007",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "当前运行时间"
+        },
+        {
+          "paramId": "9",
+          "register": "2008",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "累计运行时间"
+        },
+        {
+          "paramId": "10",
+          "register": "2009",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "温度"
+        },
+        {
+          "paramId": "11",
+          "register": "2010",
+          "transformType": "5",
+          "transformValue": "0",
+          "unit": "",
+          "note": "运行状态"
+        },
+        {
+          "paramId": "12",
+          "register": "2010",
+          "transformType": "5",
+          "transformValue": "1",
+          "unit": "",
+          "note": "参数ID 12"
+        },
+        {
+          "paramId": "13",
+          "register": "2010",
+          "transformType": "5",
+          "transformValue": "2",
+          "unit": "",
+          "note": "参数ID 13"
+        },
+        {
+          "paramId": "101",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "0",
+          "unit": "",
+          "note": "控制命令"
+        },
+        {
+          "paramId": "102",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "1",
+          "unit": "",
+          "note": "控制-102"
+        },
+        {
+          "paramId": "103",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "2",
+          "unit": "",
+          "note": "控制-103"
+        },
+        {
+          "paramId": "104",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "3",
+          "unit": "",
+          "note": "控制-104"
+        },
+        {
+          "paramId": "105",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "4",
+          "unit": "",
+          "note": "控制-105"
+        },
+        {
+          "paramId": "106",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "5",
+          "unit": "",
+          "note": "控制-106"
+        },
+        {
+          "paramId": "107",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "6",
+          "unit": "",
+          "note": "控制-107"
+        },
+        {
+          "paramId": "108",
+          "register": "2011",
+          "transformType": "5",
+          "transformValue": "7",
+          "unit": "",
+          "note": "控制-108"
+        },
+        {
+          "paramId": "109",
+          "register": "2001",
+          "transformType": "4",
+          "transformValue": "10",
+          "unit": "",
+          "note": "控制-设定频率"
+        }
+      ],
+      "truthMap": [
+        {
+          "value": "0",
+          "label": "正转",
+          "note": "运行状态"
+        },
+        {
+          "value": "0",
+          "label": "正转",
+          "note": "控制命令"
+        }
+      ],
+      "faultRules": [
+        {
+          "paramId": 200,
+          "title": "无故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3000",
+              "value": "1"
+            },
+            {
+              "register": "3000",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "paramId": 201,
+          "title": "过流保护",
+          "matchType": "7",
+          "conditions": [
+            {
+              "register": "3001",
+              "value": "2"
+            },
+            {
+              "register": "3001",
+              "value": "4"
+            },
+            {
+              "register": "3001",
+              "value": "2"
+            },
+            {
+              "register": "3001",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "paramId": 202,
+          "title": "过压保护",
+          "matchType": "7",
+          "conditions": [
+            {
+              "register": "3002",
+              "value": "4"
+            },
+            {
+              "register": "3003",
+              "value": "5"
+            },
+            {
+              "register": "3002",
+              "value": "4"
+            },
+            {
+              "register": "3003",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "paramId": 203,
+          "title": "欠压保护",
+          "matchType": "7",
+          "conditions": [
+            {
+              "register": "3004",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "paramId": 204,
+          "title": "变频器过载保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3005",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "paramId": 205,
+          "title": "电机过载保护（电机堵转）",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3006",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "paramId": 206,
+          "title": "输入缺相保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3007",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "paramId": 207,
+          "title": "输出缺相保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3008",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "paramId": 208,
+          "title": "功率模块过温度",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3009",
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "paramId": 209,
+          "title": "数据储存异常",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3010",
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "paramId": 210,
+          "title": "回水/短路",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3011",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "paramId": 211,
+          "title": "缺水",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3012",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "paramId": 212,
+          "title": "压力值高压保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3013",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "paramId": 213,
+          "title": "水满",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3014",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "paramId": 214,
+          "title": "干转/掉负载保护",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3015",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "paramId": 215,
+          "title": "压力传感器故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3016",
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "paramId": 216,
+          "title": "逐波限流故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3017",
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "paramId": 217,
+          "title": "磁极位置检测失败",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3018",
+              "value": "8"
+            }
+          ]
+        },
+        {
+          "paramId": 218,
+          "title": "反电动势异常故障",
+          "matchType": "6",
+          "conditions": [
+            {
+              "register": "3011",
+              "value": "4"
+            },
+            {
+              "register": "3011",
+              "value": "4"
+            }
+          ]
+        }
+      ],
+      "gatewayProtocol": {
+        "telemetry": {
+          "mode": 1,
+          "example": "{\"id\":\"device\",\"time\":17600000,\"mode\":\"1\",\"data\":{\"1\":100,\"2\":100}}"
+        },
+        "alarm": {
+          "mode": 2,
+          "example": "{\"id\":\"device\",\"time\":17600000,\"mode\":\"2\",\"1000\":4}"
+        },
+        "control": {
+          "mode": 3,
+          "example": "{\"id\":\"device\",\"time\":17600000,\"mode\":\"3\",\"data\":{\"101\":0,\"109\":100}}"
+        }
+      }
+    }
+  ],
+  "faultRules": [
+    {
+      "paramId": 200,
+      "title": "无故障",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3000",
+          "value": "1"
+        },
+        {
+          "register": "3000",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "paramId": 201,
+      "title": "过流保护",
+      "matchType": "7",
+      "conditions": [
+        {
+          "register": "3001",
+          "value": "2"
+        },
+        {
+          "register": "3001",
+          "value": "4"
+        },
+        {
+          "register": "3001",
+          "value": "2"
+        },
+        {
+          "register": "3001",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "paramId": 202,
+      "title": "过压保护",
+      "matchType": "7",
+      "conditions": [
+        {
+          "register": "3002",
+          "value": "4"
+        },
+        {
+          "register": "3003",
+          "value": "5"
+        },
+        {
+          "register": "3002",
+          "value": "4"
+        },
+        {
+          "register": "3003",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "paramId": 203,
+      "title": "欠压保护",
+      "matchType": "7",
+      "conditions": [
+        {
+          "register": "3004",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "paramId": 204,
+      "title": "变频器过载保护",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3005",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "paramId": 205,
+      "title": "电机过载保护（电机堵转）",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3006",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "paramId": 206,
+      "title": "输入缺相保护",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3007",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "paramId": 207,
+      "title": "输出缺相保护",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3008",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "paramId": 208,
+      "title": "功率模块过温度",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3009",
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "paramId": 209,
+      "title": "数据储存异常",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3010",
+          "value": "7"
+        }
+      ]
+    },
+    {
+      "paramId": 210,
+      "title": "回水/短路",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3011",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "paramId": 211,
+      "title": "缺水",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3012",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "paramId": 212,
+      "title": "压力值高压保护",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3013",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "paramId": 213,
+      "title": "水满",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3014",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "paramId": 214,
+      "title": "干转/掉负载保护",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3015",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "paramId": 215,
+      "title": "压力传感器故障",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3016",
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "paramId": 216,
+      "title": "逐波限流故障",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3017",
+          "value": "7"
+        }
+      ]
+    },
+    {
+      "paramId": 217,
+      "title": "磁极位置检测失败",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3018",
+          "value": "8"
+        }
+      ]
+    },
+    {
+      "paramId": 218,
+      "title": "反电动势异常故障",
+      "matchType": "6",
+      "conditions": [
+        {
+          "register": "3011",
+          "value": "4"
+        },
+        {
+          "register": "3011",
+          "value": "4"
+        }
+      ]
+    }
+  ]
+}
